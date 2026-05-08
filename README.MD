@@ -1,6 +1,6 @@
-# Kingdom Enhanced (v2.1.0)
+# Kingdom Enhanced (v2.2.0)
 
-![Mod Version](https://img.shields.io/badge/version-2.1.0-green)
+![Mod Version](https://img.shields.io/badge/version-2.2.0-green)
 ![Game Version](https://img.shields.io/badge/Kingdom%20Two%20Crowns-2.4.x-blue)
 ![Loader](https://img.shields.io/badge/BepInEx-6_(Mono_+_IL2CPP)-orange)
 
@@ -9,7 +9,7 @@ It grants players granular control over their kingdom’s army, economy, and wor
 
 ---
 
-## Universal Compatibility Update (v2.1.0)
+## Universal Compatibility Update (v2.2.0)
 
 This update focuses on **eliminating compatibility limitations** and ensuring the mod works across all environments.
 
@@ -184,7 +184,7 @@ A full **Text-to-Speech (TTS)** system designed for blind and visually impaired 
 
 ### Method 1 — Recommended (AIO)
 
-1. Download the correct **v2.1.0 package**
+1. Download the correct **v2.2.0 package**
 2. Extract into:
 ```
 Kingdom Two Crowns/
