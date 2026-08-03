@@ -79,12 +79,12 @@ namespace KingdomEnhanced.Core
         /// </summary>
         private void InitializeLocalization()
         {
-            string pluginLocation = Info.Location;
+            string pluginLocation = Assembly.GetExecutingAssembly().Location;
             string pluginDirectory = Path.GetDirectoryName(pluginLocation);
             if (string.IsNullOrWhiteSpace(pluginDirectory))
             {
                 pluginDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? AppContext.BaseDirectory;
-                LogSource.LogWarning($"Plugin.Info.Location 无法解析目录，已回退到程序集目录：{pluginDirectory}");
+                LogSource.LogWarning($"程序集位置无法解析目录，已回退到程序集目录：{pluginDirectory}");
             }
 
             string localizationDirectory = Path.Combine(pluginDirectory, "Localization");

@@ -99,6 +99,10 @@
             <HintPath>..\deps\KTC-ModDevLibs\BIE6_IL2CPP\interop\UnityEngine.CoreModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="UnityEngine.JSONSerializeModule">
+            <HintPath>..\deps\KTC-ModDevLibs\BIE6_IL2CPP\interop\UnityEngine.JSONSerializeModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="UnityEngine.IMGUIModule">
             <HintPath>..\deps\KTC-ModDevLibs\BIE6_IL2CPP\interop\UnityEngine.IMGUIModule.dll</HintPath>
             <Private>False</Private>
@@ -166,6 +170,10 @@
         </Reference>
         <Reference Include="UnityEngine.CoreModule">
             <HintPath>..\deps\KTC-ModDevLibs\BIE6_Mono\Managed\UnityEngine.CoreModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.JSONSerializeModule">
+            <HintPath>..\deps\KTC-ModDevLibs\BIE6_Mono\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.IMGUIModule">
