@@ -107,7 +107,7 @@ namespace KingdomEnhanced.Shared
             GUILayout.Label(label, labelStyle);
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(LocalizationService.Get("common.button.reset"), _sliderRangeStyle, GUILayout.Width(52))) value = defaultValue;
-            GUILayout.Label(value.ToString("F1") + "x", dimStyle, GUILayout.Width(42));
+            GUILayout.Label(LocalizationService.Format("common.value.multiplier", value.ToString("F1")), dimStyle, GUILayout.Width(42));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
