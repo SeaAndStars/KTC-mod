@@ -200,26 +200,27 @@ namespace KingdomEnhanced.Core
                 {
                     if (entry == null)
                     {
-                        continue;
+                        LogWarning($"本地化文件包含空条目：{Path.GetFileName(filePath)}");
+                        return;
                     }
 
                     if (string.IsNullOrWhiteSpace(entry.key))
                     {
-                        LogWarning($"已跳过空资源键：{Path.GetFileName(filePath)}");
-                        continue;
+                        LogWarning($"本地化文件包含空资源键：{Path.GetFileName(filePath)}");
+                        return;
                     }
 
                     if (string.IsNullOrWhiteSpace(entry.value))
                     {
-                        LogWarning($"已跳过空资源值：{Path.GetFileName(filePath)} -> {entry.key}");
-                        continue;
+                        LogWarning($"本地化文件包含空资源值：{Path.GetFileName(filePath)} -> {entry.key}");
+                        return;
                     }
 
                     string resourceKey = entry.key.Trim();
                     if (resourceMap.ContainsKey(resourceKey))
                     {
-                        LogWarning($"已跳过重复资源键：{Path.GetFileName(filePath)} -> {resourceKey}");
-                        continue;
+                        LogWarning($"本地化文件包含重复资源键：{Path.GetFileName(filePath)} -> {resourceKey}");
+                        return;
                     }
 
                     resourceMap.Add(resourceKey, entry.value);

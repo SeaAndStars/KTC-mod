@@ -80,7 +80,12 @@ namespace KingdomEnhanced.Core
         private void InitializeLocalization()
         {
             string pluginLocation = Assembly.GetExecutingAssembly().Location;
-            string pluginDirectory = Path.GetDirectoryName(pluginLocation);
+            string pluginDirectory = string.Empty;
+            if (!string.IsNullOrWhiteSpace(pluginLocation))
+            {
+                pluginDirectory = Path.GetDirectoryName(pluginLocation);
+            }
+
             if (string.IsNullOrWhiteSpace(pluginDirectory))
             {
                 pluginDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? AppContext.BaseDirectory;

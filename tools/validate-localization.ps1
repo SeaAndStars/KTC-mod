@@ -46,8 +46,9 @@ function Read-LanguageDocument {
             throw "存在空 value: $FilePath -> $($entry.key)"
         }
 
-        if (-not $keys.Add($entry.key)) {
-            throw "存在重复 key: $FilePath -> $($entry.key)"
+        $normalizedKey = $entry.key.Trim()
+        if (-not $keys.Add($normalizedKey)) {
+            throw "存在重复 key: $FilePath -> $normalizedKey"
         }
     }
 
