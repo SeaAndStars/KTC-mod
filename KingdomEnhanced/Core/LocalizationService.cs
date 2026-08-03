@@ -9,7 +9,7 @@ using UnityEngine;
 namespace KingdomEnhanced.Core
 {
     /// <summary>
-    /// 表示可由 Unity JsonUtility 反序列化的语言资源文档。
+    /// 表示固定 schema 的语言资源文档。
     /// </summary>
     [Serializable]
     public sealed class LocalizationDocument
@@ -206,7 +206,7 @@ namespace KingdomEnhanced.Core
             try
             {
                 string jsonText = File.ReadAllText(filePath, Encoding.UTF8);
-                LocalizationDocument document = JsonUtility.FromJson<LocalizationDocument>(jsonText);
+                LocalizationDocument document = DeserializeLocalizationDocument(jsonText);
                 if (document == null)
                 {
                     LogWarning($"本地化文件解析结果为空：{Path.GetFileName(filePath)}");
@@ -279,6 +279,451 @@ namespace KingdomEnhanced.Core
             catch (Exception exception)
             {
                 LogWarning($"本地化文件加载失败：{Path.GetFileName(filePath)}，reason={exception.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 使用固定 schema JSON 解析器将本地化文本转换为文档对象。
+        /// </summary>
+        /// <param name="jsonText">原始本地化 JSON 文本。</param>
+        /// <returns>成功时返回托管本地化文档；失败时返回空。</returns>
+        private static LocalizationDocument DeserializeLocalizationDocument(string jsonText)
+        {
+            return new LocalizationJsonParser(jsonText).ParseDocument();
+        }
+
+        /// <summary>
+        /// 提供固定 schema 的本地化 JSON 解析能力。
+        /// </summary>
+        private sealed class LocalizationJsonParser
+        {
+            /// <summary>
+            /// 原始 JSON 文本。
+            /// </summary>
+            private readonly string _jsonText;
+
+            /// <summary>
+            /// 当前读取位置。
+            /// </summary>
+            private int _position;
+
+            /// <summary>
+            /// 初始化固定 schema 本地化 JSON 解析器。
+            /// </summary>
+            /// <param name="jsonText">原始 JSON 文本。</param>
+            public LocalizationJsonParser(string jsonText)
+            {
+                _jsonText = jsonText ?? throw new ArgumentNullException(nameof(jsonText));
+                _position = 0;
+            }
+
+            /// <summary>
+            /// 解析完整的本地化文档。
+            /// </summary>
+            /// <returns>解析成功后的本地化文档。</returns>
+            public LocalizationDocument ParseDocument()
+            {
+                SkipWhitespace();
+                ExpectCharacter('{');
+
+                LocalizationDocument document = new LocalizationDocument();
+                bool languageSeen = false;
+                bool displayNameSeen = false;
+                bool fallbackSeen = false;
+                bool entriesSeen = false;
+
+                SkipWhitespace();
+                if (TryConsumeCharacter('}'))
+                {
+                    EnsureDocumentEnd();
+                    return document;
+                }
+
+                while (true)
+                {
+                    string propertyName = ParseString();
+                    SkipWhitespace();
+                    ExpectCharacter(':');
+                    SkipWhitespace();
+
+                    switch (propertyName)
+                    {
+                        case "language":
+                            EnsureUniqueProperty(languageSeen, propertyName);
+                            document.language = ParseString();
+                            languageSeen = true;
+                            break;
+                        case "displayName":
+                            EnsureUniqueProperty(displayNameSeen, propertyName);
+                            document.displayName = ParseString();
+                            displayNameSeen = true;
+                            break;
+                        case "fallback":
+                            EnsureUniqueProperty(fallbackSeen, propertyName);
+                            document.fallback = ParseString();
+                            fallbackSeen = true;
+                            break;
+                        case "entries":
+                            EnsureUniqueProperty(entriesSeen, propertyName);
+                            document.entries = ParseEntriesArray();
+                            entriesSeen = true;
+                            break;
+                        default:
+                            throw CreateFormatException($"不支持的顶级字段：{propertyName}");
+                    }
+
+                    SkipWhitespace();
+                    if (TryConsumeCharacter('}'))
+                    {
+                        break;
+                    }
+
+                    ExpectCharacter(',');
+                    SkipWhitespace();
+                }
+
+                EnsureDocumentEnd();
+                return document;
+            }
+
+            /// <summary>
+            /// 解析本地化条目数组。
+            /// </summary>
+            /// <returns>解析成功后的本地化条目数组。</returns>
+            private LocalizationEntry[] ParseEntriesArray()
+            {
+                ExpectCharacter('[');
+                SkipWhitespace();
+
+                List<LocalizationEntry> entries = new List<LocalizationEntry>();
+                if (TryConsumeCharacter(']'))
+                {
+                    return entries.ToArray();
+                }
+
+                while (true)
+                {
+                    entries.Add(ParseEntryObject());
+                    SkipWhitespace();
+
+                    if (TryConsumeCharacter(']'))
+                    {
+                        return entries.ToArray();
+                    }
+
+                    ExpectCharacter(',');
+                    SkipWhitespace();
+                }
+            }
+
+            /// <summary>
+            /// 解析单个本地化条目对象。
+            /// </summary>
+            /// <returns>解析成功后的本地化条目。</returns>
+            private LocalizationEntry ParseEntryObject()
+            {
+                ExpectCharacter('{');
+                SkipWhitespace();
+
+                string key = null;
+                string value = null;
+                bool keySeen = false;
+                bool valueSeen = false;
+
+                if (TryConsumeCharacter('}'))
+                {
+                    throw CreateFormatException("本地化条目不能为空对象。");
+                }
+
+                while (true)
+                {
+                    string propertyName = ParseString();
+                    SkipWhitespace();
+                    ExpectCharacter(':');
+                    SkipWhitespace();
+
+                    switch (propertyName)
+                    {
+                        case "key":
+                            EnsureUniqueProperty(keySeen, propertyName);
+                            key = ParseString();
+                            keySeen = true;
+                            if (string.IsNullOrWhiteSpace(key))
+                            {
+                                throw CreateFormatException("本地化条目 key 不能为空。");
+                            }
+
+                            break;
+                        case "value":
+                            EnsureUniqueProperty(valueSeen, propertyName);
+                            value = ParseString();
+                            valueSeen = true;
+                            if (string.IsNullOrWhiteSpace(value))
+                            {
+                                throw CreateFormatException($"本地化条目 value 不能为空：{key ?? "<unknown>"}");
+                            }
+
+                            break;
+                        default:
+                            throw CreateFormatException($"不支持的条目字段：{propertyName}");
+                    }
+
+                    SkipWhitespace();
+                    if (TryConsumeCharacter('}'))
+                    {
+                        break;
+                    }
+
+                    ExpectCharacter(',');
+                    SkipWhitespace();
+                }
+
+                if (!keySeen)
+                {
+                    throw CreateFormatException("本地化条目缺少 key。");
+                }
+
+                if (!valueSeen)
+                {
+                    throw CreateFormatException($"本地化条目缺少 value：{key}");
+                }
+
+                return new LocalizationEntry
+                {
+                    key = key,
+                    value = value
+                };
+            }
+
+            /// <summary>
+            /// 解析 JSON 字符串并处理所有支持的转义序列。
+            /// </summary>
+            /// <returns>解析成功后的字符串值。</returns>
+            private string ParseString()
+            {
+                ExpectCharacter('"');
+                StringBuilder builder = new StringBuilder();
+
+                while (true)
+                {
+                    if (IsAtEnd())
+                    {
+                        throw CreateFormatException("字符串缺少结束引号。");
+                    }
+
+                    char currentCharacter = ReadCharacter();
+                    if (currentCharacter == '"')
+                    {
+                        return builder.ToString();
+                    }
+
+                    if (currentCharacter == '\\')
+                    {
+                        builder.Append(ParseEscapeSequence());
+                        continue;
+                    }
+
+                    if (currentCharacter < 0x20)
+                    {
+                        throw CreateFormatException("字符串包含未转义的控制字符。");
+                    }
+
+                    builder.Append(currentCharacter);
+                }
+            }
+
+            /// <summary>
+            /// 解析 JSON 转义序列。
+            /// </summary>
+            /// <returns>转义序列对应的字符。</returns>
+            private char ParseEscapeSequence()
+            {
+                if (IsAtEnd())
+                {
+                    throw CreateFormatException("转义序列缺少后续字符。");
+                }
+
+                char escapeCharacter = ReadCharacter();
+                switch (escapeCharacter)
+                {
+                    case '"':
+                        return '"';
+                    case '\\':
+                        return '\\';
+                    case '/':
+                        return '/';
+                    case 'b':
+                        return '\b';
+                    case 'f':
+                        return '\f';
+                    case 'n':
+                        return '\n';
+                    case 'r':
+                        return '\r';
+                    case 't':
+                        return '\t';
+                    case 'u':
+                        return ParseUnicodeEscapeSequence();
+                    default:
+                        throw CreateFormatException($"不支持的转义序列：\\{escapeCharacter}");
+                }
+            }
+
+            /// <summary>
+            /// 解析 JSON Unicode 转义序列。
+            /// </summary>
+            /// <returns>Unicode 转义对应的字符。</returns>
+            private char ParseUnicodeEscapeSequence()
+            {
+                if (_position + 4 > _jsonText.Length)
+                {
+                    throw CreateFormatException("Unicode 转义序列长度不足 4。");
+                }
+
+                int codePoint = 0;
+                for (int index = 0; index < 4; index++)
+                {
+                    codePoint = (codePoint << 4) + ParseHexValue(ReadCharacter());
+                }
+
+                return (char)codePoint;
+            }
+
+            /// <summary>
+            /// 将单个十六进制字符转换为数值。
+            /// </summary>
+            /// <param name="hexCharacter">十六进制字符。</param>
+            /// <returns>对应的十进制数值。</returns>
+            private int ParseHexValue(char hexCharacter)
+            {
+                if (hexCharacter >= '0' && hexCharacter <= '9')
+                {
+                    return hexCharacter - '0';
+                }
+
+                if (hexCharacter >= 'a' && hexCharacter <= 'f')
+                {
+                    return hexCharacter - 'a' + 10;
+                }
+
+                if (hexCharacter >= 'A' && hexCharacter <= 'F')
+                {
+                    return hexCharacter - 'A' + 10;
+                }
+
+                throw CreateFormatException($"无效的十六进制字符：{hexCharacter}");
+            }
+
+            /// <summary>
+            /// 跳过当前位置开始的所有 JSON 空白字符。
+            /// </summary>
+            private void SkipWhitespace()
+            {
+                while (!IsAtEnd())
+                {
+                    char currentCharacter = _jsonText[_position];
+                    if (currentCharacter != ' ' &&
+                        currentCharacter != '\t' &&
+                        currentCharacter != '\r' &&
+                        currentCharacter != '\n')
+                    {
+                        break;
+                    }
+
+                    _position++;
+                }
+            }
+
+            /// <summary>
+            /// 读取并返回一个字符。
+            /// </summary>
+            /// <returns>当前位置的字符。</returns>
+            private char ReadCharacter()
+            {
+                if (IsAtEnd())
+                {
+                    throw CreateFormatException("意外到达 JSON 末尾。");
+                }
+
+                return _jsonText[_position++];
+            }
+
+            /// <summary>
+            /// 断言当前位置必须为指定字符。
+            /// </summary>
+            /// <param name="expectedCharacter">期望字符。</param>
+            private void ExpectCharacter(char expectedCharacter)
+            {
+                if (IsAtEnd())
+                {
+                    throw CreateFormatException($"缺少期望字符：{expectedCharacter}");
+                }
+
+                char actualCharacter = ReadCharacter();
+                if (actualCharacter != expectedCharacter)
+                {
+                    throw CreateFormatException($"期望字符 {expectedCharacter}，实际为 {actualCharacter}");
+                }
+            }
+
+            /// <summary>
+            /// 尝试消费指定字符。
+            /// </summary>
+            /// <param name="expectedCharacter">待匹配字符。</param>
+            /// <returns>匹配成功返回 true，否则返回 false。</returns>
+            private bool TryConsumeCharacter(char expectedCharacter)
+            {
+                if (IsAtEnd() || _jsonText[_position] != expectedCharacter)
+                {
+                    return false;
+                }
+
+                _position++;
+                return true;
+            }
+
+            /// <summary>
+            /// 断言属性名称在当前对象范围内未重复出现。
+            /// </summary>
+            /// <param name="alreadySeen">该属性是否已出现。</param>
+            /// <param name="propertyName">属性名称。</param>
+            private void EnsureUniqueProperty(bool alreadySeen, string propertyName)
+            {
+                if (alreadySeen)
+                {
+                    throw CreateFormatException($"检测到重复字段：{propertyName}");
+                }
+            }
+
+            /// <summary>
+            /// 确认解析结束后不存在额外的非空白字符。
+            /// </summary>
+            private void EnsureDocumentEnd()
+            {
+                SkipWhitespace();
+                if (!IsAtEnd())
+                {
+                    throw CreateFormatException("JSON 尾部存在多余内容。");
+                }
+            }
+
+            /// <summary>
+            /// 判断是否已经到达 JSON 文本末尾。
+            /// </summary>
+            /// <returns>到达末尾时返回 true。</returns>
+            private bool IsAtEnd()
+            {
+                return _position >= _jsonText.Length;
+            }
+
+            /// <summary>
+            /// 创建带位置上下文的格式异常。
+            /// </summary>
+            /// <param name="message">异常消息。</param>
+            /// <returns>带位置信息的格式异常。</returns>
+            private FormatException CreateFormatException(string message)
+            {
+                return new FormatException($"{message} position={_position}");
             }
         }
 
