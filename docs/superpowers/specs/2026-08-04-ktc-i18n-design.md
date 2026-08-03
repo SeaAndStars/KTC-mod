@@ -18,7 +18,7 @@
 - 缺失键回退顺序：当前语言 → 英文 → 资源键。
 - 切换入口：F1 → Settings。
 - 资源目录：与 `KingdomEnhanced.dll` 同级的 `Localization` 目录。
-- 不增加第三方 JSON 依赖，使用 Unity `JsonUtility` 解析对象和条目数组，以同时兼容 `net6.0` IL2CPP 与 `netstandard2.1` Mono。
+- 不增加第三方 JSON 依赖，使用项目内无第三方依赖的固定 schema JSON 解析器，以同时兼容 `net6.0` IL2CPP 与 `netstandard2.1` Mono。
 
 ## 覆盖范围
 
@@ -49,7 +49,7 @@ JSON 使用固定文档结构，包含语言标识、显示名称、回退语言
 新增 `KingdomEnhanced/Core/LocalizationService.cs`，负责：
 
 1. 从插件程序集所在目录的 `Localization` 子目录发现 JSON 文件。
-2. 使用 Unity `JsonUtility` 读取资源文档，并建立语言到键值字典的索引。
+2. 使用无第三方依赖的固定 schema JSON 解析器读取资源文档，并建立语言到键值字典的索引。
 3. 校验语言文件、跳过空键和重复键，并记录加载错误而不阻止插件启动。
 4. 提供按键取值、当前语言切换、可用语言列表和切换事件。
 5. 对未知语言、缺失文件和缺失键执行确定性回退。
@@ -67,7 +67,8 @@ JSON 使用固定文档结构，包含语言标识、显示名称、回退语言
 ## 构建与发布
 
 - `.csproj` 将 `Localization/*.json` 作为内容文件复制到输出目录。
-- Windows 构建脚本和发布脚本把 `Localization` 目录放入 IL2CPP、Mono 两种发布包的插件目录。
+- Windows 与 Linux 构建脚本在提供 BepInEx plugins 路径时，把 DLL 和完整 `Localization` 目录复制到 `<plugins-path>/KingdomEnhanced`；未提供路径时仅执行原有构建。
+- 发布脚本在复制目标 DLL 后、压缩前，把完整 `Localization` 目录放入 IL2CPP、Mono 两种发布包的插件目录。
 - 不把资源文件复制到系统目录，也不依赖当前工作目录。
 
 ## 验证标准
@@ -77,5 +78,5 @@ JSON 使用固定文档结构，包含语言标识、显示名称、回退语言
 - 两种构建输出都包含两个 JSON 文件。
 - JSON 键集合一致，中文和英文没有重复键或空值。
 - 静态检查确认运行时用户可见文本均通过资源键获取。
-- 游戏内验证：默认中文、切换英文、切回中文、重启后语言保持。
+- 游戏内验证：默认英文、切换中文、切回英文、重启后语言保持。
 - 资源文件缺失或 JSON 损坏时插件仍能启动并回退到资源键/英文。
