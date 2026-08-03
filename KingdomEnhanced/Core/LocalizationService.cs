@@ -9,6 +9,50 @@ using UnityEngine;
 namespace KingdomEnhanced.Core
 {
     /// <summary>
+    /// 表示可由 Unity JsonUtility 反序列化的语言资源文档。
+    /// </summary>
+    [Serializable]
+    public sealed class LocalizationDocument
+    {
+        /// <summary>
+        /// 语言代码，例如 en-US 或 zh-CN。
+        /// </summary>
+        public string language;
+
+        /// <summary>
+        /// 设置界面展示用语言名称。
+        /// </summary>
+        public string displayName;
+
+        /// <summary>
+        /// 该语言声明的回退语言代码。
+        /// </summary>
+        public string fallback;
+
+        /// <summary>
+        /// 当前语言文档包含的全部资源条目。
+        /// </summary>
+        public LocalizationEntry[] entries;
+    }
+
+    /// <summary>
+    /// 表示单个资源键和值的 JSON 条目。
+    /// </summary>
+    [Serializable]
+    public sealed class LocalizationEntry
+    {
+        /// <summary>
+        /// 稳定资源键。
+        /// </summary>
+        public string key;
+
+        /// <summary>
+        /// 资源键对应的翻译文本。
+        /// </summary>
+        public string value;
+    }
+
+    /// <summary>
     /// 提供本地化资源加载、语言切换和文本回退能力。
     /// </summary>
     public static class LocalizationService
@@ -359,50 +403,6 @@ namespace KingdomEnhanced.Core
             }
 
             Debug.LogWarning($"[KingdomEnhanced] {message}");
-        }
-
-        /// <summary>
-        /// 表示可由 Unity JsonUtility 反序列化的语言资源文档。
-        /// </summary>
-        [Serializable]
-        private sealed class LocalizationDocument
-        {
-            /// <summary>
-            /// 语言代码，例如 en-US 或 zh-CN。
-            /// </summary>
-            public string language;
-
-            /// <summary>
-            /// 设置界面展示用语言名称。
-            /// </summary>
-            public string displayName;
-
-            /// <summary>
-            /// 该语言声明的回退语言代码。
-            /// </summary>
-            public string fallback;
-
-            /// <summary>
-            /// 当前语言文档包含的全部资源条目。
-            /// </summary>
-            public LocalizationEntry[] entries;
-        }
-
-        /// <summary>
-        /// 表示单个资源键和值的 JSON 条目。
-        /// </summary>
-        [Serializable]
-        private sealed class LocalizationEntry
-        {
-            /// <summary>
-            /// 稳定资源键。
-            /// </summary>
-            public string key;
-
-            /// <summary>
-            /// 资源键对应的翻译文本。
-            /// </summary>
-            public string value;
         }
     }
 }
