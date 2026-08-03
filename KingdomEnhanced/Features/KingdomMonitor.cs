@@ -198,6 +198,8 @@ namespace KingdomEnhanced.Features
 
         private void OnGUI()
         {
+            RefreshLocalizedStringsIfLanguageChanged();
+
             if (!_isVisible) return;
             BuildStyles();
 
