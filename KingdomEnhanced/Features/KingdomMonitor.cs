@@ -47,6 +47,36 @@ namespace KingdomEnhanced.Features
         private float _nextCensusTime;
         private int _censusStep = 0;
 
+        /// <summary>
+        /// 上次用于生成监视器缓存文案的语言代码。
+        /// </summary>
+        private string _localizedLanguageCode;
+
+        /// <summary>
+        /// 上次轮询到的岛屿天数，用于语言切换时重建日数文案。
+        /// </summary>
+        private int _currentDay;
+
+        /// <summary>
+        /// 上次轮询到的昼夜周期资源键，用于语言切换时重建日数文案。
+        /// </summary>
+        private string _currentCycleKey = "monitor.cycle.unknown";
+
+        /// <summary>
+        /// 上次轮询到的威胁状态，用于语言切换时保留威胁文案的富文本颜色。
+        /// </summary>
+        private bool _isThreatDangerous;
+
+        /// <summary>
+        /// 上次轮询到的钱包金币数量，用于语言切换时重建钱包文案。
+        /// </summary>
+        private int _walletCoins;
+
+        /// <summary>
+        /// 上次轮询到的钱包宝石数量，用于语言切换时重建钱包文案。
+        /// </summary>
+        private int _walletGems;
+
         private string _strDay;
         private string _strThreat;
         private string _strGreed;
@@ -101,6 +131,7 @@ namespace KingdomEnhanced.Features
             _strPikeman = LocalizationService.Format("monitor.population.pikeman", 0);
             _strKnight = LocalizationService.Format("monitor.population.knight", 0);
             _strVagrant = LocalizationService.Format("monitor.population.vagrant", 0);
+            _localizedLanguageCode = LocalizationService.CurrentLanguageCode;
             
             if (_kingdom == null) Plugin.Instance.LogSource.LogWarning("KingdomMonitor: Kingdom not found.");
             if (_enemyManager == null) Plugin.Instance.LogSource.LogWarning("KingdomMonitor: EnemyManager not found.");
@@ -285,6 +316,8 @@ namespace KingdomEnhanced.Features
 
         private void Update()
         {
+            RefreshLocalizedStringsIfLanguageChanged();
+
             if (!_isVisible) return;
 
             // Try resolving cached references slowly
@@ -315,19 +348,22 @@ namespace KingdomEnhanced.Features
                             var player = Managers.Inst?.kingdom?.GetPlayer(0);
                             if (player != null && player.wallet != null)
                             {
-                                int coins = player.wallet.Coins;
-                                int gems = player.wallet.Gems;
-                                _strWallet = LocalizationService.Format("monitor.wallet", coins, gems);
+                                _walletCoins = player.wallet.Coins;
+                                _walletGems = player.wallet.Gems;
+                                _strWallet = LocalizationService.Format("monitor.wallet", _walletCoins, _walletGems);
                             }
                             break;
                         case 9:
                             int day = 0;
                             if (Managers.Inst != null && Managers.Inst.director != null) day = Managers.Inst.director.CurrentIslandDays;
-                            string cycle = LocalizationService.Get(_kingdom != null && _kingdom.isDaytime ? "monitor.cycle.day" : "monitor.cycle.night");
+                            _currentDay = day;
+                            _currentCycleKey = _kingdom != null && _kingdom.isDaytime ? "monitor.cycle.day" : "monitor.cycle.night";
+                            string cycle = LocalizationService.Get(_currentCycleKey);
                             _strDay = LocalizationService.Format("monitor.day", day, cycle);
                             
                             if (_enemyManager != null) {
                                 bool danger = _enemyManager.IsDangerous;
+                                _isThreatDangerous = danger;
                                 string safeHex = _stylePalette[(int)_currentStyle].safeHex;
                                 string dangerHex = _stylePalette[(int)_currentStyle].dangerHex;
                                 string status = danger
@@ -346,6 +382,44 @@ namespace KingdomEnhanced.Features
                 _censusStep++;
                 if (_censusStep > 9) _censusStep = 0;
             }
+        }
+
+        /// <summary>
+        /// 检测当前语言是否变更，并在变更后的首帧重建全部缓存化文案。
+        /// </summary>
+        private void RefreshLocalizedStringsIfLanguageChanged()
+        {
+            string currentLanguageCode = LocalizationService.CurrentLanguageCode;
+            if (string.Equals(_localizedLanguageCode, currentLanguageCode, StringComparison.Ordinal))
+                return;
+
+            _localizedLanguageCode = currentLanguageCode;
+            RefreshLocalizedStrings();
+        }
+
+        /// <summary>
+        /// 使用既有数值和状态缓存重建监视器文案，不改变轮询计算和刷新节奏。
+        /// </summary>
+        private void RefreshLocalizedStrings()
+        {
+            _strDay = LocalizationService.Format("monitor.day", _currentDay, LocalizationService.Get(_currentCycleKey));
+
+            string safeHex = _stylePalette[(int)_currentStyle].safeHex;
+            string dangerHex = _stylePalette[(int)_currentStyle].dangerHex;
+            string status = _isThreatDangerous
+                ? "<color=" + dangerHex + ">" + LocalizationService.Get("monitor.threat.danger") + "</color>"
+                : "<color=" + safeHex + ">" + LocalizationService.Get("monitor.threat.safe") + "</color>";
+            _strThreat = LocalizationService.Format("monitor.threat", status);
+            _strGreed = LocalizationService.Format("monitor.greed", _enemyCount);
+            _strWallet = LocalizationService.Format("monitor.wallet", _walletCoins, _walletGems);
+
+            _strArcher = LocalizationService.Format("monitor.population.archer", _archerCount);
+            _strWorker = LocalizationService.Format("monitor.population.worker", _workerCount);
+            _strPeasant = LocalizationService.Format("monitor.population.peasant", _peasantCount);
+            _strFarmer = LocalizationService.Format("monitor.population.farmer", _farmerCount);
+            _strPikeman = LocalizationService.Format("monitor.population.pikeman", _pikemanCount);
+            _strKnight = LocalizationService.Format("monitor.population.knight", _knightCount);
+            _strVagrant = LocalizationService.Format("monitor.population.vagrant", _vagrantCount);
         }
     }
 }

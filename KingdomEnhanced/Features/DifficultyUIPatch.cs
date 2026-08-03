@@ -69,7 +69,7 @@ namespace KingdomEnhanced.Features
                                 UnityEngine.Object.Destroy(loc);
 
                             newSelector._difficultyTexts.Add(txt);
-                            txt.text = LocalizationService.Get(HardModePresets.PresetNames[preset]);
+                            txt.text = HardModePresets.GetPresetName(preset);
                         }
 
                         foreach (var tmp in newGO.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
@@ -78,7 +78,7 @@ namespace KingdomEnhanced.Features
                             if (locTMP != null)
                                 UnityEngine.Object.Destroy(locTMP);
                             
-                            tmp.text = LocalizationService.Get(HardModePresets.PresetNames[preset]);
+                            tmp.text = HardModePresets.GetPresetName(preset);
                         }
 
                         newSelector._difficultyIndex = (DifficultyData.DifficultyLevel)(int)preset;
@@ -112,7 +112,7 @@ namespace KingdomEnhanced.Features
                         {
                             textMesh.text = LocalizationService.Format(
                                 "hard_mode.difficulty_label",
-                                LocalizationService.Get(HardModePresets.PresetNames[preset]).ToUpper());
+                                HardModePresets.GetPresetName(preset).ToUpper());
                         }
                     }
                 }
