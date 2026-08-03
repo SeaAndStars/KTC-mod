@@ -26,9 +26,19 @@ namespace KingdomEnhanced.UI
         public string Id;
 
         /// <summary>
+        /// 兼容旧调用者提供的最终功能标题文本。
+        /// </summary>
+        public string Label;
+
+        /// <summary>
         /// 功能标题资源键。
         /// </summary>
         public string LabelKey;
+
+        /// <summary>
+        /// 兼容旧调用者提供的最终功能分组标题文本。
+        /// </summary>
+        public string Section;
 
         /// <summary>
         /// 功能分组标题资源键。
@@ -39,6 +49,11 @@ namespace KingdomEnhanced.UI
         /// 功能所属标签页分类。
         /// </summary>
         public TabCategory Category;
+
+        /// <summary>
+        /// 兼容旧调用者提供的最终功能说明文本。
+        /// </summary>
+        public string Description;
 
         /// <summary>
         /// 功能说明资源键。
@@ -86,6 +101,11 @@ namespace KingdomEnhanced.UI
         public Func<bool> IsLocked;
 
         /// <summary>
+        /// 兼容旧调用者提供的最终锁定原因文本委托。
+        /// </summary>
+        public Func<string> GetLockReason;
+
+        /// <summary>
         /// 返回锁定原因资源键的委托。
         /// </summary>
         public Func<string> GetLockReasonKey;
@@ -101,7 +121,7 @@ namespace KingdomEnhanced.UI
         /// <returns>已解析的功能标题文本。</returns>
         public string GetLabelText()
         {
-            return LocalizationService.Get(LabelKey);
+            return Label ?? LocalizationService.Get(LabelKey);
         }
 
         /// <summary>
@@ -110,7 +130,7 @@ namespace KingdomEnhanced.UI
         /// <returns>已解析的分组标题文本。</returns>
         public string GetSectionText()
         {
-            return LocalizationService.Get(SectionKey);
+            return Section ?? LocalizationService.Get(SectionKey);
         }
 
         /// <summary>
@@ -119,7 +139,7 @@ namespace KingdomEnhanced.UI
         /// <returns>已解析的功能说明文本。</returns>
         public string GetDescriptionText()
         {
-            return LocalizationService.Get(DescriptionKey);
+            return Description ?? LocalizationService.Get(DescriptionKey);
         }
 
         /// <summary>
@@ -128,6 +148,11 @@ namespace KingdomEnhanced.UI
         /// <returns>已解析的锁定原因文本；若无委托则回退为通用锁定文案。</returns>
         public string GetLockReasonText()
         {
+            if (GetLockReason != null)
+            {
+                return GetLockReason();
+            }
+
             string reasonKey = GetLockReasonKey != null
                 ? GetLockReasonKey()
                 : "feature.lock.locked";
@@ -792,20 +817,21 @@ namespace KingdomEnhanced.UI
             }
 
             
-            string lastSectionKey = null;
+            string lastSectionId = null;
             bool inCard = false;
 
             foreach (var f in _features)
             {
                 if (f.Category != _activeTab) continue;
 
-                if (f.SectionKey != lastSectionKey)
+                string sectionId = f.SectionKey ?? f.Section;
+                if (sectionId != lastSectionId)
                 {
                     if (inCard) GUILayout.EndVertical(); 
                     GUILayout.BeginVertical(_styleCard);
                     inCard = true;
-                    GuiHelper.DrawSection(f.SectionKey, _styleSectionLabel);
-                    lastSectionKey = f.SectionKey;
+                    DrawFeatureSection(f);
+                    lastSectionId = sectionId;
                 }
 
                 DrawFeatureRow(f);
@@ -923,6 +949,17 @@ namespace KingdomEnhanced.UI
                 Speak(LocalizationService.Get("menu.notification.cheats_unlocked"), C_ON);
             }
             GUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// 绘制兼容旧最终文本和新资源键的功能分组标题。
+        /// </summary>
+        /// <param name="feature">功能元数据。</param>
+        private void DrawFeatureSection(FeatureMeta feature)
+        {
+            GUILayout.Space(18f);
+            GUILayout.Label(feature.GetSectionText(), _styleSectionLabel);
+            GUILayout.Space(6f);
         }
 
         private void DrawGuideTab()

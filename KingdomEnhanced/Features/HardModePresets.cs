@@ -38,48 +38,46 @@ namespace KingdomEnhanced.Features
         };
 
         /// <summary>
-        /// 硬模式预设的最终展示名称。
+        /// 硬模式预设的稳定英文名称。
         /// </summary>
         public static readonly Dictionary<HardModePreset, string> PresetNames = new Dictionary<HardModePreset, string>
         {
-            { HardModePreset.Nightmare, LocalizationService.Get(PresetNameKeys[HardModePreset.Nightmare]) },
-            { HardModePreset.Relentless, LocalizationService.Get(PresetNameKeys[HardModePreset.Relentless]) },
-            { HardModePreset.Oblivion, LocalizationService.Get(PresetNameKeys[HardModePreset.Oblivion]) },
-            { HardModePreset.NoEscape, LocalizationService.Get(PresetNameKeys[HardModePreset.NoEscape]) }
+            { HardModePreset.Nightmare, "Nightmare" },
+            { HardModePreset.Relentless, "Relentless" },
+            { HardModePreset.Oblivion, "Oblivion" },
+            { HardModePreset.NoEscape, "No Escape" }
         };
 
         /// <summary>
-        /// 硬模式预设的最终展示描述。
+        /// 硬模式预设的稳定英文描述。
         /// </summary>
         public static readonly Dictionary<HardModePreset, string> PresetDescriptions = new Dictionary<HardModePreset, string>
         {
-            { HardModePreset.Nightmare, LocalizationService.Get(PresetDescriptionKeys[HardModePreset.Nightmare]) },
-            { HardModePreset.Relentless, LocalizationService.Get(PresetDescriptionKeys[HardModePreset.Relentless]) },
-            { HardModePreset.Oblivion, LocalizationService.Get(PresetDescriptionKeys[HardModePreset.Oblivion]) },
-            { HardModePreset.NoEscape, LocalizationService.Get(PresetDescriptionKeys[HardModePreset.NoEscape]) }
+            { HardModePreset.Nightmare, "Massive waves of enemies. Prepare your defenses." },
+            { HardModePreset.Relentless, "Nights are longer. Enemies never retreat." },
+            { HardModePreset.Oblivion, "The Blood Moon rises often. Retaliation is swift." },
+            { HardModePreset.NoEscape, "Enemies are stronger, faster, and deadlier." }
         };
 
         /// <summary>
-        /// 获取指定硬模式预设在当前语言下的最终展示名称，并同步公开名称缓存。
+        /// 获取指定硬模式预设在当前语言下的最终展示名称。
         /// </summary>
         /// <param name="preset">硬模式预设。</param>
         /// <returns>当前语言下的预设展示名称。</returns>
         public static string GetPresetName(HardModePreset preset)
         {
             string name = LocalizationService.Get(PresetNameKeys[preset]);
-            PresetNames[preset] = name;
             return name;
         }
 
         /// <summary>
-        /// 获取指定硬模式预设在当前语言下的最终展示描述，并同步公开描述缓存。
+        /// 获取指定硬模式预设在当前语言下的最终展示描述。
         /// </summary>
         /// <param name="preset">硬模式预设。</param>
         /// <returns>当前语言下的预设展示描述。</returns>
         public static string GetPresetDescription(HardModePreset preset)
         {
             string description = LocalizationService.Get(PresetDescriptionKeys[preset]);
-            PresetDescriptions[preset] = description;
             return description;
         }
 
@@ -92,7 +90,7 @@ namespace KingdomEnhanced.Features
         {
             var data = new DifficultyData();
 
-            data.difficultyName = GetPresetName(preset);
+            data.difficultyName = PresetNames[preset];
             data.difficultyLevel = (DifficultyData.DifficultyLevel)(int)preset;
 
             data.difficultyMultiplier = 1.0f;
