@@ -109,7 +109,7 @@ namespace KingdomEnhanced.Features
                 if (_player.steed != null && current.gameObject == _player.steed.gameObject) return;
 
                 string rawName = PayableNameResolver.GetCanonicalName(current.name);
-                string displayName = PayableNameResolver.CleanName(current.name);
+                string displayName = PayableNameResolver.GetLocalizedDisplayName(current.name);
                 
                 
                 int price = payable.Price;
@@ -321,7 +321,7 @@ namespace KingdomEnhanced.Features
             {
                 float playerX = _player.transform.position.x;
                 float castleX = castle.transform.position.x;
-                string direction = LocalizationService.Get(castleX > playerX ? "accessibility.direction.right" : "accessibility.direction.left");
+                string direction = LocalizationService.Get(castleX > playerX ? "accessibility.camp.direction.right" : "accessibility.camp.direction.left");
                 ModMenu.Speak(LocalizationService.Format("accessibility.base_camp.direction", direction), interrupt: false);
                 _baseCampAnnounced = true;
             }

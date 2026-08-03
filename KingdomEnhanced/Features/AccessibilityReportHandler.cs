@@ -84,7 +84,7 @@ namespace KingdomEnhanced.Features
         public static void ReportMount(Player player)
         {
             if (player.steed == null) return;
-            string n = PayableNameResolver.CleanName(player.steed.name);
+            string n = PayableNameResolver.GetLocalizedDisplayName(player.steed.name);
             string status = LocalizationService.Get(player.steed.IsTired ? "accessibility.report.mount.tired" : "accessibility.report.mount.ready");
             ModMenu.Speak(LocalizationService.Format("accessibility.report.mount", n, status));
         }
@@ -115,7 +115,7 @@ namespace KingdomEnhanced.Features
                 return;
             }
 
-            string name = PayableNameResolver.CleanName(current.name);
+            string name = PayableNameResolver.GetLocalizedDisplayName(current.name);
             string currency = GetCurrencyName(current);
             int price = 0;
 
@@ -158,7 +158,7 @@ namespace KingdomEnhanced.Features
                 return;
             }
 
-            ModMenu.Speak(LocalizationService.Format("accessibility.report.inspecting", PayableNameResolver.CleanName(current.name)));
+            ModMenu.Speak(LocalizationService.Format("accessibility.report.inspecting", current.name));
             Debug.Log($"[DEBUG] Inspecting {current.name} ({current.GetType().Name})");
 
             var fields = current.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);

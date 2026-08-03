@@ -366,6 +366,8 @@
     { "key": "accessibility.castle.leaving", "value": "离开城堡" },
     { "key": "accessibility.currency.coins", "value": "金币" },
     { "key": "accessibility.currency.gems", "value": "宝石" },
+    { "key": "accessibility.camp.direction.left", "value": "左" },
+    { "key": "accessibility.camp.direction.right", "value": "右" },
     { "key": "accessibility.direction.left", "value": "左" },
     { "key": "accessibility.direction.right", "value": "右" },
     { "key": "accessibility.hover.name_only", "value": "{0}" },

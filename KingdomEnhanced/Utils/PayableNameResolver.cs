@@ -90,13 +90,23 @@ namespace KingdomEnhanced.Utils
             @"(?i)\b(bamboo|iron|stone|dead|lands|scaffold|wreck|grove|grace|pin|sale|jade|norse|norselands|shogun|dire|plague|europe|greece|cypress|pine|olive|wild|pear|p2|olympus|dynasty|viking|challenge|hickory|oak|birch|apple|cherry|palm|spruce|fir|willow|maple|walnut|chestnut)\b", RegexOptions.Compiled);
 
         /// <summary>
-        /// 将可支付对象的规范名转换为当前语言的显示名称。
+        /// 将游戏对象名称清理为稳定的英文规范名，供内部对象类型与交互规则判断使用。
+        /// </summary>
+        /// <param name="original">游戏对象原始名称或预制体名称。</param>
+        /// <returns>移除运行时后缀并应用已知映射后的英文规范名。</returns>
+        public static string CleanName(string original)
+        {
+            return GetCanonicalName(original);
+        }
+
+        /// <summary>
+        /// 将游戏对象名称转换为当前语言的无障碍显示名称。
         /// </summary>
         /// <param name="original">游戏对象原始名称或预制体名称。</param>
         /// <returns>已本地化的显示名称；未知对象返回规范英文名。</returns>
-        public static string CleanName(string original)
+        public static string GetLocalizedDisplayName(string original)
         {
-            string canonicalName = GetCanonicalName(original);
+            string canonicalName = CleanName(original);
             switch (canonicalName)
             {
                 case "Peasant": return LocalizationService.Get("payable.name.peasant");
@@ -190,7 +200,7 @@ namespace KingdomEnhanced.Utils
         }
         
         /// <summary>
-        /// 根据射线命中结果获取商店显示名称。
+        /// 根据射线命中结果获取商店英文规范名。
         /// </summary>
         /// <param name="hit">射线检测命中结果。</param>
         /// <returns>当前尚无可解析商店时返回空字符串。</returns>
@@ -200,26 +210,26 @@ namespace KingdomEnhanced.Utils
         }
         
         /// <summary>
-        /// 根据商店类型获取当前语言的显示名称。
+        /// 根据商店类型获取稳定的英文规范名。
         /// </summary>
         /// <param name="type">游戏内商店类型枚举。</param>
-        /// <returns>已本地化的商店名称；未知类型返回空字符串。</returns>
+        /// <returns>英文规范商店名；未知类型返回空字符串。</returns>
         public static string GetShopTypeName(PayableShop.ShopType type)
         {
             switch(type)
             {
-                case PayableShop.ShopType.Bow: return LocalizationService.Get("payable.name.archer_shop");
-                case PayableShop.ShopType.Hammer: return LocalizationService.Get("payable.name.builder_shop");
-                case PayableShop.ShopType.Scythe: return LocalizationService.Get("payable.name.farmer_shop");
+                case PayableShop.ShopType.Bow: return "Archer Shop";
+                case PayableShop.ShopType.Hammer: return "Builder Shop";
+                case PayableShop.ShopType.Scythe: return "Farmer Shop";
                 case PayableShop.ShopType.PikeLeft: 
-                case PayableShop.ShopType.PikeRight: return LocalizationService.Get("payable.name.pikeman_shop");
+                case PayableShop.ShopType.PikeRight: return "Pikeman Shop";
                 case PayableShop.ShopType.ShieldShopLeft:
-                case PayableShop.ShopType.ShieldShopRight: return LocalizationService.Get("payable.name.shield_shop");
-                case PayableShop.ShopType.Forge: return LocalizationService.Get("payable.name.forge");
+                case PayableShop.ShopType.ShieldShopRight: return "Shield Shop";
+                case PayableShop.ShopType.Forge: return "Forge";
                 case PayableShop.ShopType.NinjaLeft:
-                case PayableShop.ShopType.NinjaRight: return LocalizationService.Get("payable.name.ninja_house");
+                case PayableShop.ShopType.NinjaRight: return "Ninja House";
                 case PayableShop.ShopType.WorkshopLeft:
-                case PayableShop.ShopType.WorkshopRight: return LocalizationService.Get("payable.name.catapult_workshop");
+                case PayableShop.ShopType.WorkshopRight: return "Catapult Workshop";
                 default: return "";
             }
         }
