@@ -4,7 +4,7 @@
 ![Game Version](https://img.shields.io/badge/Kingdom%20Two%20Crowns-2.4.x-blue)
 ![Loader](https://img.shields.io/badge/BepInEx-6_(Mono_+_IL2CPP)-orange)
 
-**Kingdom Enhanced** is a comprehensive Quality of Life, Cheat, and Accessibility modification suite for *Kingdom Two Crowns*.
+**Kingdom Enhanced** is a comprehensive Quality of Life, Cheat, and Accessibility modification suite for *Kingdom Two Crowns*.  
 It grants players granular control over their kingdom’s army, economy, and world systems, while exposing critical gameplay data through a modern, native-style interface.
 
 ---
@@ -58,7 +58,7 @@ Check your game folder:
   <a href="#credits--feedback"><b>Credits</b></a>
 </div>
 
-> **Tested Biomes:** Norse Lands, Call of Olympus, Shogun, European
+> **Tested Biomes:** Norse Lands, Call of Olympus, Shogun, European  
 > **Compatible Versions:** 2.3.0+ (Unity 6)
 
 ---
@@ -76,75 +76,75 @@ Check your game folder:
 
 ## 🎛️ Mod Menu Suites (F1)
 
-### MAIN
+### MAIN  
 *Core System Controls & Readouts*
 
-- HUD visibility and layout control
-- Accessibility & TTS configuration (Queue / Interrupt modes)
-- Travel speed multiplier
+- HUD visibility and layout control  
+- Accessibility & TTS configuration (Queue / Interrupt modes)  
+- Travel speed multiplier  
 
 ---
 
-### CHEATS
+### CHEATS  
 *Gameplay Overrides & System Control*
 
 - **Character**
-  - Invincibility
-  - Infinite stamina
+  - Invincibility  
+  - Infinite stamina  
   - Artemis Bow (damage, spread, multi-shot)
 
 - **Economy**
-  - Add coins/gems or fill wallet
-  - Income and drop rate scaling
+  - Add coins/gems or fill wallet  
+  - Income and drop rate scaling  
 
 - **Military**
-  - Recruit all vagrants
-  - Spawn tools
-  - Kill all enemies
-  - Destroy all portals
-  - Max army instantly
+  - Recruit all vagrants  
+  - Spawn tools  
+  - Kill all enemies  
+  - Destroy all portals  
+  - Max army instantly  
 
 - **Spawner**
-  - Units: Vagrants, Archers, Builders, Farmers, etc.
-  - Hermits: Bakery, Ballista, Stable, etc.
+  - Units: Vagrants, Archers, Builders, Farmers, etc.  
+  - Hermits: Bakery, Ballista, Stable, etc.  
 
 ---
 
-### LAB (Experimental)
+### LAB (Experimental)  
 *Advanced World & Engine Manipulation*
 
-- Weather & season control
-- Blood Moon disable
-- Invincible/self-repairing walls
-- Rapid housing
-- Instant day/night skip
+- Weather & season control  
+- Blood Moon disable  
+- Invincible/self-repairing walls  
+- Rapid housing  
+- Instant day/night skip  
 
 - **Unit Enhancements**
-  - Elite Knights
-  - Archer fire rate boost
-  - Berserker rage mode
-  - Ninja speed boost
+  - Elite Knights  
+  - Archer fire rate boost  
+  - Berserker rage mode  
+  - Ninja speed boost  
 
 - **World Controls**
-  - Tree regrowth
-  - Farm output
-  - Tower/Ballista rates
-  - Animal spawn rates
+  - Tree regrowth  
+  - Farm output  
+  - Tower/Ballista rates  
+  - Animal spawn rates  
 
 ---
 
-### HARD (Custom Difficulty)
+### HARD (Custom Difficulty)  
 *Experimental Director Overrides*
 
-- Presets: Nightmare, Relentless, Oblivion, No Escape
+- Presets: Nightmare, Relentless, Oblivion, No Escape  
 
 - Manual Controls:
-  - Crown stealing toggle
-  - Wave size multiplier
-  - Enemy speed
-  - Portal spawn rate
-  - Greed Queen HP
-  - Director threat scaling
+  - Crown stealing toggle  
+  - Wave size multiplier  
+  - Enemy speed  
+  - Portal spawn rate  
+  - Greed Queen HP  
+  - Director threat scaling  
 
 > ⚠️ Experimental — behavior may vary
 
@@ -155,26 +155,26 @@ Check your game folder:
 A full **Text-to-Speech (TTS)** system designed for blind and visually impaired players.
 
 ### Features
-- Smart contextual interaction narration
-- Queue vs Interrupt speech modes
-- Environmental announcements (village, castle, etc.)
-- Tree detection to prevent critical mistakes
+- Smart contextual interaction narration  
+- Queue vs Interrupt speech modes  
+- Environmental announcements (village, castle, etc.)  
+- Tree detection to prevent critical mistakes  
 
 ### Hotkeys
-- **F5** — Radar (Portals, Chests, Vagrants)
-- **F6** — Compass (Position & Direction)
-- **F7** — Wallet
-- **F8** — Time
-- **F9** — Mount
-- **F10** — Followers (WIP)
+- **F5** — Radar (Portals, Chests, Vagrants)  
+- **F6** — Compass (Position & Direction)  
+- **F7** — Wallet  
+- **F8** — Time  
+- **F9** — Mount  
+- **F10** — Followers (WIP)  
 
 ---
 
 ## Performance & Stability
 
-- Reduced CPU usage (radar & detection systems)
-- Optimized update cycles and caching
-- Improved exception handling
+- Reduced CPU usage (radar & detection systems)  
+- Optimized update cycles and caching  
+- Improved exception handling  
 
 > Result: smoother gameplay and cleaner logs
 
@@ -198,20 +198,20 @@ Kingdom Two Crowns/
 
 ### Method 2 — Manual (Advanced)
 
-1. Download `KingdomEnhanced.dll`
+1. Download `KingdomEnhanced.dll`  
 2. Place into:
 ```
 BepInEx/plugins/
 ```
-3. Overwrite existing files
+3. Overwrite existing files  
 
 ---
 
 ## 🐧 Linux / Steam Deck / Wine
 
-- Use builds **without TTS** if needed
-- `System.Speech.dll` is Windows-only
-- TTS will not function under Proton/Wine
+- Use builds **without TTS** if needed  
+- `System.Speech.dll` is Windows-only  
+- TTS will not function under Proton/Wine  
 
 ---
 
@@ -233,9 +233,9 @@ BepInEx/plugins/
 
 ## 🤝 Credits & Feedback
 
-- **Zaykus** — Lead Developer
-- **Abevol** — Framework, Mono/IL2CPP compatibility
-- **BepInEx Team** — Modding framework
+- **Zaykus** — Lead Developer  
+- **Abevol** — Framework, Mono/IL2CPP compatibility  
+- **BepInEx Team** — Modding framework  
 
 ### Contributing
 See `CONTRIBUTING.md` for setup and guidelines.
@@ -249,9 +249,9 @@ See `CONTRIBUTING.md` for setup and guidelines.
 
 ## ⚠️ Disclaimer
 
-- Single-player focused
-- No telemetry or data collection
-- Use at your own risk
+- Single-player focused  
+- No telemetry or data collection  
+- Use at your own risk  
 
 ---
 
@@ -259,8 +259,8 @@ See `CONTRIBUTING.md` for setup and guidelines.
 
 **Kingdom Enhanced v2.1.0** removes backend and platform limitations entirely.
 
-No compatibility issues.
-No manual setup complexity.
+No compatibility issues.  
+No manual setup complexity.  
 
 **Just install and play.**
 
@@ -268,4 +268,15 @@ No manual setup complexity.
 
 ## 语言与本地化
 
-默认语言为 `en-US`，支持 `en-US` 和 `zh-CN`。按 `F1` → `Settings` 切换语言，选择会自动持久化。手动安装时，`KingdomEnhanced.dll` 同级必须包含 `Localization/en-US.json` 与 `Localization/zh-CN.json`。目录缺失或资源损坏时按英文回退；找不到对应文本时回退为资源键。
+默认语言为 `en-US`，支持 `en-US` 和 `zh-CN`。按 `F1` → `Settings` 切换语言，选择会自动持久化。
+
+手动安装时，`KingdomEnhanced.dll` 同级必须包含：
+
+```text
+BepInEx/plugins/KingdomEnhanced/
+  KingdomEnhanced.dll
+  Localization/en-US.json
+  Localization/zh-CN.json
+```
+
+`Localization` 目录缺失或资源文件损坏时，模组会优先回退英文；找不到对应文本时显示资源键。
