@@ -1,4 +1,5 @@
 using UnityEngine;
+using KingdomEnhanced.Core;
 using KingdomEnhanced.UI;
 using System.Reflection;
 using HarmonyLib;
@@ -132,7 +133,7 @@ namespace KingdomEnhanced.Features
                 {
                     DrawShadowedLabel(
                         new Rect(hudX, hudY + 25, hudWidth, 22),
-                        $" Coins: {stats.Coins}   Gems: {stats.Gems}",
+                        LocalizationService.Format("hud.wallet", stats.Coins, stats.Gems),
                         _coinStyle
                     );
                 }
@@ -142,7 +143,7 @@ namespace KingdomEnhanced.Features
 
         private string FormatTimeDisplay(Director director)
         {
-            if (director == null) return "ERROR";
+            if (director == null) return LocalizationService.Get("hud.error");
 
             try
             {
@@ -152,14 +153,14 @@ namespace KingdomEnhanced.Features
                 int minutes = Mathf.FloorToInt((totalHours % 1f) * 60f);
                 
                 string clock = string.Format("{0:00}:{1:00}", hours, minutes);
-                string timeStr = director.IsDaytime ? "Day" : "Night";
+                string timeStr = LocalizationService.Get(director.IsDaytime ? "hud.time.day" : "hud.time.night");
                 
-                return $"DAY {director.CurrentIslandDays} | {timeStr} ({clock})";
+                return LocalizationService.Format("hud.time.display", director.CurrentIslandDays, timeStr, clock);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[WorldManager] Error formatting time: {ex.Message}");
-                return "TIME ERROR";
+                return LocalizationService.Get("hud.time.error");
             }
         }
 
@@ -288,7 +289,7 @@ namespace KingdomEnhanced.Features
 
             
             director.AdvanceTime(diff + 0.1f);
-            ModMenu.Speak("<color=lightblue> Fast-forwarded to Nightfall!</color>");
+            ModMenu.Speak(LocalizationService.Get("hud.announcement.skip_to_night"));
         }
 
         public static void SkipNighttime()
@@ -302,7 +303,7 @@ namespace KingdomEnhanced.Features
             if (diff <= 0f) diff += 24f;
 
             director.AdvanceTime(diff + 0.1f);
-            ModMenu.Speak("<color=orange> Fast-forwarded to Dawn!</color>");
+            ModMenu.Speak(LocalizationService.Get("hud.announcement.skip_to_dawn"));
         }
 
         private void CheckDayNightTransition(Director director)
@@ -311,12 +312,12 @@ namespace KingdomEnhanced.Features
             {
                 if (director.IsDaytime && !_wasDay)
                 {
-                    ModMenu.Speak("<color=orange> The sun rises.</color>");
+                    ModMenu.Speak(LocalizationService.Get("hud.announcement.sunrise"));
                     _wasDay = true;
                 }
                 else if (!director.IsDaytime && _wasDay)
                 {
-                    ModMenu.Speak("<color=lightblue> Stars appear.</color>");
+                    ModMenu.Speak(LocalizationService.Get("hud.announcement.nightfall"));
                     _wasDay = false;
                 }
             }
@@ -340,7 +341,7 @@ namespace KingdomEnhanced.Features
 
                 if (ShouldTriggerSiegeAlert(enemyCount))
                 {
-                    ModMenu.Speak("<color=red><b>⚠️ SIEGE DETECTED!</b></color>");
+                    ModMenu.Speak(LocalizationService.Get("hud.announcement.siege"));
                     _lastAttackAlert = Time.time;
                 }
             }

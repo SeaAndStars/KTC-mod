@@ -47,18 +47,18 @@ namespace KingdomEnhanced.Features
         private float _nextCensusTime;
         private int _censusStep = 0;
 
-        private string _strDay = "<b>Day 0 (Unknown)</b>";
-        private string _strThreat = "Threat: <color=#00ff00>SAFE</color>";
-        private string _strGreed = "Greed: 0";
-        private string _strWallet = "Wallet: 0 Coins, 0 Gems";
+        private string _strDay;
+        private string _strThreat;
+        private string _strGreed;
+        private string _strWallet;
         
-        private string _strArcher = "Archers: 0";
-        private string _strWorker = "Workers: 0";
-        private string _strPeasant = "Peasants: 0";
-        private string _strFarmer = "Farmers: 0";
-        private string _strPikeman = "Pikemen: 0";
-        private string _strKnight = "Knights: 0";
-        private string _strVagrant = "Vagrants: 0";
+        private string _strArcher;
+        private string _strWorker;
+        private string _strPeasant;
+        private string _strFarmer;
+        private string _strPikeman;
+        private string _strKnight;
+        private string _strVagrant;
 
         private StyleColors[] _stylePalette;
 
@@ -90,6 +90,17 @@ namespace KingdomEnhanced.Features
             Instance = this;
             _kingdom = FindFirstObjectByType<Kingdom>();
             _enemyManager = FindFirstObjectByType<EnemyManager>();
+            _strDay = LocalizationService.Format("monitor.day", 0, LocalizationService.Get("monitor.cycle.unknown"));
+            _strThreat = LocalizationService.Format("monitor.threat", "<color=#00ff00>" + LocalizationService.Get("monitor.threat.safe") + "</color>");
+            _strGreed = LocalizationService.Format("monitor.greed", 0);
+            _strWallet = LocalizationService.Format("monitor.wallet", 0, 0);
+            _strArcher = LocalizationService.Format("monitor.population.archer", 0);
+            _strWorker = LocalizationService.Format("monitor.population.worker", 0);
+            _strPeasant = LocalizationService.Format("monitor.population.peasant", 0);
+            _strFarmer = LocalizationService.Format("monitor.population.farmer", 0);
+            _strPikeman = LocalizationService.Format("monitor.population.pikeman", 0);
+            _strKnight = LocalizationService.Format("monitor.population.knight", 0);
+            _strVagrant = LocalizationService.Format("monitor.population.vagrant", 0);
             
             if (_kingdom == null) Plugin.Instance.LogSource.LogWarning("KingdomMonitor: Kingdom not found.");
             if (_enemyManager == null) Plugin.Instance.LogSource.LogWarning("KingdomMonitor: EnemyManager not found.");
@@ -175,7 +186,7 @@ namespace KingdomEnhanced.Features
             
             if (_drawWindowFunc == null) _drawWindowFunc = (GUI.WindowFunction)DrawWindow;
             
-            _windowRect = GUI.Window(999, _windowRect, _drawWindowFunc, "Kingdom Monitor", _cachedWindowStyle);
+            _windowRect = GUI.Window(999, _windowRect, _drawWindowFunc, LocalizationService.Get("monitor.window.title"), _cachedWindowStyle);
             
             GUI.backgroundColor = prevBg;
         }
@@ -221,7 +232,7 @@ namespace KingdomEnhanced.Features
             GUI.contentColor = Color.white;
 
             GUI.contentColor = colors.header;
-            GUI.Label(new Rect(15, yPos, 200, 20), "<b>Population</b>"); yPos += 20f;
+            GUI.Label(new Rect(15, yPos, 200, 20), LocalizationService.Get("monitor.population.header")); yPos += 20f;
             GUI.contentColor = colors.body;
             
             if (_archerCount > 0) { GUI.Label(new Rect(15, yPos, 200, 20), _strArcher); yPos += 18f; }
@@ -238,7 +249,7 @@ namespace KingdomEnhanced.Features
             var handleSize = 20f;
             var resizeRect = new Rect(_windowRect.width - handleSize, _windowRect.height - handleSize, handleSize, handleSize);
             GUI.color = colors.footer;
-            GUI.Box(resizeRect, "[➘]");
+            GUI.Box(resizeRect, LocalizationService.Get("monitor.resize_handle"));
             GUI.color = Color.white;
 
             Event e = Event.current;
@@ -289,16 +300,16 @@ namespace KingdomEnhanced.Features
                 {
                     switch (_censusStep)
                     {
-                        case 0: _archerCount = UnitCacheManager.Archers.Count; _strArcher = $"Archers: {_archerCount}"; break;
-                        case 1: _workerCount = UnitCacheManager.Workers.Count; _strWorker = $"Workers: {_workerCount}"; break;
-                        case 2: _peasantCount = UnitCacheManager.Peasants.Count; _strPeasant = $"Peasants: {_peasantCount}"; break;
-                        case 3: _knightCount = UnitCacheManager.Knights.Count; _strKnight = $"Knights: {_knightCount}"; break;
-                        case 4: _vagrantCount = UnitCacheManager.Beggars.Count; _strVagrant = $"Vagrants: {_vagrantCount}"; break;
-                        case 5: _farmerCount = UnitCacheManager.Farmers.Count; _strFarmer = $"Farmers: {_farmerCount}"; break;
-                        case 6: _pikemanCount = UnitCacheManager.Pikemen.Count; _strPikeman = $"Pikemen: {_pikemanCount}"; break;
+                        case 0: _archerCount = UnitCacheManager.Archers.Count; _strArcher = LocalizationService.Format("monitor.population.archer", _archerCount); break;
+                        case 1: _workerCount = UnitCacheManager.Workers.Count; _strWorker = LocalizationService.Format("monitor.population.worker", _workerCount); break;
+                        case 2: _peasantCount = UnitCacheManager.Peasants.Count; _strPeasant = LocalizationService.Format("monitor.population.peasant", _peasantCount); break;
+                        case 3: _knightCount = UnitCacheManager.Knights.Count; _strKnight = LocalizationService.Format("monitor.population.knight", _knightCount); break;
+                        case 4: _vagrantCount = UnitCacheManager.Beggars.Count; _strVagrant = LocalizationService.Format("monitor.population.vagrant", _vagrantCount); break;
+                        case 5: _farmerCount = UnitCacheManager.Farmers.Count; _strFarmer = LocalizationService.Format("monitor.population.farmer", _farmerCount); break;
+                        case 6: _pikemanCount = UnitCacheManager.Pikemen.Count; _strPikeman = LocalizationService.Format("monitor.population.pikeman", _pikemanCount); break;
                         case 7:
                             _enemyCount = UnitCacheManager.Enemies.Count;
-                            _strGreed = $"Greed: {_enemyCount}";
+                            _strGreed = LocalizationService.Format("monitor.greed", _enemyCount);
                             break;
                         case 8:
                             var player = Managers.Inst?.kingdom?.GetPlayer(0);
@@ -306,21 +317,23 @@ namespace KingdomEnhanced.Features
                             {
                                 int coins = player.wallet.Coins;
                                 int gems = player.wallet.Gems;
-                                _strWallet = $"Wallet: {coins} Coins, {gems} Gems";
+                                _strWallet = LocalizationService.Format("monitor.wallet", coins, gems);
                             }
                             break;
                         case 9:
                             int day = 0;
                             if (Managers.Inst != null && Managers.Inst.director != null) day = Managers.Inst.director.CurrentIslandDays;
-                            string cycle = _kingdom != null && _kingdom.isDaytime ? "Day" : "Night";
-                            _strDay = $"<b>Day {day} ({cycle})</b>";
+                            string cycle = LocalizationService.Get(_kingdom != null && _kingdom.isDaytime ? "monitor.cycle.day" : "monitor.cycle.night");
+                            _strDay = LocalizationService.Format("monitor.day", day, cycle);
                             
                             if (_enemyManager != null) {
                                 bool danger = _enemyManager.IsDangerous;
                                 string safeHex = _stylePalette[(int)_currentStyle].safeHex;
                                 string dangerHex = _stylePalette[(int)_currentStyle].dangerHex;
-                                string status = danger ? $"<color={dangerHex}>DANGER</color>" : $"<color={safeHex}>SAFE</color>";
-                                _strThreat = $"Threat: {status}";
+                                string status = danger
+                                    ? "<color=" + dangerHex + ">" + LocalizationService.Get("monitor.threat.danger") + "</color>"
+                                    : "<color=" + safeHex + ">" + LocalizationService.Get("monitor.threat.safe") + "</color>";
+                                _strThreat = LocalizationService.Format("monitor.threat", status);
                             }
                             break;
                     }

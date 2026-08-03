@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using KingdomEnhanced.Core;
 
 namespace KingdomEnhanced.Features
 {
@@ -16,25 +17,25 @@ namespace KingdomEnhanced.Features
     {
         public static readonly Dictionary<HardModePreset, string> PresetNames = new Dictionary<HardModePreset, string>
         {
-            { HardModePreset.Nightmare, "Nightmare" },
-            { HardModePreset.Relentless, "Relentless" },
-            { HardModePreset.Oblivion, "Oblivion" },
-            { HardModePreset.NoEscape, "No Escape" }
+            { HardModePreset.Nightmare, "hard_mode.preset.nightmare.name" },
+            { HardModePreset.Relentless, "hard_mode.preset.relentless.name" },
+            { HardModePreset.Oblivion, "hard_mode.preset.oblivion.name" },
+            { HardModePreset.NoEscape, "hard_mode.preset.no_escape.name" }
         };
 
         public static readonly Dictionary<HardModePreset, string> PresetDescriptions = new Dictionary<HardModePreset, string>
         {
-            { HardModePreset.Nightmare, "Massive waves of enemies. Prepare your defenses." },
-            { HardModePreset.Relentless, "Nights are longer. Enemies never retreat." },
-            { HardModePreset.Oblivion, "The Blood Moon rises often. Retaliation is swift." },
-            { HardModePreset.NoEscape, "Enemies are stronger, faster, and deadlier." }
+            { HardModePreset.Nightmare, "hard_mode.preset.nightmare.description" },
+            { HardModePreset.Relentless, "hard_mode.preset.relentless.description" },
+            { HardModePreset.Oblivion, "hard_mode.preset.oblivion.description" },
+            { HardModePreset.NoEscape, "hard_mode.preset.no_escape.description" }
         };
 
         public static DifficultyData CreateDifficultyData(HardModePreset preset)
         {
             var data = new DifficultyData();
 
-            data.difficultyName = PresetNames[preset];
+            data.difficultyName = LocalizationService.Get(PresetNames[preset]);
             data.difficultyLevel = (DifficultyData.DifficultyLevel)(int)preset;
 
             data.difficultyMultiplier = 1.0f;
