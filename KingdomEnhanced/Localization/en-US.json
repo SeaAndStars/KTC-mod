@@ -1,0 +1,43 @@
+{
+  "language": "en-US",
+  "displayName": "English",
+  "fallback": "en-US",
+  "entries": [
+    {
+      "key": "menu.title",
+      "value": "Kingdom Enhanced"
+    },
+    {
+      "key": "menu.tab.settings",
+      "value": "SETTINGS"
+    },
+    {
+      "key": "settings.section.global",
+      "value": "GLOBAL SETTINGS"
+    },
+    {
+      "key": "settings.language.label",
+      "value": "Language"
+    },
+    {
+      "key": "settings.language.help",
+      "value": "Switches the UI language immediately and saves the selection."
+    },
+    {
+      "key": "settings.language.option.en-US",
+      "value": "English"
+    },
+    {
+      "key": "settings.language.option.zh-CN",
+      "value": "Simplified Chinese"
+    },
+    {
+      "key": "settings.reset.button",
+      "value": "Reset All Settings"
+    },
+    {
+      "key": "settings.reset.confirm",
+      "value": "Press again within 3 seconds to confirm."
+    }
+  ]
+}

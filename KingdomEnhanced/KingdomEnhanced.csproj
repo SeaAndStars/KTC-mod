@@ -35,6 +35,13 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Content Include="Localization\*.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <LocalizationResource Include="Localization\*.json" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
         <PackageReference Include="MinVer" Version="6.*" PrivateAssets="All" />
     </ItemGroup>
@@ -192,8 +199,11 @@
     </ItemGroup>
 
     <Target Name="CopyOutput" AfterTargets="Build" Condition="'$(Configuration)'=='Debug' and '$(BepInExPluginsPath)'!=''">
+        <MakeDir Directories="$(BepInExPluginsPath)$(AssemblyName)\" />
+        <MakeDir Directories="$(BepInExPluginsPath)$(AssemblyName)\Localization" />
         <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="$(BepInExPluginsPath)$(AssemblyName)\" OverwriteReadOnlyFiles="true" />
         <Copy SourceFiles="$(OutputPath)\$(AssemblyName).pdb" DestinationFolder="$(BepInExPluginsPath)$(AssemblyName)\" OverwriteReadOnlyFiles="true" Condition="Exists('$(OutputPath)\$(AssemblyName).pdb')" />
+        <Copy SourceFiles="@(LocalizationResource)" DestinationFiles="@(LocalizationResource->'$(BepInExPluginsPath)$(AssemblyName)\\Localization\\%(Filename)%(Extension)')" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
         <Message Text="Copied mod to $(BepInExPluginsPath)$(AssemblyName)\" Importance="high" />
     </Target>
 </Project>

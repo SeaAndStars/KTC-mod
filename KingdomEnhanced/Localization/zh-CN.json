@@ -1,0 +1,43 @@
+{
+  "language": "zh-CN",
+  "displayName": "简体中文",
+  "fallback": "en-US",
+  "entries": [
+    {
+      "key": "menu.title",
+      "value": "Kingdom Enhanced"
+    },
+    {
+      "key": "menu.tab.settings",
+      "value": "设置"
+    },
+    {
+      "key": "settings.section.global",
+      "value": "全局设置"
+    },
+    {
+      "key": "settings.language.label",
+      "value": "语言"
+    },
+    {
+      "key": "settings.language.help",
+      "value": "立即切换界面语言，并保存当前选择。"
+    },
+    {
+      "key": "settings.language.option.en-US",
+      "value": "英文"
+    },
+    {
+      "key": "settings.language.option.zh-CN",
+      "value": "简体中文"
+    },
+    {
+      "key": "settings.reset.button",
+      "value": "重置全部设置"
+    },
+    {
+      "key": "settings.reset.confirm",
+      "value": "请在 3 秒内再次按下以确认。"
+    }
+  ]
+}
