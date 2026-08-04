@@ -310,7 +310,7 @@
     { "key": "monitor.population.header", "value": "<b>人口</b>" },
     { "key": "monitor.population.archer", "value": "弓箭手：{0}" },
     { "key": "monitor.population.worker", "value": "工匠：{0}" },
-    { "key": "monitor.population.peasant", "value": "农民：{0}" },
+    { "key": "monitor.population.peasant", "value": "市民：{0}" },
     { "key": "monitor.population.farmer", "value": "农夫：{0}" },
     { "key": "monitor.population.pikeman", "value": "长枪兵：{0}" },
     { "key": "monitor.population.knight", "value": "骑士：{0}" },
