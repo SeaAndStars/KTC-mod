@@ -66,8 +66,6 @@ namespace KingdomEnhanced.Features
 
         void OnGUI()
         {
-            if (KingdomMonitor.Instance != null && KingdomMonitor.Instance.IsVisible) return;
-
             if (!ModMenu.DisplayTimes || !IsManagersValid()) return;
             InitializeStyles();
             DrawHUD();
