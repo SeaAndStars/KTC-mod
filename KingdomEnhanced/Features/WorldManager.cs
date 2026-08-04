@@ -32,8 +32,21 @@ namespace KingdomEnhanced.Features
 
         private bool _wasDay = true;
 
+        /// <summary>时间文本缓存:仅当分钟/昼夜/天数变化时才重建字符串,避免每帧分配</summary>
+        private string _cachedTimeText;
+        private int _cachedTimeMinute = -1;
+        private bool _cachedTimeDaytime;
+        private int _cachedTimeDay;
 
+        /// <summary>钱包文本缓存:仅当金币/宝石数值变化时才重建字符串,避免每帧分配</summary>
+        private string _cachedWalletText;
+        private int _cachedCoins = -1;
+        private int _cachedGems = -1;
 
+        /// <summary>钱包反射字段缓存:首次发现后复用,避免失败路径每帧全字段反射</summary>
+        private FieldInfo _walletCoinsField;
+        private FieldInfo _walletGemsField;
+        private bool _walletReflectDiscovered = false;
 
         private FieldInfo _enemiesListField;
         private bool _fieldsDiscovered = false;
@@ -96,10 +109,10 @@ namespace KingdomEnhanced.Features
                 _timeStyle = new GUIStyle(GUI.skin.label)
                 {
                     normal = { textColor = new Color(1f, 0.9f, 0.5f) },
-                    fontSize = 16,
-                    fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter
                 };
+                // 非动态字体不支持字号/样式覆盖,设置会触发每帧日志警告刷屏,故跳过
+                if (IsDynamicFont(_timeStyle)) _timeStyle.fontSize = 16;
             }
 
             if (_coinStyle == null)
@@ -107,13 +120,20 @@ namespace KingdomEnhanced.Features
                 _coinStyle = new GUIStyle(GUI.skin.label)
                 {
                     normal = { textColor = new Color(1f, 0.85f, 0.2f) },
-                    fontSize = 14,
-                    fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter
                 };
+                if (IsDynamicFont(_coinStyle)) _coinStyle.fontSize = 14;
             }
         }
 
+        /// <summary>判断样式字体是否支持动态属性(非动态字体设置 fontSize/fontStyle 会触发引擎警告)</summary>
+        private bool IsDynamicFont(GUIStyle style)
+        {
+            try { return style.font == null || style.font.dynamic; }
+            catch { return false; }
+        }
+
+        /// <summary>带缓存的 HUD 文本渲染:仅当值变化时才格式化,避免每帧字符串分配</summary>
         private void DrawHUD()
         {
             try
@@ -125,7 +145,7 @@ namespace KingdomEnhanced.Features
                 var director = Managers.Inst?.director;
                 if (director == null) return;
 
-                string timeDisplay = FormatTimeDisplay(director);
+                string timeDisplay = GetCachedTimeDisplay(director);
                 DrawShadowedLabel(new Rect(hudX, hudY, hudWidth, 25), timeDisplay, _timeStyle);
 
                 var stats = GetPlayerWalletStats();
@@ -133,12 +153,56 @@ namespace KingdomEnhanced.Features
                 {
                     DrawShadowedLabel(
                         new Rect(hudX, hudY + 25, hudWidth, 22),
-                        LocalizationService.Format("hud.wallet", stats.Coins, stats.Gems),
+                        GetCachedWalletText(stats),
                         _coinStyle
                     );
                 }
             }
             catch { }
+        }
+
+        /// <summary>缓存的时间文本:分钟/昼夜/天数未变化时直接返回上次结果</summary>
+        private string GetCachedTimeDisplay(Director director)
+        {
+            try
+            {
+                float rawTime = director.currentTime;
+                float totalHours = rawTime % 24f;
+                int minute = Mathf.FloorToInt((totalHours % 1f) * 60f);
+                bool isDaytime = director.IsDaytime;
+                int day = director.CurrentIslandDays;
+
+                if (_cachedTimeText != null &&
+                    _cachedTimeMinute == minute &&
+                    _cachedTimeDaytime == isDaytime &&
+                    _cachedTimeDay == day)
+                {
+                    return _cachedTimeText;
+                }
+
+                _cachedTimeMinute = minute;
+                _cachedTimeDaytime = isDaytime;
+                _cachedTimeDay = day;
+                _cachedTimeText = FormatTimeDisplay(director);
+                return _cachedTimeText;
+            }
+            catch { return LocalizationService.Get("hud.error"); }
+        }
+
+        /// <summary>缓存的钱包文本:金币/宝石数值未变化时直接返回上次结果</summary>
+        private string GetCachedWalletText((int Coins, int Gems) stats)
+        {
+            if (_cachedWalletText != null &&
+                _cachedCoins == stats.Coins &&
+                _cachedGems == stats.Gems)
+            {
+                return _cachedWalletText;
+            }
+
+            _cachedCoins = stats.Coins;
+            _cachedGems = stats.Gems;
+            _cachedWalletText = LocalizationService.Format("hud.wallet", stats.Coins, stats.Gems);
+            return _cachedWalletText;
         }
 
         private string FormatTimeDisplay(Director director)
@@ -193,30 +257,43 @@ namespace KingdomEnhanced.Features
                 }
                 catch
                 {
-                    int c = -1;
-                    int g = 0;
-                    var walletType = wallet.GetType();
-                    
-                    
-                    var cFields = walletType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                    foreach (var field in cFields)
-                    {
-                        string fn = field.Name.ToLower();
-                        if (fn == "_coins" || fn == "coins" || (fn.Contains("coin") && !fn.Contains("gem")))
-                        {
-                            if (field.FieldType == typeof(int)) c = (int)field.GetValue(wallet);
-                        }
-                        if (fn == "_gems" || fn == "gems" || (fn.Contains("gem") && !fn.Contains("coin")))
-                        {
-                            if (field.FieldType == typeof(int)) g = (int)field.GetValue(wallet);
-                        }
-                    }
-                    return (c, g);
+                    return GetWalletStatsByReflection(wallet);
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[WorldManager] Error getting wallet stats: {ex.Message}");
+                return (-1, 0);
+            }
+        }
+
+        /// <summary>反射回退取钱包数值:字段只发现一次后缓存复用,避免每帧全字段反射扫描</summary>
+        private (int Coins, int Gems) GetWalletStatsByReflection(object wallet)
+        {
+            try
+            {
+                if (!_walletReflectDiscovered)
+                {
+                    var walletType = wallet.GetType();
+                    var cFields = walletType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    foreach (var field in cFields)
+                    {
+                        if (field.FieldType != typeof(int)) continue;
+                        string fn = field.Name.ToLower();
+                        bool isCoins = fn == "_coins" || fn == "coins" || (fn.Contains("coin") && !fn.Contains("gem"));
+                        bool isGems = fn == "_gems" || fn == "gems" || (fn.Contains("gem") && !fn.Contains("coin"));
+                        if (_walletCoinsField == null && isCoins) _walletCoinsField = field;
+                        if (_walletGemsField == null && isGems) _walletGemsField = field;
+                    }
+                    _walletReflectDiscovered = true;
+                }
+
+                int c = _walletCoinsField != null ? (int)_walletCoinsField.GetValue(wallet) : -1;
+                int g = _walletGemsField != null ? (int)_walletGemsField.GetValue(wallet) : 0;
+                return (c, g);
+            }
+            catch
+            {
                 return (-1, 0);
             }
         }
