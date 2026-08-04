@@ -32,8 +32,9 @@ namespace KingdomEnhanced.Features
 
         private bool _wasDay = true;
 
-        /// <summary>时间文本缓存:仅当分钟/昼夜/天数变化时才重建字符串,避免每帧分配</summary>
+        /// <summary>时间文本缓存:仅当小时/分钟/昼夜/天数变化时才重建字符串,避免每帧分配</summary>
         private string _cachedTimeText;
+        private int _cachedTimeHour = -1;
         private int _cachedTimeMinute = -1;
         private bool _cachedTimeDaytime;
         private int _cachedTimeDay;
@@ -139,8 +140,8 @@ namespace KingdomEnhanced.Features
             try
             {
                 const float hudWidth = 320f;
-                float hudX = (Screen.width / 2) - (hudWidth / 2);
-                float hudY = 20f;
+                const float hudX = 8f;
+                const float hudY = 10f;
 
                 var director = Managers.Inst?.director;
                 if (director == null) return;
@@ -161,18 +162,17 @@ namespace KingdomEnhanced.Features
             catch { }
         }
 
-        /// <summary>缓存的时间文本:分钟/昼夜/天数未变化时直接返回上次结果</summary>
+        /// <summary>缓存的时间文本:小时/分钟/昼夜/天数未变化时直接返回上次结果</summary>
         private string GetCachedTimeDisplay(Director director)
         {
             try
             {
-                float rawTime = director.currentTime;
-                float totalHours = rawTime % 24f;
-                int minute = Mathf.FloorToInt((totalHours % 1f) * 60f);
+                GetPreciseTimeOfDay(director.currentTime, out int hour, out int minute);
                 bool isDaytime = director.IsDaytime;
                 int day = director.CurrentIslandDays;
 
                 if (_cachedTimeText != null &&
+                    _cachedTimeHour == hour &&
                     _cachedTimeMinute == minute &&
                     _cachedTimeDaytime == isDaytime &&
                     _cachedTimeDay == day)
@@ -180,13 +180,26 @@ namespace KingdomEnhanced.Features
                     return _cachedTimeText;
                 }
 
+                _cachedTimeHour = hour;
                 _cachedTimeMinute = minute;
                 _cachedTimeDaytime = isDaytime;
                 _cachedTimeDay = day;
-                _cachedTimeText = FormatTimeDisplay(director);
+                _cachedTimeText = FormatTimeDisplay(director, hour, minute);
                 return _cachedTimeText;
             }
             catch { return LocalizationService.Get("hud.error"); }
+        }
+
+        /// <summary>将游戏内累计小时换算为精确的 24 小时制时分,小时与分钟同源计算避免浮点进位偏差</summary>
+        /// <param name="currentTime">游戏内累计小时数。</param>
+        /// <param name="hour">0-23 的小时。</param>
+        /// <param name="minute">0-59 的分钟。</param>
+        private static void GetPreciseTimeOfDay(float currentTime, out int hour, out int minute)
+        {
+            float totalHours = currentTime % 24f;
+            int totalMinutesOfDay = Mathf.FloorToInt(totalHours * 60f + 0.0005f);
+            hour = totalMinutesOfDay / 60;
+            minute = totalMinutesOfDay % 60;
         }
 
         /// <summary>缓存的钱包文本:金币/宝石数值未变化时直接返回上次结果</summary>
@@ -205,18 +218,17 @@ namespace KingdomEnhanced.Features
             return _cachedWalletText;
         }
 
-        private string FormatTimeDisplay(Director director)
+        /// <summary>格式化时间显示文本(使用精确的 24 小时制时分)</summary>
+        /// <param name="director">游戏导演实例。</param>
+        /// <param name="hour">精确小时(0-23)。</param>
+        /// <param name="minute">精确分钟(0-59)。</param>
+        private string FormatTimeDisplay(Director director, int hour, int minute)
         {
             if (director == null) return LocalizationService.Get("hud.error");
 
             try
             {
-                float rawTime = director.currentTime;
-                float totalHours = rawTime % 24f;
-                int hours = Mathf.FloorToInt(totalHours);
-                int minutes = Mathf.FloorToInt((totalHours % 1f) * 60f);
-                
-                string clock = string.Format("{0:00}:{1:00}", hours, minutes);
+                string clock = string.Format("{0:00}:{1:00}", hour, minute);
                 string timeStr = LocalizationService.Get(director.IsDaytime ? "hud.time.day" : "hud.time.night");
                 
                 return LocalizationService.Format("hud.time.display", director.CurrentIslandDays, timeStr, clock);
