@@ -1,7 +1,8 @@
 $ErrorActionPreference = 'Stop'
 
 # ── Paths ────────────────────────────────────────────────────────────────────
-$workspace   = 'd:\vs CODE\KTC dev\KTC MOD 4.0'
+# 基于脚本自身位置解析仓库根目录,保证脚本可在任意位置运行
+$workspace = $PSScriptRoot
 # 发布包使用的完整本地化资源目录。
 $localizationSource = Join-Path $workspace 'KingdomEnhanced\Localization'
 $releasesDir = Join-Path $workspace 'Releases'
@@ -9,7 +10,7 @@ $workDir     = Join-Path $workspace 'temp_work'
 $baseZipsDir = Join-Path $workspace 'BaseZips'
 $speechDll   = 'C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Speech\v4.0_4.0.0.0__31bf3856ad364e35\System.Speech.dll'
 $baseUrl     = 'https://builds.bepinex.dev/projects/bepinex_be/754/'
-$version     = 'v2.1.0-beta3'
+$version     = 'v2.2.0'
 
 # ── Prep directories ─────────────────────────────────────────────────────────
 if (Test-Path $releasesDir) { Remove-Item -Path $releasesDir -Recurse -Force }
@@ -26,13 +27,13 @@ if (-not (Test-Path $baseZipsDir)) {
 # ── Targets ──────────────────────────────────────────────────────────────────
 # Each entry: file = default remote filename, match = glob to find a local override, type, os
 $targets = @(
-    [pscustomobject]@{ match = '*Mono-win-x86*.zip';    file = 'BepInEx-Unity.Mono-win-x86-6.0.0-be.754+ba5d275.zip';    type = 'Mono';   os = 'win' }
-    [pscustomobject]@{ match = '*Mono-win-x64*.zip';    file = 'BepInEx-Unity.Mono-win-x64-6.0.0-be.754+ba5d275.zip';    type = 'Mono';   os = 'win' }
-    [pscustomobject]@{ match = '*Mono-linux-x86*.zip';  file = 'BepInEx-Unity.Mono-linux-x86-6.0.0-be.754+ba5d275.zip';  type = 'Mono';   os = 'linux' }
-    [pscustomobject]@{ match = '*Mono-linux-x64*.zip';  file = 'BepInEx-Unity.Mono-linux-x64-6.0.0-be.754+ba5d275.zip';  type = 'Mono';   os = 'linux' }
-    [pscustomobject]@{ match = '*IL2CPP-win-x86*.zip';  file = 'BepInEx-Unity.IL2CPP-win-x86-6.0.0-be.754+ba5d275.zip';  type = 'IL2CPP'; os = 'win' }
-    [pscustomobject]@{ match = '*IL2CPP-win-x64*.zip';  file = 'BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.754+ba5d275.zip';  type = 'IL2CPP'; os = 'win' }
-    [pscustomobject]@{ match = '*IL2CPP-linux-x64*.zip';file = 'BepInEx-Unity.IL2CPP-linux-x64-6.0.0-be.754+ba5d275.zip';type = 'IL2CPP'; os = 'linux' }
+    [pscustomobject]@{ match = '*Mono-win-x86*.zip';    file = 'BepInEx-Unity.Mono-win-x86-6.0.0-be.754+c038613.zip';    type = 'Mono';   os = 'win' }
+    [pscustomobject]@{ match = '*Mono-win-x64*.zip';    file = 'BepInEx-Unity.Mono-win-x64-6.0.0-be.754+c038613.zip';    type = 'Mono';   os = 'win' }
+    [pscustomobject]@{ match = '*Mono-linux-x86*.zip';  file = 'BepInEx-Unity.Mono-linux-x86-6.0.0-be.754+c038613.zip';  type = 'Mono';   os = 'linux' }
+    [pscustomobject]@{ match = '*Mono-linux-x64*.zip';  file = 'BepInEx-Unity.Mono-linux-x64-6.0.0-be.754+c038613.zip';  type = 'Mono';   os = 'linux' }
+    [pscustomobject]@{ match = '*IL2CPP-win-x86*.zip';  file = 'BepInEx-Unity.IL2CPP-win-x86-6.0.0-be.754+c038613.zip';  type = 'IL2CPP'; os = 'win' }
+    [pscustomobject]@{ match = '*IL2CPP-win-x64*.zip';  file = 'BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.754+c038613.zip';  type = 'IL2CPP'; os = 'win' }
+    [pscustomobject]@{ match = '*IL2CPP-linux-x64*.zip';file = 'BepInEx-Unity.IL2CPP-linux-x64-6.0.0-be.754+c038613.zip';type = 'IL2CPP'; os = 'linux' }
 )
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
