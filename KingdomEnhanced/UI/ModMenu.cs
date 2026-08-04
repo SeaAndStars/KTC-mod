@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
+using BepInEx.Configuration;
 using KingdomEnhanced.Features;
 using KingdomEnhanced.Systems;
 using KingdomEnhanced.Core;
@@ -1148,7 +1150,7 @@ namespace KingdomEnhanced.UI
                 }
                 else
                 {
-                    
+                    ResetAllSettings();
                     ShowFeedback(LocalizationService.Get("settings.reset.success"));
                     _resetConfirmPending = false;
                 }
@@ -1162,6 +1164,26 @@ namespace KingdomEnhanced.UI
             GUILayout.EndVertical();
         }
         
+        /// <summary>
+        /// 一键重置:将全部已绑定 ConfigEntry 恢复为默认值,并刷新内存中的功能开关与界面设置。
+        /// </summary>
+        private void ResetAllSettings()
+        {
+            var fields = typeof(Settings).GetFields(BindingFlags.Public | BindingFlags.Static);
+            foreach (var field in fields)
+            {
+                Type fieldType = field.FieldType;
+                if (!fieldType.IsGenericType || fieldType.GetGenericTypeDefinition() != typeof(ConfigEntry<>)) continue;
+
+                var entry = field.GetValue(null) as ConfigEntryBase;
+                if (entry != null) entry.BoxedValue = entry.DefaultValue;
+            }
+
+            WindowScale = 1.0f;
+            MenuOpacity = 0.98f;
+            LoadFromSettings();
+        }
+
         private void DrawFeedbackOverlay()
         {
             if (_feedbackTimer <= 0) return;
