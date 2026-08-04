@@ -84,7 +84,7 @@
     { "key": "settings.language.label", "value": "Language" },
     { "key": "settings.language.help", "value": "Switches the UI language immediately and saves the selection." },
     { "key": "settings.language.option.en-US", "value": "English" },
-    { "key": "settings.language.option.zh-CN", "value": "Simplified Chinese" },
+    { "key": "settings.language.option.zh-CN", "value": "简体中文" },
     { "key": "settings.language.current", "value": "Current: {0}" },
     { "key": "settings.reset.button", "value": "Reset All Settings" },
     { "key": "settings.reset.success", "value": "Settings Reset!" },
