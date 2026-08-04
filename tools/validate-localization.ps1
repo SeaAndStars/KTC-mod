@@ -14,41 +14,41 @@ function Read-LanguageDocument {
     )
 
     if (-not (Test-Path -LiteralPath $FilePath)) {
-        throw "缺少资源文件: $FilePath"
+        throw "Resource file missing: $FilePath"
     }
 
     $jsonText = Get-Content -LiteralPath $FilePath -Raw -Encoding UTF8
     $document = $jsonText | ConvertFrom-Json -Depth 8
 
     if ([string]::IsNullOrWhiteSpace($document.language)) {
-        throw "language 不能为空: $FilePath"
+        throw "language must not be empty: $FilePath"
     }
 
     if ([string]::IsNullOrWhiteSpace($document.displayName)) {
-        throw "displayName 不能为空: $FilePath"
+        throw "displayName must not be empty: $FilePath"
     }
 
     if ([string]::IsNullOrWhiteSpace($document.fallback)) {
-        throw "fallback 不能为空: $FilePath"
+        throw "fallback must not be empty: $FilePath"
     }
 
     if ($null -eq $document.entries) {
-        throw "entries 不能为空: $FilePath"
+        throw "entries must not be empty: $FilePath"
     }
 
     $keys = New-Object 'System.Collections.Generic.HashSet[string]'
     foreach ($entry in $document.entries) {
         if ([string]::IsNullOrWhiteSpace($entry.key)) {
-            throw "存在空 key: $FilePath"
+            throw "Empty key found: $FilePath"
         }
 
         if ([string]::IsNullOrWhiteSpace($entry.value)) {
-            throw "存在空 value: $FilePath -> $($entry.key)"
+            throw "Empty value found: $FilePath -> $($entry.key)"
         }
 
         $normalizedKey = $entry.key.Trim()
         if (-not $keys.Add($normalizedKey)) {
-            throw "存在重复 key: $FilePath -> $normalizedKey"
+            throw "Duplicate key found: $FilePath -> $normalizedKey"
         }
     }
 
@@ -62,7 +62,7 @@ function Read-LanguageDocument {
 try {
     $resolvedDirectory = (Resolve-Path -LiteralPath $LocalizationDirectory).Path
 } catch {
-    throw "资源目录不存在: $LocalizationDirectory"
+    throw "Localization directory not found: $LocalizationDirectory"
 }
 
 $requiredFiles = @(
@@ -76,7 +76,7 @@ $documents = foreach ($file in $requiredFiles) {
 
 $englishKeys = @($documents | Where-Object Language -eq 'en-US' | Select-Object -First 1).Keys
 if ($null -eq $englishKeys -or $englishKeys.Count -eq 0) {
-    throw 'en-US.json 必须包含至少一个资源键'
+    throw 'en-US.json must contain at least one resource key'
 }
 
 $englishKeySet = New-Object 'System.Collections.Generic.HashSet[string]'
@@ -91,12 +91,12 @@ foreach ($document in $documents) {
     }
 
     if ($currentSet.Count -ne $englishKeySet.Count) {
-        throw "键数量不一致: $($document.Language)"
+        throw "Key count mismatch: $($document.Language)"
     }
 
     foreach ($key in $englishKeySet) {
         if (-not $currentSet.Contains($key)) {
-            throw "缺少资源键: $($document.Language) -> $key"
+            throw "Missing resource key: $($document.Language) -> $key"
         }
     }
 }
