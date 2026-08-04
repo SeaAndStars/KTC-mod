@@ -1,4 +1,5 @@
 using UnityEngine;
+using KingdomEnhanced.Core;
 using KingdomEnhanced.UI;
 using System.Reflection;
 using HarmonyLib;
@@ -31,8 +32,22 @@ namespace KingdomEnhanced.Features
 
         private bool _wasDay = true;
 
+        /// <summary>时间文本缓存:仅当小时/分钟/昼夜/天数变化时才重建字符串,避免每帧分配</summary>
+        private string _cachedTimeText;
+        private int _cachedTimeHour = -1;
+        private int _cachedTimeMinute = -1;
+        private bool _cachedTimeDaytime;
+        private int _cachedTimeDay;
 
+        /// <summary>钱包文本缓存:仅当金币/宝石数值变化时才重建字符串,避免每帧分配</summary>
+        private string _cachedWalletText;
+        private int _cachedCoins = -1;
+        private int _cachedGems = -1;
 
+        /// <summary>钱包反射字段缓存:首次发现后复用,避免失败路径每帧全字段反射</summary>
+        private FieldInfo _walletCoinsField;
+        private FieldInfo _walletGemsField;
+        private bool _walletReflectDiscovered = false;
 
         private FieldInfo _enemiesListField;
         private bool _fieldsDiscovered = false;
@@ -51,8 +66,6 @@ namespace KingdomEnhanced.Features
 
         void OnGUI()
         {
-            if (KingdomMonitor.Instance != null && KingdomMonitor.Instance.IsVisible) return;
-
             if (!ModMenu.DisplayTimes || !IsManagersValid()) return;
             InitializeStyles();
             DrawHUD();
@@ -95,10 +108,10 @@ namespace KingdomEnhanced.Features
                 _timeStyle = new GUIStyle(GUI.skin.label)
                 {
                     normal = { textColor = new Color(1f, 0.9f, 0.5f) },
-                    fontSize = 16,
-                    fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter
                 };
+                // 非动态字体不支持字号/样式覆盖,设置会触发每帧日志警告刷屏,故跳过
+                if (IsDynamicFont(_timeStyle)) _timeStyle.fontSize = 16;
             }
 
             if (_coinStyle == null)
@@ -106,25 +119,32 @@ namespace KingdomEnhanced.Features
                 _coinStyle = new GUIStyle(GUI.skin.label)
                 {
                     normal = { textColor = new Color(1f, 0.85f, 0.2f) },
-                    fontSize = 14,
-                    fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter
                 };
+                if (IsDynamicFont(_coinStyle)) _coinStyle.fontSize = 14;
             }
         }
 
+        /// <summary>判断样式字体是否支持动态属性(非动态字体设置 fontSize/fontStyle 会触发引擎警告)</summary>
+        private bool IsDynamicFont(GUIStyle style)
+        {
+            try { return style.font == null || style.font.dynamic; }
+            catch { return false; }
+        }
+
+        /// <summary>带缓存的 HUD 文本渲染:仅当值变化时才格式化,避免每帧字符串分配</summary>
         private void DrawHUD()
         {
             try
             {
                 const float hudWidth = 320f;
                 float hudX = (Screen.width / 2) - (hudWidth / 2);
-                float hudY = 20f;
+                const float hudY = 20f;
 
                 var director = Managers.Inst?.director;
                 if (director == null) return;
 
-                string timeDisplay = FormatTimeDisplay(director);
+                string timeDisplay = GetCachedTimeDisplay(director);
                 DrawShadowedLabel(new Rect(hudX, hudY, hudWidth, 25), timeDisplay, _timeStyle);
 
                 var stats = GetPlayerWalletStats();
@@ -132,7 +152,7 @@ namespace KingdomEnhanced.Features
                 {
                     DrawShadowedLabel(
                         new Rect(hudX, hudY + 25, hudWidth, 22),
-                        $" Coins: {stats.Coins}   Gems: {stats.Gems}",
+                        GetCachedWalletText(stats),
                         _coinStyle
                     );
                 }
@@ -140,26 +160,81 @@ namespace KingdomEnhanced.Features
             catch { }
         }
 
-        private string FormatTimeDisplay(Director director)
+        /// <summary>缓存的时间文本:小时/分钟/昼夜/天数未变化时直接返回上次结果</summary>
+        private string GetCachedTimeDisplay(Director director)
         {
-            if (director == null) return "ERROR";
+            try
+            {
+                GetPreciseTimeOfDay(director.currentTime, out int hour, out int minute);
+                bool isDaytime = director.IsDaytime;
+                int day = director.CurrentIslandDays;
+
+                if (_cachedTimeText != null &&
+                    _cachedTimeHour == hour &&
+                    _cachedTimeMinute == minute &&
+                    _cachedTimeDaytime == isDaytime &&
+                    _cachedTimeDay == day)
+                {
+                    return _cachedTimeText;
+                }
+
+                _cachedTimeHour = hour;
+                _cachedTimeMinute = minute;
+                _cachedTimeDaytime = isDaytime;
+                _cachedTimeDay = day;
+                _cachedTimeText = FormatTimeDisplay(director, hour, minute);
+                return _cachedTimeText;
+            }
+            catch { return LocalizationService.Get("hud.error"); }
+        }
+
+        /// <summary>将游戏内累计小时换算为精确的 24 小时制时分,小时与分钟同源计算避免浮点进位偏差</summary>
+        /// <param name="currentTime">游戏内累计小时数。</param>
+        /// <param name="hour">0-23 的小时。</param>
+        /// <param name="minute">0-59 的分钟。</param>
+        private static void GetPreciseTimeOfDay(float currentTime, out int hour, out int minute)
+        {
+            float totalHours = currentTime % 24f;
+            int totalMinutesOfDay = Mathf.FloorToInt(totalHours * 60f + 0.0005f);
+            hour = totalMinutesOfDay / 60;
+            minute = totalMinutesOfDay % 60;
+        }
+
+        /// <summary>缓存的钱包文本:金币/宝石数值未变化时直接返回上次结果</summary>
+        private string GetCachedWalletText((int Coins, int Gems) stats)
+        {
+            if (_cachedWalletText != null &&
+                _cachedCoins == stats.Coins &&
+                _cachedGems == stats.Gems)
+            {
+                return _cachedWalletText;
+            }
+
+            _cachedCoins = stats.Coins;
+            _cachedGems = stats.Gems;
+            _cachedWalletText = LocalizationService.Format("hud.wallet", stats.Coins, stats.Gems);
+            return _cachedWalletText;
+        }
+
+        /// <summary>格式化时间显示文本(使用精确的 24 小时制时分)</summary>
+        /// <param name="director">游戏导演实例。</param>
+        /// <param name="hour">精确小时(0-23)。</param>
+        /// <param name="minute">精确分钟(0-59)。</param>
+        private string FormatTimeDisplay(Director director, int hour, int minute)
+        {
+            if (director == null) return LocalizationService.Get("hud.error");
 
             try
             {
-                float rawTime = director.currentTime;
-                float totalHours = rawTime % 24f;
-                int hours = Mathf.FloorToInt(totalHours);
-                int minutes = Mathf.FloorToInt((totalHours % 1f) * 60f);
+                string clock = string.Format("{0:00}:{1:00}", hour, minute);
+                string timeStr = LocalizationService.Get(director.IsDaytime ? "hud.time.day" : "hud.time.night");
                 
-                string clock = string.Format("{0:00}:{1:00}", hours, minutes);
-                string timeStr = director.IsDaytime ? "Day" : "Night";
-                
-                return $"DAY {director.CurrentIslandDays} | {timeStr} ({clock})";
+                return LocalizationService.Format("hud.time.display", director.CurrentIslandDays, timeStr, clock);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[WorldManager] Error formatting time: {ex.Message}");
-                return "TIME ERROR";
+                return LocalizationService.Get("hud.time.error");
             }
         }
 
@@ -192,30 +267,43 @@ namespace KingdomEnhanced.Features
                 }
                 catch
                 {
-                    int c = -1;
-                    int g = 0;
-                    var walletType = wallet.GetType();
-                    
-                    
-                    var cFields = walletType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                    foreach (var field in cFields)
-                    {
-                        string fn = field.Name.ToLower();
-                        if (fn == "_coins" || fn == "coins" || (fn.Contains("coin") && !fn.Contains("gem")))
-                        {
-                            if (field.FieldType == typeof(int)) c = (int)field.GetValue(wallet);
-                        }
-                        if (fn == "_gems" || fn == "gems" || (fn.Contains("gem") && !fn.Contains("coin")))
-                        {
-                            if (field.FieldType == typeof(int)) g = (int)field.GetValue(wallet);
-                        }
-                    }
-                    return (c, g);
+                    return GetWalletStatsByReflection(wallet);
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[WorldManager] Error getting wallet stats: {ex.Message}");
+                return (-1, 0);
+            }
+        }
+
+        /// <summary>反射回退取钱包数值:字段只发现一次后缓存复用,避免每帧全字段反射扫描</summary>
+        private (int Coins, int Gems) GetWalletStatsByReflection(object wallet)
+        {
+            try
+            {
+                if (!_walletReflectDiscovered)
+                {
+                    var walletType = wallet.GetType();
+                    var cFields = walletType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    foreach (var field in cFields)
+                    {
+                        if (field.FieldType != typeof(int)) continue;
+                        string fn = field.Name.ToLower();
+                        bool isCoins = fn == "_coins" || fn == "coins" || (fn.Contains("coin") && !fn.Contains("gem"));
+                        bool isGems = fn == "_gems" || fn == "gems" || (fn.Contains("gem") && !fn.Contains("coin"));
+                        if (_walletCoinsField == null && isCoins) _walletCoinsField = field;
+                        if (_walletGemsField == null && isGems) _walletGemsField = field;
+                    }
+                    _walletReflectDiscovered = true;
+                }
+
+                int c = _walletCoinsField != null ? (int)_walletCoinsField.GetValue(wallet) : -1;
+                int g = _walletGemsField != null ? (int)_walletGemsField.GetValue(wallet) : 0;
+                return (c, g);
+            }
+            catch
+            {
                 return (-1, 0);
             }
         }
@@ -288,7 +376,7 @@ namespace KingdomEnhanced.Features
 
             
             director.AdvanceTime(diff + 0.1f);
-            ModMenu.Speak("<color=lightblue> Fast-forwarded to Nightfall!</color>");
+            ModMenu.Speak(LocalizationService.Get("hud.announcement.skip_to_night"));
         }
 
         public static void SkipNighttime()
@@ -302,7 +390,7 @@ namespace KingdomEnhanced.Features
             if (diff <= 0f) diff += 24f;
 
             director.AdvanceTime(diff + 0.1f);
-            ModMenu.Speak("<color=orange> Fast-forwarded to Dawn!</color>");
+            ModMenu.Speak(LocalizationService.Get("hud.announcement.skip_to_dawn"));
         }
 
         private void CheckDayNightTransition(Director director)
@@ -311,12 +399,12 @@ namespace KingdomEnhanced.Features
             {
                 if (director.IsDaytime && !_wasDay)
                 {
-                    ModMenu.Speak("<color=orange> The sun rises.</color>");
+                    ModMenu.Speak(LocalizationService.Get("hud.announcement.sunrise"));
                     _wasDay = true;
                 }
                 else if (!director.IsDaytime && _wasDay)
                 {
-                    ModMenu.Speak("<color=lightblue> Stars appear.</color>");
+                    ModMenu.Speak(LocalizationService.Get("hud.announcement.nightfall"));
                     _wasDay = false;
                 }
             }
@@ -340,7 +428,7 @@ namespace KingdomEnhanced.Features
 
                 if (ShouldTriggerSiegeAlert(enemyCount))
                 {
-                    ModMenu.Speak("<color=red><b>⚠️ SIEGE DETECTED!</b></color>");
+                    ModMenu.Speak(LocalizationService.Get("hud.announcement.siege"));
                     _lastAttackAlert = Time.time;
                 }
             }

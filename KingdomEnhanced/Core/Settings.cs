@@ -7,6 +7,11 @@ namespace KingdomEnhanced.Core
     {
         public static ConfigFile Config;
 
+        /// <summary>
+        /// 保存当前生效的界面语言代码。
+        /// </summary>
+        public static ConfigEntry<string> Language;
+
         
         public static ConfigEntry<bool> UseBetaUI;
         public static ConfigEntry<bool> ShowStaminaBar;
@@ -84,6 +89,8 @@ namespace KingdomEnhanced.Core
         public static void Init(ConfigFile config)
         {
             Config = config;
+
+            Language          = Config.Bind("0. General", "Language", "en-US", "Current UI language code");
 
             
             UseBetaUI         = Config.Bind("1. Visuals", "UseBetaUI", false, "Use the new Beta UI style");

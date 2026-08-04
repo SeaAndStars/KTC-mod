@@ -2,6 +2,8 @@ $ErrorActionPreference = 'Stop'
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 $workspace   = 'd:\vs CODE\KTC dev\KTC MOD 4.0'
+# 发布包使用的完整本地化资源目录。
+$localizationSource = Join-Path $workspace 'KingdomEnhanced\Localization'
 $releasesDir = Join-Path $workspace 'Releases'
 $workDir     = Join-Path $workspace 'temp_work'
 $baseZipsDir = Join-Path $workspace 'BaseZips'
@@ -82,6 +84,12 @@ foreach ($target in $targets) {
         $dllSrc = Join-Path $workspace 'KingdomEnhanced\bin\BIE6_IL2CPP\KingdomEnhanced.dll'
     }
     Copy-Item -Path $dllSrc -Destination $pluginsDir
+    # 与目标 DLL 同级打包的本地化目录。
+    $localizationDir = Join-Path $pluginsDir 'Localization'
+    if (-not (Test-Path $localizationSource)) {
+        throw "Localization directory not found: $localizationSource"
+    }
+    Copy-Item -Path $localizationSource -Destination $localizationDir -Recurse -Force
     Start-Sleep -Seconds 3
 
     # ── Copy Speech DLL (Windows only) ────────────────────────────────────────
