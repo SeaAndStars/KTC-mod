@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KingdomEnhanced.Core;
 using KingdomEnhanced.Features;
 
 namespace KingdomEnhanced.UI
@@ -129,7 +130,13 @@ namespace KingdomEnhanced.UI
                 () => !ModMenu.ShowStaminaBar, () => "feature.lock.requires_energy_bar"));
             list.Add(Toggle("display_times", "feature.display_times.label", TabCategory.Main, "feature.section.hud",
                 "feature.display_times.description",
-                () => ModMenu.DisplayTimes, v => ModMenu.DisplayTimes = v));
+                () => ModMenu.DisplayTimes,
+                v =>
+                {
+                    // 与 F4 热键行为保持一致:同步持久化配置,避免重启后状态回弹
+                    ModMenu.DisplayTimes = v;
+                    Settings.DisplayTimes.Value = v;
+                }));
             list.Add(Button("monitor_style", "feature.monitor_style.label", TabCategory.Main, "feature.section.hud",
                 "feature.monitor_style.description",
                 () => KingdomMonitor.Instance?.NextStyle(),

@@ -140,8 +140,8 @@ namespace KingdomEnhanced.Features
             try
             {
                 const float hudWidth = 320f;
-                const float hudX = 8f;
-                const float hudY = 10f;
+                float hudX = (Screen.width / 2) - (hudWidth / 2);
+                const float hudY = 20f;
 
                 var director = Managers.Inst?.director;
                 if (director == null) return;
