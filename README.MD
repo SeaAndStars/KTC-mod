@@ -263,3 +263,20 @@ No compatibility issues.
 No manual setup complexity.  
 
 **Just install and play.**
+
+---
+
+## 语言与本地化
+
+默认语言为 `en-US`，支持 `en-US` 和 `zh-CN`。按 `F1` → `Settings` 切换语言，选择会自动持久化。
+
+手动安装时，`KingdomEnhanced.dll` 同级必须包含：
+
+```text
+BepInEx/plugins/KingdomEnhanced/
+  KingdomEnhanced.dll
+  Localization/en-US.json
+  Localization/zh-CN.json
+```
+
+`Localization` 目录缺失或资源文件损坏时，模组会优先回退英文；找不到对应文本时显示资源键。
