@@ -17,6 +17,7 @@ namespace KingdomEnhanced.Core
         public static ConfigEntry<bool> ShowStaminaBar;
         public static ConfigEntry<bool> DisplayTimes;
         public static ConfigEntry<bool> ShowGreedCounter;
+        public static ConfigEntry<bool> Use12HourClock;
         
         
         public static ConfigEntry<bool> EnableAccessibility;
@@ -97,6 +98,7 @@ namespace KingdomEnhanced.Core
             ShowStaminaBar    = Config.Bind("1. Visuals", "ShowStaminaBar", false, "Show the energy/stamina bar");
             DisplayTimes      = Config.Bind("1. Visuals", "DisplayTimes", false, "Show day/night and coins HUD");
             ShowGreedCounter  = Config.Bind("1. Visuals", "ShowGreedCounter", false, "Show greed counter HUD");
+            Use12HourClock    = Config.Bind("1. Visuals", "Use12HourClock", false, "Use 12-hour clock (AM/PM) instead of 24-hour in the HUD");
 
             
             EnableAccessibility   = Config.Bind("2. Accessibility", "EnableAccessibility", true, "Enable logic for hover tracking");

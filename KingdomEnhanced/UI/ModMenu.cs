@@ -179,6 +179,7 @@ namespace KingdomEnhanced.UI
         public static bool EnableCastleAnnouncer = false;
         public static bool DebugZones = false;
         public static bool DisplayTimes;
+        public static bool Use12HourClock = false;
         public static bool CheatsUnlocked;
         public static bool InfiniteStamina;
         public static bool InvincibleWalls;
@@ -693,6 +694,7 @@ namespace KingdomEnhanced.UI
             ShowStaminaBar        = Settings.ShowStaminaBar.Value;
             DisplayTimes          = Settings.DisplayTimes.Value;
             ShowGreedCounter      = Settings.ShowGreedCounter.Value;
+            Use12HourClock        = Settings.Use12HourClock.Value;
             EnableAccessibility   = Settings.EnableAccessibility.Value;
             EnableTTS             = Settings.EnableTTS.Value;
             NarratorQueueMode     = Settings.NarratorQueueMode.Value;
@@ -754,6 +756,7 @@ namespace KingdomEnhanced.UI
             Settings.ShowStaminaBar.Value        = ShowStaminaBar;
             Settings.DisplayTimes.Value          = DisplayTimes;
             Settings.ShowGreedCounter.Value      = ShowGreedCounter;
+            Settings.Use12HourClock.Value        = Use12HourClock;
             Settings.EnableAccessibility.Value   = EnableAccessibility;
             Settings.EnableTTS.Value             = EnableTTS;
             Settings.NarratorQueueMode.Value     = NarratorQueueMode;

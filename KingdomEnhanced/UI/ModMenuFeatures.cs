@@ -137,6 +137,10 @@ namespace KingdomEnhanced.UI
                     ModMenu.DisplayTimes = v;
                     Settings.DisplayTimes.Value = v;
                 }));
+            list.Add(Toggle("use_12h_clock", "feature.use_12h_clock.label", TabCategory.Main, "feature.section.hud",
+                "feature.use_12h_clock.description",
+                () => ModMenu.Use12HourClock, v => ModMenu.Use12HourClock = v,
+                () => !ModMenu.DisplayTimes, () => "feature.lock.requires_hud"));
             list.Add(Button("monitor_style", "feature.monitor_style.label", TabCategory.Main, "feature.section.hud",
                 "feature.monitor_style.description",
                 () => KingdomMonitor.Instance?.NextStyle(),

@@ -32,12 +32,13 @@ namespace KingdomEnhanced.Features
 
         private bool _wasDay = true;
 
-        /// <summary>时间文本缓存:仅当小时/分钟/昼夜/天数变化时才重建字符串,避免每帧分配</summary>
+        /// <summary>时间文本缓存:仅当小时/分钟/昼夜/天数/时钟制式变化时才重建字符串,避免每帧分配</summary>
         private string _cachedTimeText;
         private int _cachedTimeHour = -1;
         private int _cachedTimeMinute = -1;
         private bool _cachedTimeDaytime;
         private int _cachedTimeDay;
+        private bool _cachedUse12Hour;
 
         /// <summary>钱包文本缓存:仅当金币/宝石数值变化时才重建字符串,避免每帧分配</summary>
         private string _cachedWalletText;
@@ -173,7 +174,8 @@ namespace KingdomEnhanced.Features
                     _cachedTimeHour == hour &&
                     _cachedTimeMinute == minute &&
                     _cachedTimeDaytime == isDaytime &&
-                    _cachedTimeDay == day)
+                    _cachedTimeDay == day &&
+                    _cachedUse12Hour == ModMenu.Use12HourClock)
                 {
                     return _cachedTimeText;
                 }
@@ -182,6 +184,7 @@ namespace KingdomEnhanced.Features
                 _cachedTimeMinute = minute;
                 _cachedTimeDaytime = isDaytime;
                 _cachedTimeDay = day;
+                _cachedUse12Hour = ModMenu.Use12HourClock;
                 _cachedTimeText = FormatTimeDisplay(director, hour, minute);
                 return _cachedTimeText;
             }
@@ -226,7 +229,21 @@ namespace KingdomEnhanced.Features
 
             try
             {
-                string clock = string.Format("{0:00}:{1:00}", hour, minute);
+                string clock;
+                if (ModMenu.Use12HourClock)
+                {
+                    int hour12 = hour % 12;
+                    if (hour12 == 0) hour12 = 12;
+                    string suffix = hour < 12
+                        ? LocalizationService.Get("hud.time.am")
+                        : LocalizationService.Get("hud.time.pm");
+                    clock = string.Format("{0}:{1:00} {2}", hour12, minute, suffix);
+                }
+                else
+                {
+                    clock = string.Format("{0:00}:{1:00}", hour, minute);
+                }
+
                 string timeStr = LocalizationService.Get(director.IsDaytime ? "hud.time.day" : "hud.time.night");
                 
                 return LocalizationService.Format("hud.time.display", director.CurrentIslandDays, timeStr, clock);
