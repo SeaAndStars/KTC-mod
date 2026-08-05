@@ -1,471 +1,393 @@
 using System;
 using System.Collections.Generic;
-using KingdomEnhanced.Core;
 using KingdomEnhanced.Features;
 
 namespace KingdomEnhanced.UI
 {
     /// <summary>
-    /// 构建 ModMenu 全部功能项的元数据。
+    /// Builds metadata for all features registered in the ModMenu.
+    /// Separated from ModMenu for maintainability and team collaboration.
     /// </summary>
     public static class ModMenuFeatures
     {
-        /// <summary>
-        /// 构建布尔开关类型的功能元数据。
-        /// </summary>
-        /// <param name="id">功能稳定标识。</param>
-        /// <param name="labelKey">功能标题资源键。</param>
-        /// <param name="cat">功能所属标签页。</param>
-        /// <param name="sectionKey">功能分组资源键。</param>
-        /// <param name="descriptionKey">功能说明资源键。</param>
-        /// <param name="get">读取当前值的委托。</param>
-        /// <param name="set">写入当前值的委托。</param>
-        /// <param name="isLocked">判断功能是否锁定的委托。</param>
-        /// <param name="lockReasonKey">返回锁定原因资源键的委托。</param>
-        /// <param name="hasConflict">判断功能是否存在冲突提示的委托。</param>
-        /// <returns>可供菜单绘制的功能元数据。</returns>
-        public static FeatureMeta Toggle(string id, string labelKey, TabCategory cat, string sectionKey, string descriptionKey,
+        public static FeatureMeta Toggle(string id, string label, TabCategory cat, string section, string desc,
             Func<bool> get, Action<bool> set, Func<bool> isLocked = null,
-            Func<string> lockReasonKey = null, Func<bool> hasConflict = null)
+            Func<string> lockReason = null, Func<bool> hasConflict = null)
         {
             return new FeatureMeta
             {
-                Id = id,
-                LabelKey = labelKey,
-                SectionKey = sectionKey,
-                Category = cat,
-                DescriptionKey = descriptionKey,
-                GetValue = get,
-                SetValue = set,
-                OnAction = null,
-                IsLocked = isLocked,
-                GetLockReasonKey = lockReasonKey,
-                HasConflict = hasConflict
+                Id = id, Label = label, Section = section, Category = cat, Description = desc,
+                GetValue = get, SetValue = set, OnAction = null,
+                IsLocked = isLocked, GetLockReason = lockReason, HasConflict = hasConflict
             };
         }
 
-        /// <summary>
-        /// 构建按钮动作类型的功能元数据。
-        /// </summary>
-        /// <param name="id">功能稳定标识。</param>
-        /// <param name="labelKey">功能标题资源键。</param>
-        /// <param name="cat">功能所属标签页。</param>
-        /// <param name="sectionKey">功能分组资源键。</param>
-        /// <param name="descriptionKey">功能说明资源键。</param>
-        /// <param name="act">点击按钮后执行的动作。</param>
-        /// <param name="isLocked">判断功能是否锁定的委托。</param>
-        /// <param name="lockReasonKey">返回锁定原因资源键的委托。</param>
-        /// <returns>可供菜单绘制的功能元数据。</returns>
-        public static FeatureMeta Button(string id, string labelKey, TabCategory cat, string sectionKey, string descriptionKey,
-            Action act, Func<bool> isLocked = null, Func<string> lockReasonKey = null)
+        public static FeatureMeta Button(string id, string label, TabCategory cat, string section, string desc,
+            Action act, Func<bool> isLocked = null, Func<string> lockReason = null)
         {
             return new FeatureMeta
             {
-                Id = id,
-                LabelKey = labelKey,
-                SectionKey = sectionKey,
-                Category = cat,
-                DescriptionKey = descriptionKey,
-                GetValue = null,
-                SetValue = null,
-                OnAction = act,
-                IsLocked = isLocked,
-                GetLockReasonKey = lockReasonKey,
-                HasConflict = null
+                Id = id, Label = label, Section = section, Category = cat, Description = desc,
+                GetValue = null, SetValue = null, OnAction = act,
+                IsLocked = isLocked, GetLockReason = lockReason, HasConflict = null
             };
         }
 
-        /// <summary>
-        /// 构建滑条类型的功能元数据。
-        /// </summary>
-        /// <param name="id">功能稳定标识。</param>
-        /// <param name="labelKey">功能标题资源键。</param>
-        /// <param name="cat">功能所属标签页。</param>
-        /// <param name="sectionKey">功能分组资源键。</param>
-        /// <param name="descriptionKey">功能说明资源键。</param>
-        /// <param name="get">读取当前值的委托。</param>
-        /// <param name="set">写入当前值的委托。</param>
-        /// <param name="min">滑条最小值。</param>
-        /// <param name="max">滑条最大值。</param>
-        /// <returns>可供菜单绘制的功能元数据。</returns>
-        public static FeatureMeta Slider(string id, string labelKey, TabCategory cat, string sectionKey, string descriptionKey,
+        public static FeatureMeta Slider(string id, string label, TabCategory cat, string section, string desc,
             Func<float> get, Action<float> set, float min, float max)
         {
             return new FeatureMeta
             {
-                Id = id,
-                LabelKey = labelKey,
-                SectionKey = sectionKey,
-                Category = cat,
-                DescriptionKey = descriptionKey,
-                GetFloatValue = get,
-                SetFloatValue = set,
-                MinVal = min,
-                MaxVal = max,
-                IsLocked = null,
-                GetLockReasonKey = null,
-                HasConflict = null
+                Id = id, Label = label, Section = section, Category = cat, Description = desc,
+                GetFloatValue = get, SetFloatValue = set, MinVal = min, MaxVal = max,
+                IsLocked = null, GetLockReason = null, HasConflict = null
             };
         }
 
-        /// <summary>
-        /// 构建全部功能项元数据集合。
-        /// </summary>
-        /// <returns>按既有展示顺序排列的功能元数据数组。</returns>
         public static FeatureMeta[] Build()
         {
             var list = new List<FeatureMeta>();
 
             // ==================== MAIN ====================
-            list.Add(Toggle("show_stamina", "feature.show_stamina.label", TabCategory.Main, "feature.section.hud",
-                "feature.show_stamina.description",
+            list.Add(Toggle("show_stamina", "Energy Bar", TabCategory.Main, "HUD",
+                "Shows or hides the stamina bar on the HUD.",
                 () => ModMenu.ShowStaminaBar, v => ModMenu.ShowStaminaBar = v));
-            list.Add(Button("stamina_style", "feature.stamina_style.label", TabCategory.Main, "feature.section.hud",
-                "feature.stamina_style.description",
+            list.Add(Button("stamina_style", "Cycle Energy Bar Style", TabCategory.Main, "HUD",
+                "Changes the visual style of the Energy Bar.",
                 () => ModMenu.CycleStaminaBarStyle(),
-                () => !ModMenu.ShowStaminaBar, () => "feature.lock.requires_energy_bar"));
-            list.Add(Button("stamina_pos", "feature.stamina_pos.label", TabCategory.Main, "feature.section.hud",
-                "feature.stamina_pos.description",
+                () => !ModMenu.ShowStaminaBar, () => "Requires Energy Bar"));
+            list.Add(Button("stamina_pos", "Cycle Energy Bar Position", TabCategory.Main, "HUD",
+                "Changes the position of the Energy Bar on screen.",
                 () => ModMenu.CycleStaminaBarPosition(),
-                () => !ModMenu.ShowStaminaBar, () => "feature.lock.requires_energy_bar"));
-            list.Add(Toggle("display_times", "feature.display_times.label", TabCategory.Main, "feature.section.hud",
-                "feature.display_times.description",
-                () => ModMenu.DisplayTimes,
-                v =>
-                {
-                    // 与 F4 热键行为保持一致:同步持久化配置,避免重启后状态回弹
-                    ModMenu.DisplayTimes = v;
-                    Settings.DisplayTimes.Value = v;
-                }));
-            list.Add(Toggle("use_12h_clock", "feature.use_12h_clock.label", TabCategory.Main, "feature.section.hud",
-                "feature.use_12h_clock.description",
-                () => ModMenu.Use12HourClock, v => ModMenu.Use12HourClock = v,
-                () => !ModMenu.DisplayTimes, () => "feature.lock.requires_hud"));
-            list.Add(Button("monitor_style", "feature.monitor_style.label", TabCategory.Main, "feature.section.hud",
-                "feature.monitor_style.description",
+                () => !ModMenu.ShowStaminaBar, () => "Requires Energy Bar"));
+            list.Add(Toggle("display_times", "HUD Display", TabCategory.Main, "HUD",
+                "Toggles the entire in-game HUD overlay.",
+                () => ModMenu.DisplayTimes, v => ModMenu.DisplayTimes = v));
+            list.Add(Button("monitor_style", "Cycle Monitor Style", TabCategory.Main, "HUD",
+                "Changes the visual style of the Kingdom Monitor panel.",
                 () => KingdomMonitor.Instance?.NextStyle(),
                 () => KingdomMonitor.Instance == null || !KingdomMonitor.Instance.IsVisible,
-                () => "feature.lock.requires_monitor"));
+                () => "Requires Monitor"));
 
-            list.Add(Toggle("enable_accessibility", "feature.enable_accessibility.label", TabCategory.Main, "feature.section.accessibility",
-                "feature.enable_accessibility.description",
+            list.Add(Toggle("enable_accessibility", "Accessibility & Radar", TabCategory.Main, "Accessibility",
+                "Enables world tracking, radar pings, and proximity alerts.",
                 () => ModMenu.EnableAccessibility, v => ModMenu.EnableAccessibility = v));
-            list.Add(Toggle("enable_tts", "feature.enable_tts.label", TabCategory.Main, "feature.section.accessibility",
-                "feature.enable_tts.description",
+            list.Add(Toggle("enable_tts", "Narrator (TTS)", TabCategory.Main, "Accessibility",
+                "Reads menu interactions aloud using the system TTS engine.",
                 () => ModMenu.EnableTTS, v => ModMenu.EnableTTS = v));
-            list.Add(Toggle("simplify_names", "feature.simplify_names.label", TabCategory.Main, "feature.section.accessibility",
-                "feature.simplify_names.description",
+            list.Add(Toggle("simplify_names", "Simplify Names", TabCategory.Main, "Accessibility",
+                "Replaces payable object names with shorter labels.",
                 () => ModMenu.SimplifyNames, v => ModMenu.SimplifyNames = v));
-            list.Add(Toggle("castle_announcer", "feature.castle_announcer.label", TabCategory.Main, "feature.section.accessibility",
-                "feature.castle_announcer.description",
+            list.Add(Toggle("castle_announcer", "Castle Announcer", TabCategory.Main, "Accessibility",
+                "Announces castle events via TTS.",
                 () => ModMenu.EnableCastleAnnouncer, v => ModMenu.EnableCastleAnnouncer = v));
 
-            list.Add(Slider("speed_mult", "feature.speed_mult.label", TabCategory.Main, "feature.section.movement",
-                "feature.speed_mult.description",
+            list.Add(Slider("speed_mult", "Travel Speed", TabCategory.Main, "Movement",
+                "Multiplies the monarch's movement speed while mounted.",
                 () => ModMenu.SpeedMultiplier, v => ModMenu.SpeedMultiplier = v, 0.5f, 10.0f));
 
-            list.Add(Toggle("size_hack", "feature.size_hack.label", TabCategory.Main, "feature.section.player",
-                "feature.size_hack.description",
+            list.Add(Toggle("size_hack", "Player Size Hack", TabCategory.Main, "Player",
+                "Scales the monarch sprite larger or smaller.",
                 () => ModMenu.EnableSizeHack, v => ModMenu.EnableSizeHack = v));
-            list.Add(Slider("target_size", "feature.target_size.label", TabCategory.Main, "feature.section.player",
-                "feature.target_size.description",
+            list.Add(Slider("target_size", "Player Size", TabCategory.Main, "Player",
+                "Multiplies the monarch's visual size (requires Player Size Hack to be ON).",
                 () => ModMenu.TargetSize, v => ModMenu.TargetSize = v, 0.2f, 3.0f));
 
             // ==================== CHEATS ====================
-            list.Add(Toggle("infinite_stamina", "feature.infinite_stamina.label", TabCategory.Cheats, "feature.section.invincibility",
-                "feature.infinite_stamina.description",
+            list.Add(Toggle("infinite_stamina", "Infinite Mount Stamina", TabCategory.Cheats, "Invincibility",
+                "Prevents mount stamina from depleting.",
                 () => ModMenu.InfiniteStamina, v => ModMenu.InfiniteStamina = v,
                 () => !ModMenu.CheatsUnlocked));
 
-            list.Add(Toggle("no_tool_cooldowns", "feature.no_tool_cooldowns.label", TabCategory.Cheats, "feature.section.infinite_stone",
-                "feature.no_tool_cooldowns.description",
+            list.Add(Toggle("no_tool_cooldowns", "No Tool Cooldowns", TabCategory.Cheats, "Infinite Stone",
+                "Removes the cooldown/timeout of all Hermit tools (Horn of Healing, Athena's Shield, Hermes' Staff, etc).",
                 () => ModMenu.NoToolCooldowns, v => ModMenu.NoToolCooldowns = v,
                 () => !ModMenu.CheatsUnlocked));
-            list.Add(Slider("artemis_arrows", "feature.artemis_arrows.label", TabCategory.Cheats, "feature.section.infinite_stone",
-                "feature.artemis_arrows.description",
+            list.Add(Slider("artemis_arrows", "Artemis Arrow Count", TabCategory.Cheats, "Infinite Stone",
+                "How many arrows fall per cast of the Artemis Bow.",
                 () => ModMenu.ArtemisArrowCount, v => ModMenu.ArtemisArrowCount = v, 1f, 50f));
-            list.Add(Slider("artemis_range", "feature.artemis_range.label", TabCategory.Cheats, "feature.section.infinite_stone",
-                "feature.artemis_range.description",
+            list.Add(Slider("artemis_range", "Artemis Range", TabCategory.Cheats, "Infinite Stone",
+                "Multiplies the range across which arrows are spread.",
                 () => ModMenu.ArtemisRangeMult, v => ModMenu.ArtemisRangeMult = v, 0.5f, 5.0f));
-            list.Add(Slider("artemis_damage", "feature.artemis_damage.label", TabCategory.Cheats, "feature.section.infinite_stone",
-                "feature.artemis_damage.description",
+            list.Add(Slider("artemis_damage", "Artemis Arrow Damage", TabCategory.Cheats, "Infinite Stone",
+                "Multiplies damage dealt per arrow.",
                 () => ModMenu.ArtemisArrowDamageMult, v => ModMenu.ArtemisArrowDamageMult = v, 0.5f, 5.0f));
 
-            list.Add(Button("add_10_coins", "feature.add_10_coins.label", TabCategory.Cheats, "feature.section.economy",
-                "feature.add_10_coins.description",
+            list.Add(Button("add_10_coins", "+10 Coins", TabCategory.Cheats, "Economy",
+                "Adds 10 coins instantly.",
                 () => ModMenu.GiveCurrency(10, false),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("add_50_coins", "feature.add_50_coins.label", TabCategory.Cheats, "feature.section.economy",
-                "feature.add_50_coins.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("add_50_coins", "+50 Coins", TabCategory.Cheats, "Economy",
+                "Adds 50 coins instantly.",
                 () => ModMenu.GiveCurrency(50, false),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("add_5_gems", "feature.add_5_gems.label", TabCategory.Cheats, "feature.section.economy",
-                "feature.add_5_gems.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("add_5_gems", "+5 Gems", TabCategory.Cheats, "Economy",
+                "Instant gem grant.",
                 () => ModMenu.GiveCurrency(5, true),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("fill_wallet", "feature.fill_wallet.label", TabCategory.Cheats, "feature.section.economy",
-                "feature.fill_wallet.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("fill_wallet", "Fill Wallet to Max", TabCategory.Cheats, "Economy",
+                "Fills coins and gems to capacity.",
                 () => ModMenu.FillWallet(),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Slider("coin_income", "feature.coin_income.label", TabCategory.Cheats, "feature.section.economy",
-                "feature.coin_income.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Slider("coin_income", "Coin Income", TabCategory.Cheats, "Economy",
+                "Multiplies passive coin income rate.",
                 () => ModMenu.CoinIncomeMult, v => ModMenu.CoinIncomeMult = v, 0.5f, 4.0f));
-            list.Add(Slider("bag_drop", "feature.bag_drop.label", TabCategory.Cheats, "feature.section.economy",
-                "feature.bag_drop.description",
+            list.Add(Slider("bag_drop", "Bag Drop Rate", TabCategory.Cheats, "Economy",
+                "Multiplies bag drop rate.",
                 () => ModMenu.BagDropMult, v => ModMenu.BagDropMult = v, 0.5f, 4.0f));
 
-            list.Add(Button("recruit_beggars", "feature.recruit_beggars.label", TabCategory.Cheats, "feature.section.military",
-                "feature.recruit_beggars.description",
+            list.Add(Button("recruit_beggars", "Recruit All Beggars", TabCategory.Cheats, "Military",
+                "Forces all vagrants to immediately pick up tools and join.",
                 () => ArmyManager.RecruitBeggars(),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("drop_archer", "feature.drop_archer.label", TabCategory.Cheats, "feature.section.military",
-                "feature.drop_archer.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("drop_archer", "Drop Archer Bow", TabCategory.Cheats, "Military",
+                "Spawns an archer bow pickup at the monarch's position.",
                 () => ArmyManager.DropTools("Archer"),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("drop_builder", "feature.drop_builder.label", TabCategory.Cheats, "feature.section.military",
-                "feature.drop_builder.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("drop_builder", "Drop Builder Hammer", TabCategory.Cheats, "Military",
+                "Spawns a builder hammer pickup at the monarch's position.",
                 () => ArmyManager.DropTools("Builder"),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
 
-            list.Add(Button("kill_enemies", "feature.kill_enemies.label", TabCategory.Cheats, "feature.section.military",
-                "feature.kill_enemies.description",
+            list.Add(Button("kill_enemies", "Kill All Enemies", TabCategory.Cheats, "Military",
+                "Instantly destroys all active Greed units.",
                 () => ArmyManager.KillAllEnemies(),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("destroy_portals", "feature.destroy_portals.label", TabCategory.Cheats, "feature.section.military",
-                "feature.destroy_portals.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("destroy_portals", "Destroy All Portals", TabCategory.Cheats, "Military",
+                "Closes all active portals.",
                 () => ArmyManager.DestroyAllPortals(),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("max_army", "feature.max_army.label", TabCategory.Cheats, "feature.section.military",
-                "feature.max_army.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("max_army", "Spawn Max Army", TabCategory.Cheats, "Military",
+                "Fills all available archer/knight slots instantly.",
                 () => ArmyManager.SpawnMaxArmy(),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
 
-            list.Add(Slider("spawn_unit_count", "feature.spawn_unit_count.label", TabCategory.Cheats, "feature.section.unit_spawner",
-                "feature.spawn_unit_count.description",
+            list.Add(Slider("spawn_unit_count", "Unit Spawn Amount", TabCategory.Cheats, "Unit Spawner",
+                "Select amount of units to spawn (1-50).",
                 () => ModMenu.SpawnUnitCount, v => ModMenu.SpawnUnitCount = (int)v, 1f, 50f));
-            list.Add(Button("spawn_u_vagrant", "feature.spawn_u_vagrant.label", TabCategory.Cheats, "feature.section.unit_spawner",
-                "feature.spawn_u_vagrant.description",
+            list.Add(Button("spawn_u_vagrant", "Spawn Vagrants", TabCategory.Cheats, "Unit Spawner",
+                "Spawns Vagrants (Baggers).",
                 () => ArmyManager.SpawnUnit("Beggar", (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_u_villager", "feature.spawn_u_villager.label", TabCategory.Cheats, "feature.section.unit_spawner",
-                "feature.spawn_u_villager.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_u_villager", "Spawn Villagers", TabCategory.Cheats, "Unit Spawner",
+                "Spawns Villagers.",
                 () => ArmyManager.SpawnUnit("Peasant", (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_u_archer", "feature.spawn_u_archer.label", TabCategory.Cheats, "feature.section.unit_spawner",
-                "feature.spawn_u_archer.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_u_archer", "Spawn Archers", TabCategory.Cheats, "Unit Spawner",
+                "Spawns Archers.",
                 () => ArmyManager.SpawnUnit("Archer", (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_u_builder", "feature.spawn_u_builder.label", TabCategory.Cheats, "feature.section.unit_spawner",
-                "feature.spawn_u_builder.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_u_builder", "Spawn Builders", TabCategory.Cheats, "Unit Spawner",
+                "Spawns Builders.",
                 () => ArmyManager.SpawnUnit("Worker", (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_u_farmer", "feature.spawn_u_farmer.label", TabCategory.Cheats, "feature.section.unit_spawner",
-                "feature.spawn_u_farmer.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_u_farmer", "Spawn Farmers", TabCategory.Cheats, "Unit Spawner",
+                "Spawns Farmers.",
                 () => ArmyManager.SpawnUnit("Farmer", (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_u_pikeman", "feature.spawn_u_pikeman.label", TabCategory.Cheats, "feature.section.unit_spawner",
-                "feature.spawn_u_pikeman.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_u_pikeman", "Spawn Pikemen", TabCategory.Cheats, "Unit Spawner",
+                "Spawns Pikemen.",
                 () => ArmyManager.SpawnUnit("Pikeman", (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_u_ninja", "feature.spawn_u_ninja.label", TabCategory.Cheats, "feature.section.unit_spawner",
-                "feature.spawn_u_ninja.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_u_ninja", "Spawn Ninjas", TabCategory.Cheats, "Unit Spawner",
+                "Spawns Ninjas (Shogun only).",
                 () => ArmyManager.SpawnUnit("Ninja", (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked || BiomeHolder.Inst == null || BiomeHolder.Inst.BiomeIndex != (int)BiomeHolder.Biomes.Shogun,
-                () => !ModMenu.CheatsUnlocked ? "feature.lock.locked" : "feature.lock.shogun_only"));
-            list.Add(Button("spawn_u_berserker", "feature.spawn_u_berserker.label", TabCategory.Cheats, "feature.section.unit_spawner",
-                "feature.spawn_u_berserker.description",
+                () => !ModMenu.CheatsUnlocked || BiomeHolder.Inst == null || BiomeHolder.Inst.BiomeIndex != (int)BiomeHolder.Biomes.Shogun, 
+                () => !ModMenu.CheatsUnlocked ? "Locked" : "Shogun Only"));
+            list.Add(Button("spawn_u_berserker", "Spawn Berserkers", TabCategory.Cheats, "Unit Spawner",
+                "Spawns Berserkers (Norse only).",
                 () => ArmyManager.SpawnUnit("Berserker", (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked || BiomeHolder.Inst == null || BiomeHolder.Inst.BiomeIndex != (int)BiomeHolder.Biomes.Norselands,
-                () => !ModMenu.CheatsUnlocked ? "feature.lock.locked" : "feature.lock.norse_only"));
-            list.Add(Button("spawn_u_knight", "feature.spawn_u_knight.label", TabCategory.Cheats, "feature.section.unit_spawner",
-                "feature.spawn_u_knight.description",
+                () => !ModMenu.CheatsUnlocked || BiomeHolder.Inst == null || BiomeHolder.Inst.BiomeIndex != (int)BiomeHolder.Biomes.Norselands, 
+                () => !ModMenu.CheatsUnlocked ? "Locked" : "Norse Only"));
+            list.Add(Button("spawn_u_knight", "Spawn Knights", TabCategory.Cheats, "Unit Spawner",
+                "Spawns Knights.",
                 () => ArmyManager.SpawnUnit("Knight", (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
 
-            list.Add(Button("spawn_h_bakery", "feature.spawn_h_bakery.label", TabCategory.Cheats, "feature.section.hermit_spawner",
-                "feature.spawn_h_bakery.description",
+            list.Add(Button("spawn_h_bakery", "Spawn Bakery Hermit", TabCategory.Cheats, "Hermit Spawner",
+                "Spawns the Bakery Hermit.",
                 () => ArmyManager.SpawnHermit("Bakery"),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_h_ballista", "feature.spawn_h_ballista.label", TabCategory.Cheats, "feature.section.hermit_spawner",
-                "feature.spawn_h_ballista.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_h_ballista", "Spawn Ballista Hermit", TabCategory.Cheats, "Hermit Spawner",
+                "Spawns the Ballista Hermit.",
                 () => ArmyManager.SpawnHermit("Ballista"),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_h_berserker", "feature.spawn_h_berserker.label", TabCategory.Cheats, "feature.section.hermit_spawner",
-                "feature.spawn_h_berserker.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_h_berserker", "Spawn Berserker Hermit", TabCategory.Cheats, "Hermit Spawner",
+                "Spawns the Berserker Hermit (Norse only).",
                 () => ArmyManager.SpawnHermit("Berserker"),
-                () => !ModMenu.CheatsUnlocked || BiomeHolder.Inst == null || BiomeHolder.Inst.BiomeIndex != (int)BiomeHolder.Biomes.Norselands,
-                () => !ModMenu.CheatsUnlocked ? "feature.lock.locked" : "feature.lock.norse_only"));
-            list.Add(Button("spawn_h_fire", "feature.spawn_h_fire.label", TabCategory.Cheats, "feature.section.hermit_spawner",
-                "feature.spawn_h_fire.description",
+                () => !ModMenu.CheatsUnlocked || BiomeHolder.Inst == null || BiomeHolder.Inst.BiomeIndex != (int)BiomeHolder.Biomes.Norselands, 
+                () => !ModMenu.CheatsUnlocked ? "Locked" : "Norse Only"));
+            list.Add(Button("spawn_h_fire", "Spawn Fire Hermit", TabCategory.Cheats, "Hermit Spawner",
+                "Spawns the Fire Hermit.",
                 () => ArmyManager.SpawnHermit("Fire"),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_h_horn", "feature.spawn_h_horn.label", TabCategory.Cheats, "feature.section.hermit_spawner",
-                "feature.spawn_h_horn.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_h_horn", "Spawn Horn Hermit", TabCategory.Cheats, "Hermit Spawner",
+                "Spawns the Horn Hermit.",
                 () => ArmyManager.SpawnHermit("Horn"),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_h_stable", "feature.spawn_h_stable.label", TabCategory.Cheats, "feature.section.hermit_spawner",
-                "feature.spawn_h_stable.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_h_stable", "Spawn Stable Hermit", TabCategory.Cheats, "Hermit Spawner",
+                "Spawns the Stable Hermit.",
                 () => ArmyManager.SpawnHermit("Stable"),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_h_warrior", "feature.spawn_h_warrior.label", TabCategory.Cheats, "feature.section.hermit_spawner",
-                "feature.spawn_h_warrior.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_h_warrior", "Spawn Warrior Hermit", TabCategory.Cheats, "Hermit Spawner",
+                "Spawns the Warrior Hermit.",
                 () => ArmyManager.SpawnHermit("Warrior"),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
 
-            list.Add(Button("spawn_e_weak", "feature.spawn_e_weak.label", TabCategory.Cheats, "feature.section.enemy_spawner",
-                "feature.spawn_e_weak.description",
+            list.Add(Button("spawn_e_weak", "Spawn Greedling", TabCategory.Cheats, "Enemy Spawner",
+                "Spawns basic Greedlings.",
                 () => ArmyManager.SpawnEnemy(EnemyType.TrollWeak, (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_e_squid", "feature.spawn_e_squid.label", TabCategory.Cheats, "feature.section.enemy_spawner",
-                "feature.spawn_e_squid.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_e_squid", "Spawn Greed (Flyer)", TabCategory.Cheats, "Enemy Spawner",
+                "Spawns Greed flyers (Squids).",
                 () => ArmyManager.SpawnEnemy(EnemyType.Squid, (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_e_stealer", "feature.spawn_e_stealer.label", TabCategory.Cheats, "feature.section.enemy_spawner",
-                "feature.spawn_e_stealer.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_e_stealer", "Spawn Crown Stealer", TabCategory.Cheats, "Enemy Spawner",
+                "Spawns Crown Stealers.",
                 () => ArmyManager.SpawnEnemy(EnemyType.Stealer, (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_e_boss", "feature.spawn_e_boss.label", TabCategory.Cheats, "feature.section.enemy_spawner",
-                "feature.spawn_e_boss.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_e_boss", "Spawn Breeder", TabCategory.Cheats, "Enemy Spawner",
+                "Spawns Breeders.",
                 () => ArmyManager.SpawnEnemy(EnemyType.Boss, (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_e_crusher", "feature.spawn_e_crusher.label", TabCategory.Cheats, "feature.section.enemy_spawner",
-                "feature.spawn_e_crusher.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_e_crusher", "Spawn Crusher", TabCategory.Cheats, "Enemy Spawner",
+                "Spawns Crushers.",
                 () => ArmyManager.SpawnEnemy(EnemyType.Crusher, (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_e_knight", "feature.spawn_e_knight.label", TabCategory.Cheats, "feature.section.enemy_spawner",
-                "feature.spawn_e_knight.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_e_knight", "Spawn Greed Knight", TabCategory.Cheats, "Enemy Spawner",
+                "Spawns Greed Knights.",
                 () => ArmyManager.SpawnEnemy(EnemyType.Knight, (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
-            list.Add(Button("spawn_e_archer", "feature.spawn_e_archer.label", TabCategory.Cheats, "feature.section.enemy_spawner",
-                "feature.spawn_e_archer.description",
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
+            list.Add(Button("spawn_e_archer", "Spawn Greed Archer", TabCategory.Cheats, "Enemy Spawner",
+                "Spawns Greed Archers.",
                 () => ArmyManager.SpawnEnemy(EnemyType.Archer, (int)ModMenu.SpawnUnitCount),
-                () => !ModMenu.CheatsUnlocked, () => "feature.lock.locked"));
+                () => !ModMenu.CheatsUnlocked, () => "Locked"));
 
-            list.Add(Button("clear_coins", "feature.clear_coins.label", TabCategory.Cheats, "feature.section.world",
-                "feature.clear_coins.description",
+            list.Add(Button("clear_coins", "Clear Dropped Coins", TabCategory.Cheats, "World",
+                "Removes all dropped coins/gems on the ground to improve performance.",
                 () => ArmyManager.ClearCoins()));
 
-            list.Add(Toggle("hyper_builders", "feature.hyper_builders.label", TabCategory.Cheats, "feature.section.builders",
-                "feature.hyper_builders.description",
+            list.Add(Toggle("hyper_builders", "Instant Construction", TabCategory.Cheats, "Builders",
+                "Buildings complete in one frame.",
                 () => ModMenu.HyperBuilders, v => ModMenu.HyperBuilders = v,
                 () => !ModMenu.CheatsUnlocked, null,
                 () => ModMenu.HyperBuilders && ModMenu.LargerCamps));
-            list.Add(Slider("builder_speed", "feature.builder_speed.label", TabCategory.Cheats, "feature.section.builders",
-                "feature.builder_speed.description",
+            list.Add(Slider("builder_speed", "Builder Speed", TabCategory.Cheats, "Builders",
+                "Multiplies builder movement speed.",
                 () => ModMenu.BuilderSpeedMult, v => ModMenu.BuilderSpeedMult = v, 0.01f, 10.0f));
-            list.Add(Slider("builder_work", "feature.builder_work.label", TabCategory.Cheats, "feature.section.builders",
-                "feature.builder_work.description",
+            list.Add(Slider("builder_work", "Builder Efficiency", TabCategory.Cheats, "Builders",
+                "Scales builder work time (lower is faster).",
                 () => ModMenu.BuilderEfficiencyMult, v => ModMenu.BuilderEfficiencyMult = v, 0.0001f, 3.0f));
-            list.Add(Toggle("larger_camps", "feature.larger_camps.label", TabCategory.Cheats, "feature.section.builders",
-                "feature.larger_camps.description",
+            list.Add(Toggle("larger_camps", "Expand Vagrant Camps", TabCategory.Cheats, "Builders",
+                "Increases the maximum vagrant camp population.",
                 () => ModMenu.LargerCamps, v => ModMenu.LargerCamps = v,
                 () => !ModMenu.CheatsUnlocked, null,
                 () => ModMenu.HyperBuilders && ModMenu.LargerCamps));
 
             // ==================== LAB ====================
-            list.Add(Toggle("lock_summer", "feature.lock_summer.label", TabCategory.Lab, "feature.section.world",
-                "feature.lock_summer.description",
+            list.Add(Toggle("lock_summer", "Lock Summer Season", TabCategory.Lab, "World",
+                "Prevents the season from advancing past summer.",
                 () => ModMenu.LockSummer, v => ModMenu.LockSummer = v));
-            list.Add(Toggle("clear_weather", "feature.clear_weather.label", TabCategory.Lab, "feature.section.world",
-                "feature.clear_weather.description",
+            list.Add(Toggle("clear_weather", "Clear Weather", TabCategory.Lab, "World",
+                "Disables rain and snow effects.",
                 () => ModMenu.ClearWeather, v => ModMenu.ClearWeather = v,
                 null, null, () => ModMenu.LockSummer && ModMenu.ClearWeather));
-            list.Add(Toggle("coins_stay_dry", "feature.coins_stay_dry.label", TabCategory.Lab, "feature.section.world",
-                "feature.coins_stay_dry.description",
+            list.Add(Toggle("coins_stay_dry", "Buoyant Currency", TabCategory.Lab, "World",
+                "Coins dropped in water float instead of sinking.",
                 () => ModMenu.CoinsStayDry, v => ModMenu.CoinsStayDry = v));
-            list.Add(Toggle("no_blood_moons", "feature.no_blood_moons.label", TabCategory.Lab, "feature.section.world",
-                "feature.no_blood_moons.description",
+            list.Add(Toggle("no_blood_moons", "Disable Blood Moons", TabCategory.Lab, "World",
+                "Prevents blood moon wave events.",
                 () => ModMenu.NoBloodMoons, v => ModMenu.NoBloodMoons = v));
 
-            list.Add(Toggle("invincible_walls", "feature.invincible_walls.label", TabCategory.Lab, "feature.section.structures",
-                "feature.invincible_walls.description",
+            list.Add(Toggle("invincible_walls", "Self-Repairing Walls", TabCategory.Lab, "Structures",
+                "Damaged walls automatically restore over time.",
                 () => ModMenu.InvincibleWalls, v => ModMenu.InvincibleWalls = v));
-            list.Add(Toggle("better_citizen_houses", "feature.better_citizen_houses.label", TabCategory.Lab, "feature.section.structures",
-                "feature.better_citizen_houses.description",
+            list.Add(Toggle("better_citizen_houses", "Rapid Citizen Housing", TabCategory.Lab, "Structures",
+                "Citizens move into houses faster.",
                 () => ModMenu.BetterCitizenHouses, v => ModMenu.BetterCitizenHouses = v));
-            list.Add(Toggle("better_knight", "feature.better_knight.label", TabCategory.Lab, "feature.section.combat",
-                "feature.better_knight.description",
+            list.Add(Toggle("better_knight", "Elite Knights", TabCategory.Lab, "Combat",
+                "Increases knight combat effectiveness.",
                 () => ModMenu.BetterKnight, v => ModMenu.BetterKnight = v));
 
-            list.Add(Toggle("archer_fire_boost", "feature.archer_fire_boost.label", TabCategory.Lab, "feature.section.units",
-                "feature.archer_fire_boost.description",
+            list.Add(Toggle("archer_fire_boost", "Archer Fire Rate Boost", TabCategory.Lab, "Units",
+                "Archers shoot significantly faster.",
                 () => ModMenu.ArcherFireBoost, v => ModMenu.ArcherFireBoost = v));
-            list.Add(Toggle("berserker_rage", "feature.berserker_rage.label", TabCategory.Lab, "feature.section.units",
-                "feature.berserker_rage.description",
+            list.Add(Toggle("berserker_rage", "Berserker Rage Mode", TabCategory.Lab, "Units",
+                "Berserkers enter rage state permanently.",
                 () => ModMenu.BerserkerRage, v => ModMenu.BerserkerRage = v));
-            list.Add(Toggle("ninja_speed_boost", "feature.ninja_speed_boost.label", TabCategory.Lab, "feature.section.units",
-                "feature.ninja_speed_boost.description",
+            list.Add(Toggle("ninja_speed_boost", "Ninja Speed Boost", TabCategory.Lab, "Units",
+                "Ninjas move faster.",
                 () => ModMenu.NinjaSpeedBoost, v => ModMenu.NinjaSpeedBoost = v));
 
-            list.Add(Slider("recruit_cap", "feature.recruit_cap.label", TabCategory.Lab, "feature.section.lab_rules",
-                "feature.recruit_cap.description",
+            list.Add(Slider("recruit_cap", "Recruit Cap", TabCategory.Lab, "Lab Rules",
+                "Overrides max recruitable units. 0 for default.",
                 () => ModMenu.RecruitCap, v => ModMenu.RecruitCap = (int)v, 0, 50));
-            list.Add(Slider("tree_regrow", "feature.tree_regrow.label", TabCategory.Lab, "feature.section.world",
-                "feature.tree_regrow.description",
+            list.Add(Slider("tree_regrow", "Tree Regrowth", TabCategory.Lab, "World",
+                "Multiplies tree regrowth speed.",
                 () => ModMenu.TreeRegrowthMult, v => ModMenu.TreeRegrowthMult = v, 0.1f, 5.0f));
 
-            list.Add(Toggle("farm_output", "feature.farm_output.label", TabCategory.Lab, "feature.section.world",
-                "feature.farm_output.description",
+            list.Add(Toggle("farm_output", "Farm Output Boost", TabCategory.Lab, "World",
+                "Increases farm production yield.",
                 () => ModMenu.FarmOutputBoost, v => ModMenu.FarmOutputBoost = v));
-            list.Add(Toggle("tower_fire", "feature.tower_fire.label", TabCategory.Lab, "feature.section.world",
-                "feature.tower_fire.description",
+            list.Add(Toggle("tower_fire", "Tower Fire Boost", TabCategory.Lab, "World",
+                "Increases tower fire rate.",
                 () => ModMenu.TowerFireBoost, v => ModMenu.TowerFireBoost = v));
-            list.Add(Toggle("ballista_boost", "feature.ballista_boost.label", TabCategory.Lab, "feature.section.world",
-                "feature.ballista_boost.description",
+            list.Add(Toggle("ballista_boost", "Ballista Boost", TabCategory.Lab, "World",
+                "Enables ballista stat overrides.",
                 () => ModMenu.BallistaBoost, v => ModMenu.BallistaBoost = v));
-            list.Add(Slider("ballista_reload", "feature.ballista_reload.label", TabCategory.Lab, "feature.section.world",
-                "feature.ballista_reload.description",
+            list.Add(Slider("ballista_reload", "Ballista Reload", TabCategory.Lab, "World",
+                "Scales ballista reload time.",
                 () => ModMenu.BallistaReloadMult, v => ModMenu.BallistaReloadMult = v, 0.001f, 2.0f));
-            list.Add(Slider("ballista_flight", "feature.ballista_flight.label", TabCategory.Lab, "feature.section.world",
-                "feature.ballista_flight.description",
+            list.Add(Slider("ballista_flight", "Ballista Flight Speed", TabCategory.Lab, "World",
+                "Multiplies ballista bolt speed.",
                 () => ModMenu.BallistaFlightMult, v => ModMenu.BallistaFlightMult = v, 1.0f, 5.0f));
 
-            list.Add(Toggle("catapult_boost", "feature.catapult_boost.label", TabCategory.Lab, "feature.section.world",
-                "feature.catapult_boost.description",
+            list.Add(Toggle("catapult_boost", "Catapult Boost", TabCategory.Lab, "World",
+                "Enables catapult stat overrides.",
                 () => ModMenu.CatapultBoost, v => ModMenu.CatapultBoost = v));
-            list.Add(Slider("catapult_reload", "feature.catapult_reload.label", TabCategory.Lab, "feature.section.world",
-                "feature.catapult_reload.description",
+            list.Add(Slider("catapult_reload", "Catapult Reload", TabCategory.Lab, "World",
+                "Scales catapult reload time.",
                 () => ModMenu.CatapultReloadMult, v => ModMenu.CatapultReloadMult = v, 0.001f, 2.0f));
-            list.Add(Slider("catapult_flight", "feature.catapult_flight.label", TabCategory.Lab, "feature.section.world",
-                "feature.catapult_flight.description",
+            list.Add(Slider("catapult_flight", "Catapult Flight Speed", TabCategory.Lab, "World",
+                "Multiplies catapult stone speed.",
                 () => ModMenu.CatapultFlightMult, v => ModMenu.CatapultFlightMult = v, 1.0f, 5.0f));
-            list.Add(Toggle("instant_castle", "feature.instant_castle.label", TabCategory.Lab, "feature.section.world",
-                "feature.instant_castle.description",
+            list.Add(Toggle("instant_castle", "Instant Castle Upgrade", TabCategory.Lab, "World",
+                "Castle upgrades finish immediately.",
                 () => ModMenu.InstantCastle, v => ModMenu.InstantCastle = v));
-            list.Add(Toggle("instant_day_skip", "feature.instant_day_skip.label", TabCategory.Lab, "feature.section.world",
-                "feature.instant_day_skip.description",
+            list.Add(Toggle("instant_day_skip", "Instant Day Skip", TabCategory.Lab, "World",
+                "Skips the day/night transition delays.",
                 () => ModMenu.InstantDaySkip, v => ModMenu.InstantDaySkip = v));
-            list.Add(Toggle("animal_spawn", "feature.animal_spawn.label", TabCategory.Lab, "feature.section.world",
-                "feature.animal_spawn.description",
+            list.Add(Toggle("animal_spawn", "Animal Spawn Boost", TabCategory.Lab, "World",
+                "Increases animal spawn rates.",
                 () => ModMenu.AnimalSpawnBoost, v => ModMenu.AnimalSpawnBoost = v));
 
-            list.Add(Toggle("charge_dmg", "feature.charge_dmg.label", TabCategory.Lab, "feature.section.steed",
-                "feature.charge_dmg.description",
+            list.Add(Toggle("charge_dmg", "Charge Damage Boost", TabCategory.Lab, "Steed",
+                "Increases steed charge damage.",
                 () => ModMenu.ChargeDmgBoost, v => ModMenu.ChargeDmgBoost = v));
-            list.Add(Slider("buff_aura", "feature.buff_aura.label", TabCategory.Lab, "feature.section.steed",
-                "feature.buff_aura.description",
+            list.Add(Slider("buff_aura", "Buff Aura Duration", TabCategory.Lab, "Steed",
+                "Extends duration of buff auras.",
                 () => ModMenu.BuffAuraDuration, v => ModMenu.BuffAuraDuration = v, 1.0f, 10.0f));
 
             // ==================== HARD ====================
-            list.Add(Toggle("no_crown_stealing", "feature.no_crown_stealing.label", TabCategory.Hard, "feature.section.wave_control",
-                "feature.no_crown_stealing.description",
+            list.Add(Toggle("no_crown_stealing", "No Crown Stealing", TabCategory.Hard, "Wave Control",
+                "Greed units cannot steal the crown.",
                 () => ModMenu.NoCrownStealing, v => ModMenu.NoCrownStealing = v,
-                () => DifficultyRules.IsHardModeActive(), () => "feature.lock.hard_mode"));
+                () => DifficultyRules.IsHardModeActive(), () => "Hard Mode"));
 
-            list.Add(Slider("wave_size", "feature.wave_size.label", TabCategory.Hard, "feature.section.wave_sliders",
-                "feature.wave_size.description",
+            list.Add(Slider("wave_size", "Wave Size", TabCategory.Hard, "Wave Sliders",
+                "Multiplies the number of enemies per wave.",
                 () => ModMenu.WaveSizeMult, v => ModMenu.WaveSizeMult = v, 0.1f, 5.0f));
-            list.Add(Slider("enemy_speed", "feature.enemy_speed.label", TabCategory.Hard, "feature.section.wave_sliders",
-                "feature.enemy_speed.description",
+            list.Add(Slider("enemy_speed", "Enemy Speed", TabCategory.Hard, "Wave Sliders",
+                "Multiplies Greed unit movement speed.",
                 () => ModMenu.EnemySpeedMult, v => ModMenu.EnemySpeedMult = v, 0.5f, 3.0f));
-            list.Add(Slider("portal_rate", "feature.portal_rate.label", TabCategory.Hard, "feature.section.wave_sliders",
-                "feature.portal_rate.description",
+            list.Add(Slider("portal_rate", "Portal Spawn Rate", TabCategory.Hard, "Wave Sliders",
+                "Multiplies portal spawn rate.",
                 () => ModMenu.PortalSpawnRate, v => ModMenu.PortalSpawnRate = v, 0.1f, 5.0f));
-            list.Add(Slider("queen_hp", "feature.queen_hp.label", TabCategory.Hard, "feature.section.wave_sliders",
-                "feature.queen_hp.description",
+            list.Add(Slider("queen_hp", "Greed Queen HP", TabCategory.Hard, "Wave Sliders",
+                "Multiplies the Greed Queen's max health.",
                 () => ModMenu.GreedQueenHPScale, v => ModMenu.GreedQueenHPScale = v, 0.5f, 5.0f));
-            list.Add(Slider("threat", "feature.threat.label", TabCategory.Hard, "feature.section.wave_sliders",
-                "feature.threat.description",
+            list.Add(Slider("threat", "Director Threat", TabCategory.Hard, "Wave Sliders",
+                "Multiplies the Director's threat scaling.",
                 () => ModMenu.DirectorThreatMult, v => ModMenu.DirectorThreatMult = v, 0.1f, 5.0f));
 
             return list.ToArray();

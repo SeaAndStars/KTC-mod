@@ -178,16 +178,9 @@ namespace KingdomEnhanced.Hooks
             if (__instance == null || (!ModMenu.ArcherFireBoost && !ModMenu.TowerFireBoost)) return;
             var md = ModData.GetOrAdd(__instance.gameObject);
             if (md.baseFireRate == 0f) return;
-
-            if (!md.towerCheckCached)
-            {
-                md.cachedInTower = __instance.GetComponentInParent<Tower>() != null;
-                md.towerCheckCached = true;
-            }
-
             float mult = 1.0f;
             if (ModMenu.ArcherFireBoost)  mult *= 2.0f;
-            if (ModMenu.TowerFireBoost && md.cachedInTower) mult *= 2.0f;
+            if (ModMenu.TowerFireBoost && __instance.GetComponentInParent<Tower>() != null) mult *= 2.0f;
             __instance.shootCooldownTime = md.baseFireRate / mult;
         }
 
@@ -290,42 +283,27 @@ namespace KingdomEnhanced.Hooks
             }
         }
 
-        private static readonly System.Reflection.FieldInfo CrankRateField =
-            typeof(Catapult).GetField("crankRate", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-        private static readonly System.Reflection.FieldInfo CrankRateFormationField =
-            typeof(Catapult).GetField("crankRateFormation", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
         public static void CatapultUpdatePostfix(Catapult __instance)
         {
             if (!ModMenu.CatapultBoost || ModMenu.CatapultReloadMult <= 1.0f) return;
             var md = ModData.GetOrAdd(__instance.gameObject);
+            
+            // IL2CPP dummy assemblies often hide these as private fields or properties
+            var crankField = typeof(Catapult).GetField("crankRate", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            var crankFormationField = typeof(Catapult).GetField("crankRateFormation", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-            if (CrankRateField == null) return;
+            if (crankField == null) return;
 
             if (md.baseCrankRate == 0f)
             {
-                md.baseCrankRate = (float)CrankRateField.GetValue(__instance);
-                if (CrankRateFormationField != null)
-                    md.baseCrankRateFormation = (float)CrankRateFormationField.GetValue(__instance);
+                md.baseCrankRate = (float)crankField.GetValue(__instance);
+                if (crankFormationField != null)
+                    md.baseCrankRateFormation = (float)crankFormationField.GetValue(__instance);
             }
 
-            float targetRate = md.baseCrankRate * ModMenu.CatapultReloadMult;
-            if (Math.Abs(md.lastAppliedCrankRate - targetRate) > 0.0001f)
-            {
-                CrankRateField.SetValue(__instance, targetRate);
-                md.lastAppliedCrankRate = targetRate;
-            }
-
-            if (CrankRateFormationField != null)
-            {
-                float targetFormation = md.baseCrankRateFormation * ModMenu.CatapultReloadMult;
-                if (Math.Abs(md.lastAppliedCrankRateFormation - targetFormation) > 0.0001f)
-                {
-                    CrankRateFormationField.SetValue(__instance, targetFormation);
-                    md.lastAppliedCrankRateFormation = targetFormation;
-                }
-            }
+            crankField.SetValue(__instance, md.baseCrankRate * ModMenu.CatapultReloadMult);
+            if (crankFormationField != null)
+                crankFormationField.SetValue(__instance, md.baseCrankRateFormation * ModMenu.CatapultReloadMult);
         }
 
         public static void LaunchableLaunchPrefix(Launchable __instance, ref Vector2 __0, GameObject __1)
@@ -369,14 +347,8 @@ namespace KingdomEnhanced.Hooks
                 md.moverBaseSpeed = (float)f.GetValue(__instance);
                 md.isInitialized = true;
             }
-
-            // 仅在目标速度与上次实际写入值不同时才反射写入,避免每帧对每个单位反射 Get/Set
-            float target = md.moverBaseSpeed * ModMenu.EnemySpeedMult;
-            if (Math.Abs(md.lastAppliedMoverSpeed - target) > 0.0001f)
-            {
-                f.SetValue(__instance, target);
-                md.lastAppliedMoverSpeed = target;
-            }
+            
+            f.SetValue(__instance, md.moverBaseSpeed * ModMenu.EnemySpeedMult);
         }
 
         private static bool _inWaveSpawnExtra = false;

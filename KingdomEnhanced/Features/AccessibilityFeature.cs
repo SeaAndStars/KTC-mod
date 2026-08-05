@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using KingdomEnhanced.Core;
 using KingdomEnhanced.UI;
 using KingdomEnhanced.Systems;
 using KingdomEnhanced.Utils; 
@@ -108,13 +107,11 @@ namespace KingdomEnhanced.Features
                 
                 if (_player.steed != null && current.gameObject == _player.steed.gameObject) return;
 
-                string rawName = PayableNameResolver.GetCanonicalName(current.name);
-                string displayName = PayableNameResolver.GetLocalizedDisplayName(current.name);
+                string rawName = PayableNameResolver.CleanName(current.name);
                 
                 
                 int price = payable.Price;
-                bool isGemCurrency = payable.Currency == CurrencyType.Gems;
-                string currency = LocalizationService.Get(isGemCurrency ? "accessibility.currency.gems" : "accessibility.currency.coins");
+                string currency = (payable.Currency == CurrencyType.Gems) ? "Gems" : "Coins";
 
 
 
@@ -122,23 +119,20 @@ namespace KingdomEnhanced.Features
                 if (string.IsNullOrEmpty(rawName))
                 {
                     rawName = current.name.Replace("(Clone)", "").Trim();
-                    displayName = rawName;
                 }
 
                 
-                bool isBoat = current.GetComponent<Boat>() != null || current.name.ToLower().Contains("boat");
-                bool isShipwreck = !isBoat && current.name.ToLower().Contains("wreck");
-                if (isBoat)
+                if (current.GetComponent<Boat>() != null || current.name.ToLower().Contains("boat")) 
                 {
-                    displayName = LocalizationService.Get("payable.name.boat");
+                    rawName = "Boat";
                 }
-                else if (isShipwreck)
+                else if (current.name.ToLower().Contains("wreck"))
                 {
-                    displayName = LocalizationService.Get("accessibility.name.shipwreck");
+                    rawName = "Shipwreck";
                 }
                 else if (current.name.ToLower().Contains("wharf"))
                 {
-                    displayName = LocalizationService.Get("accessibility.name.wharf");
+                    rawName = "Wharf";
                 }
 
                 
@@ -148,12 +142,12 @@ namespace KingdomEnhanced.Features
                     
                     switch (reason)
                     {
-                        case LockIndicator.LockReason.StoneTechRequired: techWarning = LocalizationService.Get("accessibility.lock.stone_tech_required"); break;
-                        case LockIndicator.LockReason.IronTechRequired: techWarning = LocalizationService.Get("accessibility.lock.iron_tech_required"); break;
-                        case LockIndicator.LockReason.HermitLocked: techWarning = LocalizationService.Get("accessibility.lock.hermit_locked"); break;
-                        case LockIndicator.LockReason.NoUpgrade: techWarning = LocalizationService.Get("accessibility.lock.fully_upgraded"); break;
-                        case LockIndicator.LockReason.Base: techWarning = LocalizationService.Get("accessibility.lock.base_upgrade_required"); break;
-                        default: techWarning = LocalizationService.Get("accessibility.lock.locked"); break;
+                        case LockIndicator.LockReason.StoneTechRequired: techWarning = "Need Stone Tech"; break;
+                        case LockIndicator.LockReason.IronTechRequired: techWarning = "Need Iron Tech"; break;
+                        case LockIndicator.LockReason.HermitLocked: techWarning = "Locked by Hermit"; break;
+                        case LockIndicator.LockReason.NoUpgrade: techWarning = "Fully Upgraded"; break; 
+                        case LockIndicator.LockReason.Base: techWarning = "Base upgrade required"; break;
+                        default: techWarning = "Locked"; break; 
                     }
                     if (reason == LockIndicator.LockReason.NotLocked) techWarning = ""; 
                 }
@@ -162,74 +156,74 @@ namespace KingdomEnhanced.Features
                 bool isProtecting = false;
                 if (rawName.Contains("Tree") && (isProtecting = IsTreeProtectingVillage(current.transform.position.x)))
                 {
-                    techWarning = LocalizationService.Get("accessibility.lock.destroys_village");
+                    techWarning = "WARNING: Destroys Village";
                 }
 
                 
-                string actionKey = "accessibility.action.build";
+                string action = "Build";
                 
                 
-                if (isBoat || rawName.Contains("Boat") || rawName.Contains("Ship"))
+                if (rawName == "Boat" || rawName.Contains("Boat") || rawName.Contains("Ship"))
                 {
-                     if (price <= 3) actionKey = "accessibility.action.add_parts";
-                     else if (price >= 10) actionKey = "accessibility.action.sail";
-                     else actionKey = "accessibility.action.repair_hull";
+                     if (price <= 3) action = "Add Parts";
+                     else if (price >= 10) action = "Sail";
+                     else action = "Repair Hull";
                      
-                     if (isShipwreck || rawName.Contains("Wreck") || rawName.Contains("Ruin")) actionKey = "accessibility.action.repair_hull";
+                     if (rawName.Contains("Wreck") || rawName.Contains("Ruin")) action = "Repair Hull";
                 }
                 
                 if (rawName.Contains("Statue") || rawName.Contains("Idol"))
                 {
-                    actionKey = isGemCurrency ? "accessibility.action.pay" : "accessibility.action.activate";
+                    action = (currency == "Gems") ? "Pay" : "Activate";
                 }
                 
-                if (rawName.Contains("Bank") || rawName.Contains("Chest")) actionKey = "accessibility.action.deposit";
-                else if (rawName.Contains("Portal") || rawName.Contains("Border")) actionKey = "accessibility.action.destroy_portal";
-                else if (rawName.Contains("Beggar") || rawName.Contains("Citizen") || rawName.Contains("Hermit")) actionKey = "accessibility.action.hire";
-                else if (rawName.Contains("Shop") || rawName.Contains("Merchant")) actionKey = rawName.Contains("Merchant") ? "accessibility.action.invest" : "accessibility.action.buy";
-                else if (rawName.Contains("Teleporter")) actionKey = "accessibility.action.teleport";
-                else if (rawName.Contains("Bell")) actionKey = "accessibility.action.call";
-                else if (rawName.Contains("Gem Guard") || rawName.Contains("GemKeeper")) actionKey = "accessibility.action.withdraw";
+                if (rawName.Contains("Bank") || rawName.Contains("Chest")) action = "Deposit";
+                else if (rawName.Contains("Portal") || rawName.Contains("Border")) action = "Destroy Portal";
+                else if (rawName.Contains("Beggar") || rawName.Contains("Citizen") || rawName.Contains("Hermit")) action = "Hire";
+                else if (rawName.Contains("Shop") || rawName.Contains("Merchant")) action = (rawName.Contains("Merchant")) ? "Invest" : "Buy";
+                else if (rawName.Contains("Teleporter")) action = "Teleport";
+                else if (rawName.Contains("Bell")) action = "Call";
+                else if (rawName.Contains("Gem Guard") || rawName.Contains("GemKeeper")) action = "Withdraw";
                 
-                else if (rawName.Contains("Tree") && !rawName.Contains("Close")) actionKey = "accessibility.action.chop";
-                else if (rawName.Contains("Mount") || rawName.Contains("Chimera") || current.name.Contains("Steed") || current.name.Contains("Horse")) actionKey = "accessibility.action.switch";
-                else if (rawName.Contains("Banner")) actionKey = "accessibility.action.expedition";
+                else if (rawName.Contains("Tree") && !rawName.Contains("Close")) action = "Chop";
+                else if (rawName.Contains("Mount") || rawName.Contains("Chimera") || current.name.Contains("Steed") || current.name.Contains("Horse")) action = "Switch";
+                else if (rawName.Contains("Banner")) action = "Expedition";
                 
                 
-                if (actionKey == "accessibility.action.build")
+                if (action == "Build")
                 {
                     
                     
-                    if (_endsWithDigitRegex.IsMatch(rawName) || _endsWithUpperRegex.IsMatch(rawName)) actionKey = "accessibility.action.upgrade";
+                    if (_endsWithDigitRegex.IsMatch(rawName) || _endsWithUpperRegex.IsMatch(rawName)) action = "Upgrade";
                     
                     var wall = current.GetComponent<Wall>();
-                    if (wall != null && wall.level > 0) actionKey = "accessibility.action.upgrade_wall";
+                    if (wall != null && wall.level > 0) action = "Upgrade Wall";
                     
                     var castle = current.GetComponent<Castle>();
                     
                     if (castle != null)
                     {
-                         actionKey = castle.level == 0 ? "accessibility.action.build" : "accessibility.action.upgrade";
+                         action = (castle.level == 0) ? "Build" : "Upgrade";
                     }
                     
                     var farm = current.GetComponent<Farmhouse>();
-                    if (farm != null && price >= 3) actionKey = "accessibility.action.upgrade_farm";
+                    if (farm != null && price >= 3) action = "Upgrade Farm"; 
                 }
 
                 
-                string message = LocalizationService.Format("accessibility.hover.name_only", displayName);
+                string message = $"{rawName}";
                 
                 if (!string.IsNullOrEmpty(techWarning))
                 {
-                    message = LocalizationService.Format("accessibility.hover.with_warning", displayName, techWarning);
+                    message += $", {techWarning}";
                 }
                 else
                 {
                     
-                    if (price > 0 || actionKey == "accessibility.action.withdraw" || actionKey == "accessibility.action.deposit")
-                        message = LocalizationService.Format("accessibility.hover.with_price", displayName, price, currency, LocalizationService.Get(actionKey));
+                    if (price > 0 || action == "Withdraw" || action == "Deposit") 
+                        message += $", {price} {currency}, {action}";
                     else
-                        message = LocalizationService.Format("accessibility.hover.with_action", displayName, LocalizationService.Get(actionKey));
+                        message += $", {action}";
                 }
 
                 
@@ -321,8 +315,8 @@ namespace KingdomEnhanced.Features
             {
                 float playerX = _player.transform.position.x;
                 float castleX = castle.transform.position.x;
-                string direction = LocalizationService.Get(castleX > playerX ? "accessibility.camp.direction.right" : "accessibility.camp.direction.left");
-                ModMenu.Speak(LocalizationService.Format("accessibility.base_camp.direction", direction), interrupt: false);
+                string direction = castleX > playerX ? "right" : "left";
+                ModMenu.Speak($"Base camp on the {direction}", interrupt: false);
                 _baseCampAnnounced = true;
             }
         }
@@ -373,11 +367,11 @@ namespace KingdomEnhanced.Features
 
             if (minWallX != float.MaxValue)
             {
-                _debugZones.Add(new TriggerZone { Box = new Rect(minWallX, y - 2f, 0.1f, h), Color = Color.cyan, Label = LocalizationService.Get("accessibility.zone.last_wall") });
-                _debugZones.Add(new TriggerZone { Box = new Rect(maxWallX, y - 2f, 0.1f, h), Color = Color.cyan, Label = LocalizationService.Get("accessibility.zone.last_wall") });
+                _debugZones.Add(new TriggerZone { Box = new Rect(minWallX, y - 2f, 0.1f, h), Color = Color.cyan, Label = "Last Wall" });
+                _debugZones.Add(new TriggerZone { Box = new Rect(maxWallX, y - 2f, 0.1f, h), Color = Color.cyan, Label = "Last Wall" });
                 
-                _debugZones.Add(new TriggerZone { Box = new Rect(minWallX - wBox, y - 1f, wBox, h - 1f), Color = Color.red, Label = LocalizationService.Get("accessibility.zone.castle_trigger") });
-                _debugZones.Add(new TriggerZone { Box = new Rect(maxWallX,        y - 1f, wBox, h - 1f), Color = Color.red, Label = LocalizationService.Get("accessibility.zone.castle_trigger") });
+                _debugZones.Add(new TriggerZone { Box = new Rect(minWallX - wBox, y - 1f, wBox, h - 1f), Color = Color.red, Label = "Entering/Leaving Castle (Trigger)" });
+                _debugZones.Add(new TriggerZone { Box = new Rect(maxWallX,        y - 1f, wBox, h - 1f), Color = Color.red, Label = "Entering/Leaving Castle (Trigger)" });
             }
 
             _campIntervals.Clear();
@@ -420,14 +414,14 @@ namespace KingdomEnhanced.Features
 
                     _campIntervals.Add(new Vector2(treeL1, treeR1));
 
-                    _debugZones.Add(new TriggerZone { Box = new Rect(treeL1, y - 2f, 0.1f, h), Color = Color.cyan, Label = LocalizationService.Get("accessibility.zone.inner_tree_line") });
-                    _debugZones.Add(new TriggerZone { Box = new Rect(treeR1, y - 2f, 0.1f, h), Color = Color.cyan, Label = LocalizationService.Get("accessibility.zone.inner_tree_line") });
+                    _debugZones.Add(new TriggerZone { Box = new Rect(treeL1, y - 2f, 0.1f, h), Color = Color.cyan, Label = "Inner Tree Line" });
+                    _debugZones.Add(new TriggerZone { Box = new Rect(treeR1, y - 2f, 0.1f, h), Color = Color.cyan, Label = "Inner Tree Line" });
 
-                    _debugZones.Add(new TriggerZone { Box = new Rect(treeL1 - wBox, y - 1f, wBox, h - 1f), Color = Color.red, Label = LocalizationService.Get("accessibility.zone.camp_trigger") });
-                    _debugZones.Add(new TriggerZone { Box = new Rect(treeR1,        y - 1f, wBox, h - 1f), Color = Color.red, Label = LocalizationService.Get("accessibility.zone.camp_trigger") });
+                    _debugZones.Add(new TriggerZone { Box = new Rect(treeL1 - wBox, y - 1f, wBox, h - 1f), Color = Color.red, Label = "Entering/Leaving Camp (Trigger)" });
+                    _debugZones.Add(new TriggerZone { Box = new Rect(treeR1,        y - 1f, wBox, h - 1f), Color = Color.red, Label = "Entering/Leaving Camp (Trigger)" });
 
-                    _debugZones.Add(new TriggerZone { Box = new Rect(treeL_N, y - 0.5f, Mathf.Max(0.1f, treeL1 - treeL_N - wBox), h - 2f), Color = new Color(0.3f, 0.3f, 0.3f, 0.6f), Label = LocalizationService.Get("accessibility.zone.exclusion") });
-                    _debugZones.Add(new TriggerZone { Box = new Rect(treeR1 + wBox, y - 0.5f, Mathf.Max(0.1f, treeR_N - treeR1 - wBox), h - 2f), Color = new Color(0.3f, 0.3f, 0.3f, 0.6f), Label = LocalizationService.Get("accessibility.zone.exclusion") });
+                    _debugZones.Add(new TriggerZone { Box = new Rect(treeL_N, y - 0.5f, Mathf.Max(0.1f, treeL1 - treeL_N - wBox), h - 2f), Color = new Color(0.3f, 0.3f, 0.3f, 0.6f), Label = "Exclusion Zone (No triggers)" });
+                    _debugZones.Add(new TriggerZone { Box = new Rect(treeR1 + wBox, y - 0.5f, Mathf.Max(0.1f, treeR_N - treeR1 - wBox), h - 2f), Color = new Color(0.3f, 0.3f, 0.3f, 0.6f), Label = "Exclusion Zone (No triggers)" });
                 }
             }
         }
@@ -454,7 +448,7 @@ namespace KingdomEnhanced.Features
                     _wasInCastle = insideCastle;
                     if (_announcerCooldown <= 0f)
                     {
-                        ModMenu.Speak(LocalizationService.Get(insideCastle ? "accessibility.castle.entering" : "accessibility.castle.leaving"));
+                        ModMenu.Speak(insideCastle ? "Entering Castle" : "Leaving Castle");
                         _announcerCooldown = 0.5f;
                     }
                 }
@@ -475,7 +469,7 @@ namespace KingdomEnhanced.Features
                 _wasInVillage = insideAnyCamp;
                 if (_announcerCooldown <= 0f)
                 {
-                    ModMenu.Speak(LocalizationService.Get(insideAnyCamp ? "accessibility.camp.entering" : "accessibility.camp.leaving"));
+                    ModMenu.Speak(insideAnyCamp ? "Entering Camp" : "Leaving Camp");
                     _announcerCooldown = 0.5f;
                 }
             }

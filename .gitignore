@@ -27,7 +27,3 @@ diff.txt
 Releases
 # Local developer config (do not commit)
 Directory.Build.props
-
-# Generated IL2CPP interop assemblies (see tools/generate-interop.ps1)
-interop/
-temp_work/

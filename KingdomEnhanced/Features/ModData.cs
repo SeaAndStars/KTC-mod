@@ -34,9 +34,6 @@ namespace KingdomEnhanced.Features
         // Mover
         public float moverBaseSpeed;
         
-        /// <summary>Mover 上次实际写入的速度值,用于跳过值未变化的重复反射写入</summary>
-        public float lastAppliedMoverSpeed = float.MinValue;
-        
         // ArtemisBow
         public int artemisBaseArrows;
         public float artemisBaseRange;
@@ -52,19 +49,6 @@ namespace KingdomEnhanced.Features
         // Catapult
         public float baseCrankRate;
         public float baseCrankRateFormation;
-
-        /// <summary>Catapult 上次实际写入的曲柄速率,用于跳过值未变化的重复反射写入</summary>
-        public float lastAppliedCrankRate = float.MinValue;
-
-        /// <summary>Catapult 上次实际写入的集结曲柄速率,用于跳过值未变化的重复反射写入</summary>
-        public float lastAppliedCrankRateFormation = float.MinValue;
-
-        // Archer
-        /// <summary>Archer 是否已缓存过塔归属检查结果</summary>
-        public bool towerCheckCached = false;
-
-        /// <summary>Archer 是否位于塔内(缓存结果,避免每帧 GetComponentInParent)</summary>
-        public bool cachedInTower = false;
 
         // Ballista
         public float ballistaFractionalWork;

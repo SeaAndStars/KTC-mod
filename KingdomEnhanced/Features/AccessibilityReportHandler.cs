@@ -1,7 +1,6 @@
 using System;
 using System.Reflection;
 using UnityEngine;
-using KingdomEnhanced.Core;
 using KingdomEnhanced.Systems;
 using KingdomEnhanced.UI;
 using KingdomEnhanced.Utils;
@@ -9,35 +8,28 @@ using KingdomEnhanced.Utils;
 namespace KingdomEnhanced.Features
 {
     /// <summary>
-        /// 提供 F5-F10 热键触发的无障碍状态播报功能。
+    /// Accessibility reporting features. Handles F5-F10 hotkey status reports.
     /// </summary>
     public static class AccessibilityReportHandler
     {
-        /// <summary>
-        /// 可支付对象类型到价格属性的反射缓存，避免重复查找。
-        /// </summary>
         private static readonly System.Collections.Generic.Dictionary<Type, PropertyInfo> _priceCache = new();
 
-        /// <summary>
-        /// 播报玩家朝向、昼夜、威胁状态和最近城墙距离。
-        /// </summary>
-        /// <param name="player">当前玩家实例。</param>
         public static void CheckCompassAndSafety(Player player)
         {
-            string dir = LocalizationService.Get(player.mover.GetDirection() == Side.Left ? "accessibility.direction.left" : "accessibility.direction.right");
+            string dir = (player.mover.GetDirection() == Side.Left) ? "Left" : "Right";
 
-            string threat = LocalizationService.Get("accessibility.report.threat.safe");
-            string timeOfDay = LocalizationService.Get("accessibility.report.time.day");
+            string threat = "Safe";
+            string timeOfDay = "Day";
             string borderInfo = "";
             try
             {
                 var enemyMgr = UnityEngine.Object.FindFirstObjectByType<EnemyManager>();
                 if (enemyMgr != null && enemyMgr.IsDangerous)
-                    threat = LocalizationService.Get("accessibility.report.threat.danger");
+                    threat = "DANGER";
 
                 var kingdom = UnityEngine.Object.FindFirstObjectByType<Kingdom>();
                 if (kingdom != null && !kingdom.isDaytime)
-                    timeOfDay = LocalizationService.Get("accessibility.report.time.night");
+                    timeOfDay = "Night";
 
                 var walls = UnityEngine.Object.FindObjectsByType<Wall>(FindObjectsSortMode.None);
                 if (walls != null && walls.Length > 0)
@@ -48,50 +40,36 @@ namespace KingdomEnhanced.Features
                         float d = Mathf.Abs(w.transform.position.x - player.transform.position.x);
                         if (d < min) min = d;
                     }
-                    if (min < float.MaxValue) borderInfo = LocalizationService.Format("accessibility.report.wall_distance", Mathf.RoundToInt(min));
+                    if (min < float.MaxValue) borderInfo = $", {Mathf.RoundToInt(min)}m to Wall";
                 }
             }
             catch { }
 
-            ModMenu.Speak(LocalizationService.Format("accessibility.report.compass", dir, timeOfDay, threat, borderInfo));
+            ModMenu.Speak($"Facing {dir}, {timeOfDay}, {threat}{borderInfo}");
         }
 
-        /// <summary>
-        /// 播报玩家钱包中的金币和宝石数量。
-        /// </summary>
-        /// <param name="player">当前玩家实例。</param>
         public static void ReportWallet(Player player)
         {
             int coins = player.wallet.GetCurrency(CurrencyType.Coins);
             int gems = player.wallet.GetCurrency(CurrencyType.Gems);
-            ModMenu.Speak(LocalizationService.Format("accessibility.report.wallet", coins, gems));
+            ModMenu.Speak($"{coins} Gold, {gems} Gems");
         }
 
-        /// <summary>
-        /// 播报当前岛屿天数与昼夜状态。
-        /// </summary>
         public static void ReportWorld()
         {
             var d = Managers.Inst.director;
-            string time = LocalizationService.Get(d.IsDaytime ? "accessibility.report.time.day" : "accessibility.report.time.night");
-            ModMenu.Speak(LocalizationService.Format("accessibility.report.world", d.CurrentIslandDays, time));
+            string time = d.IsDaytime ? "Day" : "Night";
+            ModMenu.Speak($"Day {d.CurrentIslandDays}, {time}");
         }
 
-        /// <summary>
-        /// 播报当前坐骑名称与疲劳状态。
-        /// </summary>
-        /// <param name="player">当前玩家实例。</param>
         public static void ReportMount(Player player)
         {
             if (player.steed == null) return;
-            string n = PayableNameResolver.GetLocalizedDisplayName(player.steed.name);
-            string status = LocalizationService.Get(player.steed.IsTired ? "accessibility.report.mount.tired" : "accessibility.report.mount.ready");
-            ModMenu.Speak(LocalizationService.Format("accessibility.report.mount", n, status));
+            string n = PayableNameResolver.CleanName(player.steed.name);
+            string status = player.steed.IsTired ? "Tired" : "Ready";
+            ModMenu.Speak($"{n}, {status}");
         }
 
-        /// <summary>
-        /// 播报附近各类追随者数量。
-        /// </summary>
         public static void ReportCompanions()
         {
             int archers = UnityEngine.Object.FindObjectsByType<Archer>(FindObjectsSortMode.None).Length;
@@ -99,23 +77,19 @@ namespace KingdomEnhanced.Features
             int peasants = UnityEngine.Object.FindObjectsByType<Peasant>(FindObjectsSortMode.None).Length;
             int knights = UnityEngine.Object.FindObjectsByType<Knight>(FindObjectsSortMode.None).Length;
 
-            ModMenu.Speak(LocalizationService.Format("accessibility.report.companions", archers, workers, peasants, knights));
+            ModMenu.Speak($"{archers} Archers, {workers} Workers, {peasants} Peasants, {knights} Knights");
         }
 
-        /// <summary>
-        /// 播报当前选中或最近可支付对象的价格与等级信息。
-        /// </summary>
-        /// <param name="player">当前玩家实例。</param>
         public static void ReportDetailedInfo(Player player)
         {
             var current = player.selectedPayable as MonoBehaviour ?? GetClosestPayable(player);
             if (current == null)
             {
-                ModMenu.Speak(LocalizationService.Get("accessibility.report.no_object_selected"));
+                ModMenu.Speak("No object selected.");
                 return;
             }
 
-            string name = PayableNameResolver.GetLocalizedDisplayName(current.name);
+            string name = PayableNameResolver.CleanName(current.name);
             string currency = GetCurrencyName(current);
             int price = 0;
 
@@ -129,36 +103,32 @@ namespace KingdomEnhanced.Features
 
             string levelInfo = "";
             var wall = current.GetComponent<Wall>();
-            if (wall != null) levelInfo = LocalizationService.Format("accessibility.report.level", wall.level);
+            if (wall != null) levelInfo = $", Level {wall.level}";
 
             var castle = current.GetComponent<Castle>();
-            if (castle != null) levelInfo = LocalizationService.Format("accessibility.report.level", (int)castle.level);
+            if (castle != null) levelInfo = $", Level {(int)castle.level}";
 
             var tower = current.GetComponent<Tower>();
             if (tower != null)
             {
-                name = LocalizationService.Get("payable.name.watchtower");
-                levelInfo = LocalizationService.Format("accessibility.report.level", tower.level);
+                name = "Watchtower";
+                levelInfo = $", Level {tower.level}";
             }
 
-            ModMenu.Speak(LocalizationService.Format("accessibility.report.detailed", name, price, currency, levelInfo));
+            ModMenu.Speak($"{name}, {price} {currency}{levelInfo}");
         }
 
-        /// <summary>
-        /// 将当前选中或最近对象的反射字段写入开发日志，并播报操作结果。
-        /// </summary>
-        /// <param name="player">当前玩家实例。</param>
         public static void DumpPayableInfo(Player player)
         {
             var current = player.selectedPayable as MonoBehaviour ?? GetClosestPayable(player);
 
             if (current == null)
             {
-                ModMenu.Speak(LocalizationService.Get("accessibility.report.no_object_to_inspect"));
+                ModMenu.Speak("No object found to inspect.");
                 return;
             }
 
-            ModMenu.Speak(LocalizationService.Format("accessibility.report.inspecting", current.name));
+            ModMenu.Speak($"Inspecting: {current.name}");
             Debug.Log($"[DEBUG] Inspecting {current.name} ({current.GetType().Name})");
 
             var fields = current.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -177,14 +147,9 @@ namespace KingdomEnhanced.Features
                 catch { }
             }
 
-            ModMenu.Speak(LocalizationService.Get("accessibility.report.dumped_fields"));
+            ModMenu.Speak("Dumped fields to log file.");
         }
 
-        /// <summary>
-        /// 查找玩家附近处于激活状态的最近可支付对象。
-        /// </summary>
-        /// <param name="player">当前玩家实例。</param>
-        /// <returns>最近可支付对象；不存在时返回空。</returns>
         private static MonoBehaviour GetClosestPayable(Player player)
         {
             if (Managers.Inst == null || Managers.Inst.payables == null) return null;
@@ -213,14 +178,9 @@ namespace KingdomEnhanced.Features
             return closest;
         }
 
-        /// <summary>
-        /// 通过对象类型与反射支付字段识别当前语言的货币名称。
-        /// </summary>
-        /// <param name="target">待识别的可支付对象。</param>
-        /// <returns>当前语言的货币名称。</returns>
         private static string GetCurrencyName(MonoBehaviour target)
         {
-            if (target.name.Contains("Gem Guard") || target.name.Contains("GemKeeper")) return LocalizationService.Get("accessibility.currency.gems");
+            if (target.name.Contains("Gem Guard") || target.name.Contains("GemKeeper")) return "gems";
 
             try
             {
@@ -236,8 +196,8 @@ namespace KingdomEnhanced.Features
                         if (value != null)
                         {
                             string sVal = value.ToString().ToLower();
-                            if (sVal.Contains("gem")) return LocalizationService.Get("accessibility.currency.gems");
-                            if (sVal.Contains("coin") || sVal.Contains("gold")) return LocalizationService.Get("accessibility.currency.coins");
+                            if (sVal.Contains("gem")) return "gems";
+                            if (sVal.Contains("coin") || sVal.Contains("gold")) return "coins";
                         }
                     }
 
@@ -248,15 +208,15 @@ namespace KingdomEnhanced.Features
                         if (value != null)
                         {
                             string sVal = value.ToString().ToLower();
-                            if (sVal.Contains("gem")) return LocalizationService.Get("accessibility.currency.gems");
-                            if (sVal.Contains("coin") || sVal.Contains("gold")) return LocalizationService.Get("accessibility.currency.coins");
+                            if (sVal.Contains("gem")) return "gems";
+                            if (sVal.Contains("coin") || sVal.Contains("gold")) return "coins";
                         }
                     }
                 }
             }
             catch { }
 
-            return LocalizationService.Get("accessibility.currency.coins");
+            return "coins";
         }
     }
 }

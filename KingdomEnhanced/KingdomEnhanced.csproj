@@ -35,13 +35,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Localization\*.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <LocalizationResource Include="Localization\*.json" />
-    </ItemGroup>
-
-    <ItemGroup>
         <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
         <PackageReference Include="MinVer" Version="6.*" PrivateAssets="All" />
     </ItemGroup>
@@ -97,10 +90,6 @@
         </Reference>
         <Reference Include="UnityEngine.CoreModule">
             <HintPath>..\deps\KTC-ModDevLibs\BIE6_IL2CPP\interop\UnityEngine.CoreModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.JSONSerializeModule">
-            <HintPath>..\deps\KTC-ModDevLibs\BIE6_IL2CPP\interop\UnityEngine.JSONSerializeModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.IMGUIModule">
@@ -172,10 +161,6 @@
             <HintPath>..\deps\KTC-ModDevLibs\BIE6_Mono\Managed\UnityEngine.CoreModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
-        <Reference Include="UnityEngine.JSONSerializeModule">
-            <HintPath>..\deps\KTC-ModDevLibs\BIE6_Mono\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
         <Reference Include="UnityEngine.IMGUIModule">
             <HintPath>..\deps\KTC-ModDevLibs\BIE6_Mono\Managed\UnityEngine.IMGUIModule.dll</HintPath>
             <Private>False</Private>
@@ -207,11 +192,8 @@
     </ItemGroup>
 
     <Target Name="CopyOutput" AfterTargets="Build" Condition="'$(Configuration)'=='Debug' and '$(BepInExPluginsPath)'!=''">
-        <MakeDir Directories="$(BepInExPluginsPath)$(AssemblyName)\" />
-        <MakeDir Directories="$(BepInExPluginsPath)$(AssemblyName)\Localization" />
         <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="$(BepInExPluginsPath)$(AssemblyName)\" OverwriteReadOnlyFiles="true" />
         <Copy SourceFiles="$(OutputPath)\$(AssemblyName).pdb" DestinationFolder="$(BepInExPluginsPath)$(AssemblyName)\" OverwriteReadOnlyFiles="true" Condition="Exists('$(OutputPath)\$(AssemblyName).pdb')" />
-        <Copy SourceFiles="@(LocalizationResource)" DestinationFiles="@(LocalizationResource->'$(BepInExPluginsPath)$(AssemblyName)\\Localization\\%(Filename)%(Extension)')" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
         <Message Text="Copied mod to $(BepInExPluginsPath)$(AssemblyName)\" Importance="high" />
     </Target>
 </Project>

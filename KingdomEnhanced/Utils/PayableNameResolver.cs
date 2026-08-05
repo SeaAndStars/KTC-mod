@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using KingdomEnhanced.Core;
 using KingdomEnhanced.UI; 
 
 namespace KingdomEnhanced.Utils
@@ -89,89 +88,7 @@ namespace KingdomEnhanced.Utils
         private static readonly Regex _biomeRegex = new Regex(
             @"(?i)\b(bamboo|iron|stone|dead|lands|scaffold|wreck|grove|grace|pin|sale|jade|norse|norselands|shogun|dire|plague|europe|greece|cypress|pine|olive|wild|pear|p2|olympus|dynasty|viking|challenge|hickory|oak|birch|apple|cherry|palm|spruce|fir|willow|maple|walnut|chestnut)\b", RegexOptions.Compiled);
 
-        /// <summary>
-        /// 将游戏对象名称清理为稳定的英文规范名，供内部对象类型与交互规则判断使用。
-        /// </summary>
-        /// <param name="original">游戏对象原始名称或预制体名称。</param>
-        /// <returns>移除运行时后缀并应用已知映射后的英文规范名。</returns>
         public static string CleanName(string original)
-        {
-            return GetCanonicalName(original);
-        }
-
-        /// <summary>
-        /// 将游戏对象名称转换为当前语言的无障碍显示名称。
-        /// </summary>
-        /// <param name="original">游戏对象原始名称或预制体名称。</param>
-        /// <returns>已本地化的显示名称；未知对象返回规范英文名。</returns>
-        public static string GetLocalizedDisplayName(string original)
-        {
-            string canonicalName = CleanName(original);
-            switch (canonicalName)
-            {
-                case "Peasant": return LocalizationService.Get("payable.name.peasant");
-                case "Worker": return LocalizationService.Get("payable.name.worker");
-                case "Griffin Mount": return LocalizationService.Get("payable.name.griffin_mount");
-                case "Stag Mount": return LocalizationService.Get("payable.name.stag_mount");
-                case "Warhorse Mount": return LocalizationService.Get("payable.name.warhorse_mount");
-                case "Unicorn Mount": return LocalizationService.Get("payable.name.unicorn_mount");
-                case "Lizard Mount": return LocalizationService.Get("payable.name.lizard_mount");
-                case "Bear Mount": return LocalizationService.Get("payable.name.bear_mount");
-                case "Beetle Mount": return LocalizationService.Get("payable.name.beetle_mount");
-                case "Construction": return LocalizationService.Get("payable.name.construction");
-                case "Boat": return LocalizationService.Get("payable.name.boat");
-                case "Portal": return LocalizationService.Get("payable.name.portal");
-                case "Tower": return LocalizationService.Get("payable.name.tower");
-                case "Tree": return LocalizationService.Get("payable.name.tree");
-                case "Builder Shop": return LocalizationService.Get("payable.name.builder_shop");
-                case "Archer Shop": return LocalizationService.Get("payable.name.archer_shop");
-                case "Dead Tree": return LocalizationService.Get("payable.name.dead_tree");
-                case "Bare Dead Tree": return LocalizationService.Get("payable.name.bare_dead_tree");
-                case "Castle": return LocalizationService.Get("payable.name.castle");
-                case "Hermes Statue": return LocalizationService.Get("payable.name.hermes_statue");
-                case "Pikeman Statue": return LocalizationService.Get("payable.name.pikeman_statue");
-                case "Archer Statue": return LocalizationService.Get("payable.name.archer_statue");
-                case "Builder Statue": return LocalizationService.Get("payable.name.builder_statue");
-                case "Farmer Statue": return LocalizationService.Get("payable.name.farmer_statue");
-                case "Knight Statue": return LocalizationService.Get("payable.name.knight_statue");
-                case "Banner": return LocalizationService.Get("payable.name.banner");
-                case "Farmer Shop": return LocalizationService.Get("payable.name.farmer_shop");
-                case "Vagrant": return LocalizationService.Get("payable.name.vagrant");
-                case "Citizen": return LocalizationService.Get("payable.name.citizen");
-                case "Ronin": return LocalizationService.Get("payable.name.ronin");
-                case "Hoplite": return LocalizationService.Get("payable.name.hoplite");
-                case "Slinger": return LocalizationService.Get("payable.name.slinger");
-                case "Gamigin Mount": return LocalizationService.Get("payable.name.gamigin_mount");
-                case "Gined Mount": return LocalizationService.Get("payable.name.gined_mount");
-                case "Fenrir Mount": return LocalizationService.Get("payable.name.fenrir_mount");
-                case "Reindeer Mount": return LocalizationService.Get("payable.name.reindeer_mount");
-                case "Sleipnir Mount": return LocalizationService.Get("payable.name.sleipnir_mount");
-                case "Cat Chariot": return LocalizationService.Get("payable.name.cat_chariot");
-                case "Kelpie Mount": return LocalizationService.Get("payable.name.kelpie_mount");
-                case "Hippocampus Mount": return LocalizationService.Get("payable.name.hippocampus_mount");
-                case "Cerberus Mount": return LocalizationService.Get("payable.name.cerberus_mount");
-                case "Pegasus Mount": return LocalizationService.Get("payable.name.pegasus_mount");
-                case "Donkey Mount": return LocalizationService.Get("payable.name.donkey_mount");
-                case "Stone Quarry": return LocalizationService.Get("payable.name.stone_quarry");
-                case "Iron Mine": return LocalizationService.Get("payable.name.iron_mine");
-                case "Dojo": return LocalizationService.Get("payable.name.dojo");
-                case "Ballista Tower": return LocalizationService.Get("payable.name.ballista_tower");
-                case "Bakery": return LocalizationService.Get("payable.name.bakery");
-                case "Stable": return LocalizationService.Get("payable.name.stable");
-                case "Horn Wall": return LocalizationService.Get("payable.name.horn_wall");
-                case "Lighthouse": return LocalizationService.Get("payable.name.lighthouse");
-                case "Citizen House": return LocalizationService.Get("payable.name.citizen_house");
-                case "Forge": return LocalizationService.Get("payable.name.forge");
-                default: return canonicalName;
-            }
-        }
-
-        /// <summary>
-        /// 将游戏对象名称清理为稳定的英文规范名，供内部对象类型与交互规则判断使用。
-        /// </summary>
-        /// <param name="original">游戏对象原始名称或预制体名称。</param>
-        /// <returns>移除运行时后缀并应用已知映射后的英文规范名。</returns>
-        public static string GetCanonicalName(string original)
         {
             if (string.IsNullOrEmpty(original)) return "";
 
@@ -199,21 +116,11 @@ namespace KingdomEnhanced.Utils
             return s;
         }
         
-        /// <summary>
-        /// 根据射线命中结果获取商店英文规范名。
-        /// </summary>
-        /// <param name="hit">射线检测命中结果。</param>
-        /// <returns>当前尚无可解析商店时返回空字符串。</returns>
         public static string GetShopTypeName(RaycastHit hit) 
         {
              return "";
         }
         
-        /// <summary>
-        /// 根据商店类型获取稳定的英文规范名。
-        /// </summary>
-        /// <param name="type">游戏内商店类型枚举。</param>
-        /// <returns>英文规范商店名；未知类型返回空字符串。</returns>
         public static string GetShopTypeName(PayableShop.ShopType type)
         {
             switch(type)
