@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 
@@ -94,31 +95,80 @@ namespace KingdomEnhanced.Core
             AvailableLanguageCodes.Clear();
             _currentLanguageCode = DefaultLanguageCode;
 
-            if (string.IsNullOrWhiteSpace(localizationDirectory))
+            bool loadedAnyExternal = false;
+
+            if (!string.IsNullOrWhiteSpace(localizationDirectory) && Directory.Exists(localizationDirectory))
             {
-                LogWarning("Localization 目录路径为空，已回退到默认语言配置。");
-                ApplyConfiguredLanguage(configuredLanguage);
-                return;
+                string[] resourceFiles = Directory
+                    .GetFiles(localizationDirectory, "*.json", SearchOption.TopDirectoryOnly)
+                    .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                foreach (string resourceFile in resourceFiles)
+                {
+                    LoadLanguageFile(resourceFile);
+                }
+
+                loadedAnyExternal = LoadedCatalogs.Count > 0;
+                if (loadedAnyExternal)
+                {
+                    LogWarning("External localization catalog(s) loaded from: " + localizationDirectory);
+                }
             }
 
-            if (!Directory.Exists(localizationDirectory))
+            if (!loadedAnyExternal)
             {
-                LogWarning($"Localization 目录不存在：{localizationDirectory}");
-                ApplyConfiguredLanguage(configuredLanguage);
-                return;
-            }
-
-            string[] resourceFiles = Directory
-                .GetFiles(localizationDirectory, "*.json", SearchOption.TopDirectoryOnly)
-                .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            foreach (string resourceFile in resourceFiles)
-            {
-                LoadLanguageFile(resourceFile);
+                // 外部目录缺失或为空时，回退到 DLL 内嵌目录，保证菜单与播报永远有可用文本。
+                LoadEmbeddedCatalogs();
             }
 
             ApplyConfiguredLanguage(configuredLanguage);
+        }
+
+        /// <summary>
+        /// 从当前程序集内嵌资源加载全部本地化目录（DLL 内置兜底）。
+        /// </summary>
+        private static void LoadEmbeddedCatalogs()
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            int loadedCount = 0;
+
+            try
+            {
+                string[] resourceNames = assembly.GetManifestResourceNames();
+                foreach (string resourceName in resourceNames)
+                {
+                    if (!resourceName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!resourceName.Contains(".Localization.")) continue;
+
+                    using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+                    {
+                        if (stream == null) continue;
+
+                        using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                        {
+                            string jsonText = reader.ReadToEnd();
+                            if (LoadLanguageText(jsonText, resourceName))
+                            {
+                                loadedCount++;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                LogWarning($"Failed to load embedded localization catalogs: {exception.Message}");
+            }
+
+            if (loadedCount > 0)
+            {
+                LogWarning($"Embedded localization catalog(s) loaded ({loadedCount}) - external Localization folder was missing or empty.");
+            }
+            else if (LoadedCatalogs.Count == 0)
+            {
+                LogWarning("No localization catalogs loaded (external or embedded); falling back to raw resource keys.");
+            }
         }
 
         /// <summary>
@@ -167,7 +217,7 @@ namespace KingdomEnhanced.Core
             }
             catch (FormatException exception)
             {
-                LogWarning($"本地化格式化失败：key={key}，language={_currentLanguageCode}，reason={exception.Message}");
+                LogWarning($"Localization format failed: key={key}, language={_currentLanguageCode}, reason={exception.Message}");
                 return template;
             }
         }
@@ -180,7 +230,7 @@ namespace KingdomEnhanced.Core
         {
             if (!TryResolveLanguageCode(languageCode, out string resolvedLanguageCode))
             {
-                LogWarning($"忽略未加载的语言切换请求：{languageCode}");
+                LogWarning($"Ignoring language switch request for unloaded language: {languageCode}");
                 return;
             }
 
@@ -206,35 +256,53 @@ namespace KingdomEnhanced.Core
             try
             {
                 string jsonText = File.ReadAllText(filePath, Encoding.UTF8);
+                LoadLanguageText(jsonText, Path.GetFileName(filePath));
+            }
+            catch (Exception exception)
+            {
+                LogWarning($"Failed to load localization file: {Path.GetFileName(filePath)}, reason={exception.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 解析并注册一份本地化目录文本（外部文件与内嵌资源共用）。
+        /// </summary>
+        /// <param name="jsonText">原始本地化 JSON 文本。</param>
+        /// <param name="sourceName">资源来源名称，仅用于日志。</param>
+        /// <returns>成功注册返回 true，否则返回 false。</returns>
+        private static bool LoadLanguageText(string jsonText, string sourceName)
+        {
+            try
+            {
                 LocalizationDocument document = DeserializeLocalizationDocument(jsonText);
                 if (document == null)
                 {
-                    LogWarning($"本地化文件解析结果为空：{Path.GetFileName(filePath)}");
-                    return;
+                    LogWarning($"Localization parse returned null: {sourceName}");
+                    return false;
                 }
 
                 if (string.IsNullOrWhiteSpace(document.language))
                 {
-                    LogWarning($"本地化文件缺少有效 language：{Path.GetFileName(filePath)}");
-                    return;
+                    LogWarning($"Localization file missing valid language: {sourceName}");
+                    return false;
                 }
 
                 if (string.IsNullOrWhiteSpace(document.displayName))
                 {
-                    LogWarning($"本地化文件缺少有效 displayName：{Path.GetFileName(filePath)}");
-                    return;
+                    LogWarning($"Localization file missing valid displayName: {sourceName}");
+                    return false;
                 }
 
                 if (string.IsNullOrWhiteSpace(document.fallback))
                 {
-                    LogWarning($"本地化文件缺少有效 fallback：{Path.GetFileName(filePath)}");
-                    return;
+                    LogWarning($"Localization file missing valid fallback: {sourceName}");
+                    return false;
                 }
 
                 if (document.entries == null)
                 {
-                    LogWarning($"本地化文件缺少 entries：{Path.GetFileName(filePath)}");
-                    return;
+                    LogWarning($"Localization file missing entries: {sourceName}");
+                    return false;
                 }
 
                 string languageCode = document.language.Trim();
@@ -244,27 +312,27 @@ namespace KingdomEnhanced.Core
                 {
                     if (entry == null)
                     {
-                        LogWarning($"本地化文件包含空条目：{Path.GetFileName(filePath)}");
-                        return;
+                        LogWarning($"Localization file contains a null entry: {sourceName}");
+                        return false;
                     }
 
                     if (string.IsNullOrWhiteSpace(entry.key))
                     {
-                        LogWarning($"本地化文件包含空资源键：{Path.GetFileName(filePath)}");
-                        return;
+                        LogWarning($"Localization file contains an empty resource key: {sourceName}");
+                        return false;
                     }
 
                     if (string.IsNullOrWhiteSpace(entry.value))
                     {
-                        LogWarning($"本地化文件包含空资源值：{Path.GetFileName(filePath)} -> {entry.key}");
-                        return;
+                        LogWarning($"Localization file contains an empty value: {sourceName} -> {entry.key}");
+                        return false;
                     }
 
                     string resourceKey = entry.key.Trim();
                     if (resourceMap.ContainsKey(resourceKey))
                     {
-                        LogWarning($"本地化文件包含重复资源键：{Path.GetFileName(filePath)} -> {resourceKey}");
-                        return;
+                        LogWarning($"Localization file contains a duplicate key: {sourceName} -> {resourceKey}");
+                        return false;
                     }
 
                     resourceMap.Add(resourceKey, entry.value);
@@ -275,10 +343,13 @@ namespace KingdomEnhanced.Core
                 {
                     AvailableLanguageCodes.Add(languageCode);
                 }
+
+                return true;
             }
             catch (Exception exception)
             {
-                LogWarning($"本地化文件加载失败：{Path.GetFileName(filePath)}，reason={exception.Message}");
+                LogWarning($"Failed to load localization catalog: {sourceName}, reason={exception.Message}");
+                return false;
             }
         }
 
@@ -369,7 +440,7 @@ namespace KingdomEnhanced.Core
                             entriesSeen = true;
                             break;
                         default:
-                            throw CreateFormatException($"不支持的顶级字段：{propertyName}");
+                            throw CreateFormatException($"unsupported top-level field: {propertyName}");
                     }
 
                     SkipWhitespace();
@@ -432,7 +503,7 @@ namespace KingdomEnhanced.Core
 
                 if (TryConsumeCharacter('}'))
                 {
-                    throw CreateFormatException("本地化条目不能为空对象。");
+                    throw CreateFormatException("localization entry cannot be an empty object.");
                 }
 
                 while (true)
@@ -450,7 +521,7 @@ namespace KingdomEnhanced.Core
                             keySeen = true;
                             if (string.IsNullOrWhiteSpace(key))
                             {
-                                throw CreateFormatException("本地化条目 key 不能为空。");
+                                throw CreateFormatException("localization entry key cannot be empty.");
                             }
 
                             break;
@@ -460,12 +531,12 @@ namespace KingdomEnhanced.Core
                             valueSeen = true;
                             if (string.IsNullOrWhiteSpace(value))
                             {
-                                throw CreateFormatException($"本地化条目 value 不能为空：{key ?? "<unknown>"}");
+                                throw CreateFormatException($"localization entry value cannot be empty: {key ?? "<unknown>"}");
                             }
 
                             break;
                         default:
-                            throw CreateFormatException($"不支持的条目字段：{propertyName}");
+                            throw CreateFormatException($"unsupported entry field: {propertyName}");
                     }
 
                     SkipWhitespace();
@@ -480,12 +551,12 @@ namespace KingdomEnhanced.Core
 
                 if (!keySeen)
                 {
-                    throw CreateFormatException("本地化条目缺少 key。");
+                    throw CreateFormatException("localization entry is missing key.");
                 }
 
                 if (!valueSeen)
                 {
-                    throw CreateFormatException($"本地化条目缺少 value：{key}");
+                    throw CreateFormatException($"localization entry is missing value: {key}");
                 }
 
                 return new LocalizationEntry
@@ -508,7 +579,7 @@ namespace KingdomEnhanced.Core
                 {
                     if (IsAtEnd())
                     {
-                        throw CreateFormatException("字符串缺少结束引号。");
+                        throw CreateFormatException("string is missing closing quote.");
                     }
 
                     char currentCharacter = ReadCharacter();
@@ -525,7 +596,7 @@ namespace KingdomEnhanced.Core
 
                     if (currentCharacter < 0x20)
                     {
-                        throw CreateFormatException("字符串包含未转义的控制字符。");
+                        throw CreateFormatException("string contains unescaped control character.");
                     }
 
                     builder.Append(currentCharacter);
@@ -540,7 +611,7 @@ namespace KingdomEnhanced.Core
             {
                 if (IsAtEnd())
                 {
-                    throw CreateFormatException("转义序列缺少后续字符。");
+                    throw CreateFormatException("escape sequence is missing following characters.");
                 }
 
                 char escapeCharacter = ReadCharacter();
@@ -565,7 +636,7 @@ namespace KingdomEnhanced.Core
                     case 'u':
                         return ParseUnicodeEscapeSequence();
                     default:
-                        throw CreateFormatException($"不支持的转义序列：\\{escapeCharacter}");
+                        throw CreateFormatException($"unsupported escape sequence: \\{escapeCharacter}");
                 }
             }
 
@@ -577,7 +648,7 @@ namespace KingdomEnhanced.Core
             {
                 if (_position + 4 > _jsonText.Length)
                 {
-                    throw CreateFormatException("Unicode 转义序列长度不足 4。");
+                    throw CreateFormatException("unicode escape sequence is shorter than 4 digits.");
                 }
 
                 int codePoint = 0;
@@ -611,7 +682,7 @@ namespace KingdomEnhanced.Core
                     return hexCharacter - 'A' + 10;
                 }
 
-                throw CreateFormatException($"无效的十六进制字符：{hexCharacter}");
+                throw CreateFormatException($"invalid hex character: {hexCharacter}");
             }
 
             /// <summary>
@@ -642,7 +713,7 @@ namespace KingdomEnhanced.Core
             {
                 if (IsAtEnd())
                 {
-                    throw CreateFormatException("意外到达 JSON 末尾。");
+                    throw CreateFormatException("unexpected end of JSON.");
                 }
 
                 return _jsonText[_position++];
@@ -656,13 +727,13 @@ namespace KingdomEnhanced.Core
             {
                 if (IsAtEnd())
                 {
-                    throw CreateFormatException($"缺少期望字符：{expectedCharacter}");
+                    throw CreateFormatException($"missing expected character: {expectedCharacter}");
                 }
 
                 char actualCharacter = ReadCharacter();
                 if (actualCharacter != expectedCharacter)
                 {
-                    throw CreateFormatException($"期望字符 {expectedCharacter}，实际为 {actualCharacter}");
+                    throw CreateFormatException($"expected character {expectedCharacter} but got {actualCharacter}");
                 }
             }
 
@@ -691,7 +762,7 @@ namespace KingdomEnhanced.Core
             {
                 if (alreadySeen)
                 {
-                    throw CreateFormatException($"检测到重复字段：{propertyName}");
+                    throw CreateFormatException($"duplicate field: {propertyName}");
                 }
             }
 
@@ -703,7 +774,7 @@ namespace KingdomEnhanced.Core
                 SkipWhitespace();
                 if (!IsAtEnd())
                 {
-                    throw CreateFormatException("JSON 尾部存在多余内容。");
+                    throw CreateFormatException("unexpected trailing content after JSON.");
                 }
             }
 
@@ -755,13 +826,13 @@ namespace KingdomEnhanced.Core
             {
                 _currentLanguageCode = AvailableLanguageCodes[0];
                 PersistLanguageSetting(_currentLanguageCode);
-                LogWarning($"默认英文资源缺失，已回退到首个可用语言：{_currentLanguageCode}");
+                LogWarning($"Default English catalog missing; fell back to first available language: {_currentLanguageCode}");
                 return;
             }
 
             _currentLanguageCode = DefaultLanguageCode;
             PersistLanguageSetting(DefaultLanguageCode);
-            LogWarning("未加载到任何本地化资源，将直接回退到资源键显示。");
+            LogWarning("No localization catalogs loaded; falling back to raw resource keys.");
         }
 
         /// <summary>
@@ -831,7 +902,7 @@ namespace KingdomEnhanced.Core
             }
             catch (Exception exception)
             {
-                LogWarning($"语言配置保存失败：{languageCode}，reason={exception.Message}");
+                LogWarning($"Failed to save language setting: {languageCode}, reason={exception.Message}");
             }
         }
 

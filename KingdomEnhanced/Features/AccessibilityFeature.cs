@@ -101,160 +101,180 @@ namespace KingdomEnhanced.Features
             if (current != null)
             {
                 var payable = current.GetComponent<Payable>();
-                if (payable == null) return; 
+                if (payable == null)
+                {
+                    // 无 Payable 组件时视为无目标，避免 _lastPayable 残留导致下一帧重复播报
+                    ResetHoverState();
+                    return;
+                }
 
                 
                 if (current.GetComponent<Player>() != null || current.gameObject == _player.gameObject) return;
                 
                 if (_player.steed != null && current.gameObject == _player.steed.gameObject) return;
 
-                string rawName = PayableNameResolver.GetCanonicalName(current.name);
-                string displayName = PayableNameResolver.GetLocalizedDisplayName(current.name);
-                
-                
-                int price = payable.Price;
-                bool isGemCurrency = payable.Currency == CurrencyType.Gems;
-                string currency = LocalizationService.Get(isGemCurrency ? "accessibility.currency.gems" : "accessibility.currency.coins");
-
-
-
-                
-                if (string.IsNullOrEmpty(rawName))
+                try
                 {
-                    rawName = current.name.Replace("(Clone)", "").Trim();
-                    displayName = rawName;
-                }
-
-                
-                bool isBoat = current.GetComponent<Boat>() != null || current.name.ToLower().Contains("boat");
-                bool isShipwreck = !isBoat && current.name.ToLower().Contains("wreck");
-                if (isBoat)
-                {
-                    displayName = LocalizationService.Get("payable.name.boat");
-                }
-                else if (isShipwreck)
-                {
-                    displayName = LocalizationService.Get("accessibility.name.shipwreck");
-                }
-                else if (current.name.ToLower().Contains("wharf"))
-                {
-                    displayName = LocalizationService.Get("accessibility.name.wharf");
-                }
-
-                
-                string techWarning = "";
-                if (payable.IsLocked(_player, out LockIndicator.LockReason reason))
-                {
+                    string rawName = PayableNameResolver.GetCanonicalName(current.name);
+                    string displayName = PayableNameResolver.GetLocalizedDisplayName(current.name);
                     
-                    switch (reason)
+                    
+                    int price = payable.Price;
+                    bool isGemCurrency = payable.Currency == CurrencyType.Gems;
+                    string currency = LocalizationService.Get(isGemCurrency ? "accessibility.currency.gems" : "accessibility.currency.coins");
+
+
+
+                    
+                    if (string.IsNullOrEmpty(rawName))
                     {
-                        case LockIndicator.LockReason.StoneTechRequired: techWarning = LocalizationService.Get("accessibility.lock.stone_tech_required"); break;
-                        case LockIndicator.LockReason.IronTechRequired: techWarning = LocalizationService.Get("accessibility.lock.iron_tech_required"); break;
-                        case LockIndicator.LockReason.HermitLocked: techWarning = LocalizationService.Get("accessibility.lock.hermit_locked"); break;
-                        case LockIndicator.LockReason.NoUpgrade: techWarning = LocalizationService.Get("accessibility.lock.fully_upgraded"); break;
-                        case LockIndicator.LockReason.Base: techWarning = LocalizationService.Get("accessibility.lock.base_upgrade_required"); break;
-                        default: techWarning = LocalizationService.Get("accessibility.lock.locked"); break;
+                        rawName = current.name.Replace("(Clone)", "").Trim();
+                        displayName = rawName;
                     }
-                    if (reason == LockIndicator.LockReason.NotLocked) techWarning = ""; 
-                }
 
-                
-                bool isProtecting = false;
-                if (rawName.Contains("Tree") && (isProtecting = IsTreeProtectingVillage(current.transform.position.x)))
-                {
-                    techWarning = LocalizationService.Get("accessibility.lock.destroys_village");
-                }
-
-                
-                string actionKey = "accessibility.action.build";
-                
-                
-                if (isBoat || rawName.Contains("Boat") || rawName.Contains("Ship"))
-                {
-                     if (price <= 3) actionKey = "accessibility.action.add_parts";
-                     else if (price >= 10) actionKey = "accessibility.action.sail";
-                     else actionKey = "accessibility.action.repair_hull";
-                     
-                     if (isShipwreck || rawName.Contains("Wreck") || rawName.Contains("Ruin")) actionKey = "accessibility.action.repair_hull";
-                }
-                
-                if (rawName.Contains("Statue") || rawName.Contains("Idol"))
-                {
-                    actionKey = isGemCurrency ? "accessibility.action.pay" : "accessibility.action.activate";
-                }
-                
-                if (rawName.Contains("Bank") || rawName.Contains("Chest")) actionKey = "accessibility.action.deposit";
-                else if (rawName.Contains("Portal") || rawName.Contains("Border")) actionKey = "accessibility.action.destroy_portal";
-                else if (rawName.Contains("Beggar") || rawName.Contains("Citizen") || rawName.Contains("Hermit")) actionKey = "accessibility.action.hire";
-                else if (rawName.Contains("Shop") || rawName.Contains("Merchant")) actionKey = rawName.Contains("Merchant") ? "accessibility.action.invest" : "accessibility.action.buy";
-                else if (rawName.Contains("Teleporter")) actionKey = "accessibility.action.teleport";
-                else if (rawName.Contains("Bell")) actionKey = "accessibility.action.call";
-                else if (rawName.Contains("Gem Guard") || rawName.Contains("GemKeeper")) actionKey = "accessibility.action.withdraw";
-                
-                else if (rawName.Contains("Tree") && !rawName.Contains("Close")) actionKey = "accessibility.action.chop";
-                else if (rawName.Contains("Mount") || rawName.Contains("Chimera") || current.name.Contains("Steed") || current.name.Contains("Horse")) actionKey = "accessibility.action.switch";
-                else if (rawName.Contains("Banner")) actionKey = "accessibility.action.expedition";
-                
-                
-                if (actionKey == "accessibility.action.build")
-                {
                     
-                    
-                    if (_endsWithDigitRegex.IsMatch(rawName) || _endsWithUpperRegex.IsMatch(rawName)) actionKey = "accessibility.action.upgrade";
-                    
-                    var wall = current.GetComponent<Wall>();
-                    if (wall != null && wall.level > 0) actionKey = "accessibility.action.upgrade_wall";
-                    
-                    var castle = current.GetComponent<Castle>();
-                    
-                    if (castle != null)
+                    bool isBoat = current.GetComponent<Boat>() != null || current.name.ToLower().Contains("boat");
+                    bool isShipwreck = !isBoat && current.name.ToLower().Contains("wreck");
+                    if (isBoat)
                     {
-                         actionKey = castle.level == 0 ? "accessibility.action.build" : "accessibility.action.upgrade";
+                        displayName = LocalizationService.Get("payable.name.boat");
+                    }
+                    else if (isShipwreck)
+                    {
+                        displayName = LocalizationService.Get("accessibility.name.shipwreck");
+                    }
+                    else if (current.name.ToLower().Contains("wharf"))
+                    {
+                        displayName = LocalizationService.Get("accessibility.name.wharf");
+                    }
+
+                    
+                    string techWarning = "";
+                    if (payable.IsLocked(_player, out LockIndicator.LockReason reason))
+                    {
+                        
+                        switch (reason)
+                        {
+                            case LockIndicator.LockReason.StoneTechRequired: techWarning = LocalizationService.Get("accessibility.lock.stone_tech_required"); break;
+                            case LockIndicator.LockReason.IronTechRequired: techWarning = LocalizationService.Get("accessibility.lock.iron_tech_required"); break;
+                            case LockIndicator.LockReason.HermitLocked: techWarning = LocalizationService.Get("accessibility.lock.hermit_locked"); break;
+                            case LockIndicator.LockReason.NoUpgrade: techWarning = LocalizationService.Get("accessibility.lock.fully_upgraded"); break;
+                            case LockIndicator.LockReason.Base: techWarning = LocalizationService.Get("accessibility.lock.base_upgrade_required"); break;
+                            default: techWarning = LocalizationService.Get("accessibility.lock.locked"); break;
+                        }
+                        if (reason == LockIndicator.LockReason.NotLocked) techWarning = ""; 
+                    }
+
+                    
+                    bool isProtecting = false;
+                    if (rawName.Contains("Tree") && (isProtecting = IsTreeProtectingVillage(current.transform.position.x)))
+                    {
+                        techWarning = LocalizationService.Get("accessibility.lock.destroys_village");
+                    }
+
+                    
+                    string actionKey = "accessibility.action.build";
+                    
+                    
+                    if (isBoat || rawName.Contains("Boat") || rawName.Contains("Ship"))
+                    {
+                         if (price <= 3) actionKey = "accessibility.action.add_parts";
+                         else if (price >= 10) actionKey = "accessibility.action.sail";
+                         else actionKey = "accessibility.action.repair_hull";
+                         
+                         if (isShipwreck || rawName.Contains("Wreck") || rawName.Contains("Ruin")) actionKey = "accessibility.action.repair_hull";
                     }
                     
-                    var farm = current.GetComponent<Farmhouse>();
-                    if (farm != null && price >= 3) actionKey = "accessibility.action.upgrade_farm";
-                }
-
-                
-                string message = LocalizationService.Format("accessibility.hover.name_only", displayName);
-                
-                if (!string.IsNullOrEmpty(techWarning))
-                {
-                    message = LocalizationService.Format("accessibility.hover.with_warning", displayName, techWarning);
-                }
-                else
-                {
+                    if (rawName.Contains("Statue") || rawName.Contains("Idol"))
+                    {
+                        actionKey = isGemCurrency ? "accessibility.action.pay" : "accessibility.action.activate";
+                    }
                     
-                    if (price > 0 || actionKey == "accessibility.action.withdraw" || actionKey == "accessibility.action.deposit")
-                        message = LocalizationService.Format("accessibility.hover.with_price", displayName, price, currency, LocalizationService.Get(actionKey));
+                    if (rawName.Contains("Bank") || rawName.Contains("Chest")) actionKey = "accessibility.action.deposit";
+                    else if (rawName.Contains("Portal") || rawName.Contains("Border")) actionKey = "accessibility.action.destroy_portal";
+                    else if (rawName.Contains("Beggar") || rawName.Contains("Citizen") || rawName.Contains("Hermit")) actionKey = "accessibility.action.hire";
+                    else if (rawName.Contains("Shop") || rawName.Contains("Merchant")) actionKey = rawName.Contains("Merchant") ? "accessibility.action.invest" : "accessibility.action.buy";
+                    else if (rawName.Contains("Teleporter")) actionKey = "accessibility.action.teleport";
+                    else if (rawName.Contains("Bell")) actionKey = "accessibility.action.call";
+                    else if (rawName.Contains("Gem Guard") || rawName.Contains("GemKeeper")) actionKey = "accessibility.action.withdraw";
+                    
+                    else if (rawName.Contains("Tree") && !rawName.Contains("Close")) actionKey = "accessibility.action.chop";
+                    else if (rawName.Contains("Mount") || rawName.Contains("Chimera") || current.name.Contains("Steed") || current.name.Contains("Horse")) actionKey = "accessibility.action.switch";
+                    else if (rawName.Contains("Banner")) actionKey = "accessibility.action.expedition";
+                    
+                    
+                    if (actionKey == "accessibility.action.build")
+                    {
+                        
+                        
+                        if (_endsWithDigitRegex.IsMatch(rawName) || _endsWithUpperRegex.IsMatch(rawName)) actionKey = "accessibility.action.upgrade";
+                        
+                        var wall = current.GetComponent<Wall>();
+                        if (wall != null && wall.level > 0) actionKey = "accessibility.action.upgrade_wall";
+                        
+                        var castle = current.GetComponent<Castle>();
+                        
+                        if (castle != null)
+                        {
+                             actionKey = castle.level == 0 ? "accessibility.action.build" : "accessibility.action.upgrade";
+                        }
+                        
+                        var farm = current.GetComponent<Farmhouse>();
+                        if (farm != null && price >= 3) actionKey = "accessibility.action.upgrade_farm";
+                    }
+
+                    
+                    string message = LocalizationService.Format("accessibility.hover.name_only", displayName);
+                    
+                    if (!string.IsNullOrEmpty(techWarning))
+                    {
+                        message = LocalizationService.Format("accessibility.hover.with_warning", displayName, techWarning);
+                    }
                     else
-                        message = LocalizationService.Format("accessibility.hover.with_action", displayName, LocalizationService.Get(actionKey));
-                }
+                    {
+                        
+                        if (price > 0 || actionKey == "accessibility.action.withdraw" || actionKey == "accessibility.action.deposit")
+                            message = LocalizationService.Format("accessibility.hover.with_price", displayName, price, currency, LocalizationService.Get(actionKey));
+                        else
+                            message = LocalizationService.Format("accessibility.hover.with_action", displayName, LocalizationService.Get(actionKey));
+                    }
 
-                
-                bool changed = (current != _lastPayable || message != _lastSpokenMsg);
-                if (changed)
+                    
+                    bool changed = (current != _lastPayable || message != _lastSpokenMsg);
+                    if (changed)
+                    {
+                        ModMenu.Speak(message, interrupt: false);
+                        _lastSpokenMsg = message;
+                        _spamTimer = Time.time;
+                    }
+
+                    _lastPayable = current;
+                    _lastName = rawName;
+                    _lastPrice = price;
+                }
+                catch (Exception ex)
                 {
-                    ModMenu.Speak(message, interrupt: false);
-                    _lastSpokenMsg = message;
-                    _spamTimer = Time.time;
+                    // 任何异常都重置悬停状态，防止异常路径每帧重复触发播报
+                    ResetHoverState();
+                    Debug.LogWarning($"[Accessibility] HandleHover error: {ex.Message}");
                 }
-
-                _lastPayable = current;
-                _lastName = rawName;
-                _lastPrice = price;
             }
             else
             {
-                 if (_lastPayable != null)
-                 {
-                     _lastPayable = null;
-                     _lastSpokenMsg = "";
-                     _lastName = "";
-                     _lastPrice = -1;
-                 }
+                ResetHoverState();
             }
+        }
+
+        /// <summary>
+        /// 清空悬停播报状态，避免陈旧状态导致下一帧重复播报。
+        /// </summary>
+        private void ResetHoverState()
+        {
+            if (_lastPayable == null && string.IsNullOrEmpty(_lastSpokenMsg)) return;
+            _lastPayable = null;
+            _lastSpokenMsg = "";
+            _lastName = "";
+            _lastPrice = -1;
         }
 
         MonoBehaviour GetClosestPayable()

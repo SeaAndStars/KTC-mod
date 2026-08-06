@@ -39,6 +39,7 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <LocalizationResource Include="Localization\*.json" />
+        <EmbeddedResource Include="Localization\*.json" />
     </ItemGroup>
 
     <ItemGroup>

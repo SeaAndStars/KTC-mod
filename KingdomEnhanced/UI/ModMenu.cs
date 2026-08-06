@@ -1239,13 +1239,14 @@ namespace KingdomEnhanced.UI
             Speak(text, Color.white);
         }
 
-        
+        /// <summary>
+        /// 播报文本（可打断）：interrupt 为 true 时清空待播报队列。
+        /// </summary>
+        /// <param name="text">待播报文本。</param>
+        /// <param name="interrupt">是否打断当前队列中未播报的消息。</param>
         public static void Speak(string text, bool interrupt)
         {
-            
-            
-            
-            if (EnableTTS) TTSManager.Speak(text);
+            if (EnableTTS) TTSManager.Speak(text, interrupt);
             Speak(text, Color.white);
         }
         

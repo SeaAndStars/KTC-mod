@@ -295,6 +295,9 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>反射回退取钱包数值:字段只发现一次后缓存复用,避免每帧全字段反射扫描</summary>
+#if IL2CPP
+        [Il2CppInterop.Runtime.Attributes.HideFromIl2Cpp]
+#endif
         private (int Coins, int Gems) GetWalletStatsByReflection(object wallet)
         {
             try
