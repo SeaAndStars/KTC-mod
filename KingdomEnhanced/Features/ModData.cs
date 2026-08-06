@@ -9,68 +9,73 @@ namespace KingdomEnhanced.Features
 #if IL2CPP
     [RegisterTypeInIl2Cpp]
 #endif
+    /// <summary>
+    /// Per-object cached baseline values used by patches to apply multipliers without compounding.
+    /// </summary>
     public class ModData : MonoBehaviour
     {
 #if IL2CPP
         public ModData(IntPtr ptr) : base(ptr) { }
 #endif
 
-        // Archer
+        // Archer — base fire rate (shoot cooldown) cached at spawn
         public float baseFireRate;
         
-        // Berserker, Ninja
+        // Berserker / Ninja — base run speed cached at spawn
         public float baseSpeed;
         
-        // Farm
+        // Farm — base coin yield cached at spawn
         public float baseCoinYield;
         
-        // Bolt
+        // Bolt — base damage and launch force cached at spawn
         public int baseDamage;
         public float baseForce;
         
-        // Portal
+        // Portal — base spawn interval cached at spawn
         public float baseSpawnInterval;
         
-        // Mover
+        // Mover — base move speed cached on first update
         public float moverBaseSpeed;
         
-        /// <summary>Mover 上次实际写入的速度值,用于跳过值未变化的重复反射写入</summary>
+        /// <summary>Last speed value actually written to the Mover, used to skip duplicate reflection writes.</summary>
         public float lastAppliedMoverSpeed = float.MinValue;
         
-        // ArtemisBow
+        // ArtemisBow — base arrow count, range, and damage cached before modification
         public int artemisBaseArrows;
         public float artemisBaseRange;
         public int artemisBaseDamage;
         
-        // Knight
+        // Knight — base HP
         public int knightBaseHp;
         
-        // Worker
+        // Worker — base speed and work time
         public float workerBaseSpeed;
         public float workerBaseWorkTime;
 
-        // Catapult
+        // Catapult — base crank rates cached before modification
         public float baseCrankRate;
         public float baseCrankRateFormation;
 
-        /// <summary>Catapult 上次实际写入的曲柄速率,用于跳过值未变化的重复反射写入</summary>
+        /// <summary>Last crank rate actually written to the Catapult, used to skip duplicate reflection writes.</summary>
         public float lastAppliedCrankRate = float.MinValue;
 
-        /// <summary>Catapult 上次实际写入的集结曲柄速率,用于跳过值未变化的重复反射写入</summary>
+        /// <summary>Last formation crank rate actually written to the Catapult, used to skip duplicate reflection writes.</summary>
         public float lastAppliedCrankRateFormation = float.MinValue;
 
-        // Archer
-        /// <summary>Archer 是否已缓存过塔归属检查结果</summary>
+        // Archer — cached tower membership check
+        /// <summary>Whether the Archer's tower membership check has been cached.</summary>
         public bool towerCheckCached = false;
 
-        /// <summary>Archer 是否位于塔内(缓存结果,避免每帧 GetComponentInParent)</summary>
+        /// <summary>Whether the Archer is inside a tower (cached to avoid per-frame GetComponentInParent).</summary>
         public bool cachedInTower = false;
 
-        // Ballista
+        // Ballista — accumulated fractional reload work
         public float ballistaFractionalWork;
 
+        // Guards one-time caching of base values
         public bool isInitialized = false;
 
+        /// <summary>Gets the ModData component on the object, adding it if missing.</summary>
         public static ModData GetOrAdd(GameObject obj)
         {
             var data = obj.GetComponent<ModData>();

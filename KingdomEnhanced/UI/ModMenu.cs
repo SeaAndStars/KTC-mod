@@ -18,136 +18,136 @@ namespace KingdomEnhanced.UI
     public enum TabCategory { Main, Cheats, Lab, Hard, Info, Guide, Settings, Report }
 
     /// <summary>
-    /// 描述一个可在 ModMenu 中展示的功能项元数据。
+    /// Describes metadata for a feature item shown in the ModMenu.
     /// </summary>
     public struct FeatureMeta
     {
         /// <summary>
-        /// 功能稳定标识。
+        /// Stable feature identifier.
         /// </summary>
         public string Id;
 
         /// <summary>
-        /// 兼容旧调用者提供的最终功能标题文本。
+        /// Final feature title text for legacy callers.
         /// </summary>
         public string Label;
 
         /// <summary>
-        /// 功能标题资源键。
+        /// Feature title resource key.
         /// </summary>
         public string LabelKey;
 
         /// <summary>
-        /// 兼容旧调用者提供的最终功能分组标题文本。
+        /// Final feature section title text for legacy callers.
         /// </summary>
         public string Section;
 
         /// <summary>
-        /// 功能分组标题资源键。
+        /// Feature section title resource key.
         /// </summary>
         public string SectionKey;
 
         /// <summary>
-        /// 功能所属标签页分类。
+        /// Tab category the feature belongs to.
         /// </summary>
         public TabCategory Category;
 
         /// <summary>
-        /// 兼容旧调用者提供的最终功能说明文本。
+        /// Final feature description text for legacy callers.
         /// </summary>
         public string Description;
 
         /// <summary>
-        /// 功能说明资源键。
+        /// Feature description resource key.
         /// </summary>
         public string DescriptionKey;
 
         /// <summary>
-        /// 读取布尔功能当前值的委托。
+        /// Delegate that reads the current value of a boolean feature.
         /// </summary>
         public Func<bool> GetValue;
 
         /// <summary>
-        /// 写入布尔功能当前值的委托。
+        /// Delegate that writes the current value of a boolean feature.
         /// </summary>
         public Action<bool> SetValue;
 
         /// <summary>
-        /// 读取滑条功能当前值的委托。
+        /// Delegate that reads the current value of a slider feature.
         /// </summary>
         public Func<float> GetFloatValue;
 
         /// <summary>
-        /// 写入滑条功能当前值的委托。
+        /// Delegate that writes the current value of a slider feature.
         /// </summary>
         public Action<float> SetFloatValue;
 
         /// <summary>
-        /// 滑条功能允许的最小值。
+        /// Minimum value allowed for a slider feature.
         /// </summary>
         public float MinVal;
 
         /// <summary>
-        /// 滑条功能允许的最大值。
+        /// Maximum value allowed for a slider feature.
         /// </summary>
         public float MaxVal;
 
         /// <summary>
-        /// 按钮功能点击后执行的动作。
+        /// Action executed when a button feature is clicked.
         /// </summary>
         public Action OnAction;
 
         /// <summary>
-        /// 判断当前功能是否锁定的委托。
+        /// Delegate that determines whether the feature is locked.
         /// </summary>
         public Func<bool> IsLocked;
 
         /// <summary>
-        /// 兼容旧调用者提供的最终锁定原因文本委托。
+        /// Delegate returning the final lock reason text for legacy callers.
         /// </summary>
         public Func<string> GetLockReason;
 
         /// <summary>
-        /// 返回锁定原因资源键的委托。
+        /// Delegate returning the lock reason resource key.
         /// </summary>
         public Func<string> GetLockReasonKey;
 
         /// <summary>
-        /// 判断当前功能是否需要显示冲突提示的委托。
+        /// Delegate that determines whether a conflict warning should be shown.
         /// </summary>
         public Func<bool> HasConflict;
 
         /// <summary>
-        /// 获取当前语言下的功能标题文本。
+        /// Gets the feature title text in the current language.
         /// </summary>
-        /// <returns>已解析的功能标题文本。</returns>
+        /// <returns>The resolved feature title text.</returns>
         public string GetLabelText()
         {
             return Label ?? LocalizationService.Get(LabelKey);
         }
 
         /// <summary>
-        /// 获取当前语言下的功能分组标题文本。
+        /// Gets the feature section title text in the current language.
         /// </summary>
-        /// <returns>已解析的分组标题文本。</returns>
+        /// <returns>The resolved section title text.</returns>
         public string GetSectionText()
         {
             return Section ?? LocalizationService.Get(SectionKey);
         }
 
         /// <summary>
-        /// 获取当前语言下的功能说明文本。
+        /// Gets the feature description text in the current language.
         /// </summary>
-        /// <returns>已解析的功能说明文本。</returns>
+        /// <returns>The resolved feature description text.</returns>
         public string GetDescriptionText()
         {
             return Description ?? LocalizationService.Get(DescriptionKey);
         }
 
         /// <summary>
-        /// 获取当前语言下的功能锁定原因文本。
+        /// Gets the feature lock reason text in the current language.
         /// </summary>
-        /// <returns>已解析的锁定原因文本；若无委托则回退为通用锁定文案。</returns>
+        /// <returns>The resolved lock reason text; falls back to a generic message when no delegate is set.</returns>
         public string GetLockReasonText()
         {
             if (GetLockReason != null)
@@ -529,10 +529,10 @@ namespace KingdomEnhanced.UI
         }
 
         /// <summary>
-        /// 根据标签页分类返回对应的主菜单标签资源键。
+        /// Returns the main menu tab label resource key for a tab category.
         /// </summary>
-        /// <param name="category">目标标签页分类。</param>
-        /// <returns>标签资源键。</returns>
+        /// <param name="category">Target tab category.</param>
+        /// <returns>The tab label resource key.</returns>
         private static string GetTabLabelKey(TabCategory category)
         {
             switch (category)
@@ -550,10 +550,10 @@ namespace KingdomEnhanced.UI
         }
 
         /// <summary>
-        /// 根据标签页分类返回报告页徽标缩写资源键。
+        /// Returns the report badge abbreviation resource key for a tab category.
         /// </summary>
-        /// <param name="category">目标标签页分类。</param>
-        /// <returns>报告页缩写资源键。</returns>
+        /// <param name="category">Target tab category.</param>
+        /// <returns>The report badge abbreviation resource key.</returns>
         private static string GetReportBadgeKey(TabCategory category)
         {
             switch (category)
@@ -571,20 +571,20 @@ namespace KingdomEnhanced.UI
         }
 
         /// <summary>
-        /// 获取当前语言下的标签页标题文本。
+        /// Gets the tab title text in the current language.
         /// </summary>
-        /// <param name="category">目标标签页分类。</param>
-        /// <returns>已解析的标签页标题文本。</returns>
+        /// <param name="category">Target tab category.</param>
+        /// <returns>The resolved tab title text.</returns>
         private static string GetTabLabelText(TabCategory category)
         {
             return LocalizationService.Get(GetTabLabelKey(category));
         }
 
         /// <summary>
-        /// 将滑条数值格式化为菜单中使用的倍率文本。
+        /// Formats a slider value into the multiplier text used by the menu.
         /// </summary>
-        /// <param name="value">需要格式化的数值。</param>
-        /// <returns>保持现有精度规则的倍率文本。</returns>
+        /// <param name="value">Value to format.</param>
+        /// <returns>The multiplier text following the existing precision rules.</returns>
         private static string FormatScaledValue(float value)
         {
             return value < 0.01f
@@ -597,10 +597,10 @@ namespace KingdomEnhanced.UI
         }
 
         /// <summary>
-        /// 获取语言代码在当前界面语言下的展示文本。
+        /// Gets the display text of a language code under the current UI language.
         /// </summary>
-        /// <param name="languageCode">语言代码。</param>
-        /// <returns>语言显示名；缺失时回退为语言代码。</returns>
+        /// <param name="languageCode">Language code.</param>
+        /// <returns>The language display name; falls back to the code when missing.</returns>
         private static string GetLanguageOptionLabel(string languageCode)
         {
             string key = $"settings.language.option.{languageCode}";
@@ -957,9 +957,9 @@ namespace KingdomEnhanced.UI
         }
 
         /// <summary>
-        /// 绘制兼容旧最终文本和新资源键的功能分组标题。
+        /// Draws the feature section title, compatible with both legacy final text and new resource keys.
         /// </summary>
-        /// <param name="feature">功能元数据。</param>
+        /// <param name="feature">Feature metadata.</param>
         private void DrawFeatureSection(FeatureMeta feature)
         {
             GUILayout.Space(18f);
@@ -1168,7 +1168,7 @@ namespace KingdomEnhanced.UI
         }
         
         /// <summary>
-        /// 一键重置:将全部已绑定 ConfigEntry 恢复为默认值,并刷新内存中的功能开关与界面设置。
+        /// One-click reset: restores every bound ConfigEntry to its default value and refreshes in-memory feature toggles and UI settings.
         /// </summary>
         private void ResetAllSettings()
         {
@@ -1240,10 +1240,10 @@ namespace KingdomEnhanced.UI
         }
 
         /// <summary>
-        /// 播报文本（可打断）：interrupt 为 true 时清空待播报队列。
+        /// Speaks text (interruptible): clears the pending queue when interrupt is true.
         /// </summary>
-        /// <param name="text">待播报文本。</param>
-        /// <param name="interrupt">是否打断当前队列中未播报的消息。</param>
+        /// <param name="text">Text to speak.</param>
+        /// <param name="interrupt">Whether to interrupt messages not yet spoken in the queue.</param>
         public static void Speak(string text, bool interrupt)
         {
             if (EnableTTS) TTSManager.Speak(text, interrupt);

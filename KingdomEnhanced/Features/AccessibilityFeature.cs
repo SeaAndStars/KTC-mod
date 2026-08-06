@@ -16,38 +16,57 @@ namespace KingdomEnhanced.Features
 #if IL2CPP
     [RegisterTypeInIl2Cpp]
 #endif
+    /// <summary>
+    /// Main accessibility driver: hover announcements, radar, castle proximity, and debug zones.
+    /// </summary>
     public class AccessibilityFeature : MonoBehaviour
     {
 #if IL2CPP
         public AccessibilityFeature(IntPtr ptr) : base(ptr) { }
 #endif
+        // Cached reference to the player
         private Player _player;
+        // The payable last hovered, used to detect hover changes
         private MonoBehaviour _lastPayable = null;
 
+        // Radar helper created once the player is found
         private RadarSystem _radarSystem; 
 
+        /// <summary>Resets the base camp announcement flag when the scene starts.</summary>
         void Start()
         {
             _baseCampAnnounced = false;
         }
 
+        // Whether the player was inside the castle on the last check
         private bool _wasInCastle = false;
         
+        // Guards the one-time base camp direction announcement
         private bool _baseCampAnnounced = false;
+        // Whether the player was inside a vagrant camp on the last check
         private bool _wasInVillage = false; 
         
+        // Last announcement timestamp, used for spam throttling
         private float _spamTimer = 0f;
+        // Last announced message, used to detect hover changes
         private string _lastSpokenMsg = "";
+        // Last announced canonical name
         private string _lastName = "";
+        // Last announced price
         private int _lastPrice = -1;
 
 
+        // Timestamp of the last closest-payable scan
         private float _lastPayableCheckTime = 0f;
+        // Minimum interval between closest-payable scans
         private const float PAYABLE_CHECK_INTERVAL = 0.15f; 
 
+        // Matches names ending in a digit (upgrade candidates)
         private static readonly Regex _endsWithDigitRegex = new Regex(@"\d$", RegexOptions.Compiled);
+        // Matches names ending in a capital letter (upgrade candidates)
         private static readonly Regex _endsWithUpperRegex = new Regex(@"[A-Z]$", RegexOptions.Compiled);
 
+        /// <summary>Drains the TTS queue and handles input, hover, and proximity announcements each frame.</summary>
         void Update()
         {
             // TTS queue must always drain, even if Accessibility is off
@@ -103,7 +122,7 @@ namespace KingdomEnhanced.Features
                 var payable = current.GetComponent<Payable>();
                 if (payable == null)
                 {
-                    // 无 Payable 组件时视为无目标，避免 _lastPayable 残留导致下一帧重复播报
+                    // Missing Payable means no target; prevent stale _lastPayable from re-announcing next frame
                     ResetHoverState();
                     return;
                 }
@@ -254,7 +273,7 @@ namespace KingdomEnhanced.Features
                 }
                 catch (Exception ex)
                 {
-                    // 任何异常都重置悬停状态，防止异常路径每帧重复触发播报
+                    // Any exception resets the hover state to prevent repeated announcements from the exception path
                     ResetHoverState();
                     Debug.LogWarning($"[Accessibility] HandleHover error: {ex.Message}");
                 }
@@ -266,7 +285,7 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 清空悬停播报状态，避免陈旧状态导致下一帧重复播报。
+        /// Clears the hover announcement state to prevent stale state from re-announcing next frame.
         /// </summary>
         private void ResetHoverState()
         {
@@ -277,6 +296,7 @@ namespace KingdomEnhanced.Features
             _lastPrice = -1;
         }
 
+        /// <summary>Returns the nearest payable within range, throttled to every 0.3 seconds.</summary>
         MonoBehaviour GetClosestPayable()
         {
             if (Time.time < _lastPayableCheckTime + 0.3f) return _lastPayable as MonoBehaviour; 
@@ -311,6 +331,7 @@ namespace KingdomEnhanced.Features
             return closest;
         }
 
+        /// <summary>Returns the castle nearest to the player's X position.</summary>
         Castle FindClosestCastle()
         {
             Castle closest = null;
@@ -330,6 +351,7 @@ namespace KingdomEnhanced.Features
             return closest;
         }
 
+        /// <summary>Announces the base camp direction once shortly after scene load.</summary>
         void HandleBaseCampOrientation()
         {
             if (_baseCampAnnounced) return;
@@ -347,20 +369,27 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        // Timer controlling how often the trigger zones are refreshed
         private float _zoneUpdateTimer = 0f;
+        // Leftmost and rightmost wall X positions defining the castle zone
         private float _castleMinX = 0f;
         private float _castleMaxX = 0f;
+        // X intervals between the trees bordering each vagrant camp
         private List<Vector2> _campIntervals = new List<Vector2>();
         
+        // Debug visualization box: rect, color, and label
         private struct TriggerZone {
             public Rect Box;
             public Color Color;
             public string Label;
         }
+        // Debug zones drawn in OnGUI when DebugZones is enabled
         private List<TriggerZone> _debugZones = new List<TriggerZone>();
         
+        // Cooldown between castle/camp enter-leave announcements
         private float _announcerCooldown = 0f;
 
+        /// <summary>Rebuilds the castle and camp trigger zones plus their debug boxes.</summary>
         void UpdateZones()
         {
             if (_player == null) return;
@@ -452,6 +481,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Announces entering or leaving the castle and vagrant camps.</summary>
         void HandleCastleProximity()
         {
             if (_announcerCooldown > 0f) _announcerCooldown -= Time.deltaTime;
@@ -501,8 +531,10 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        // Cached label style for debug zone boxes
         private GUIStyle _debugLabelStyle;
 
+        /// <summary>Draws the debug zone boxes when the DebugZones option is enabled.</summary>
         void OnGUI()
         {
             if (!ModMenu.DebugZones) return;
@@ -553,6 +585,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Returns the vagrant camp nearest to the player's X position.</summary>
         private BeggarCamp FindClosestCamp()
         {
             BeggarCamp closest = null;
@@ -566,6 +599,7 @@ namespace KingdomEnhanced.Features
             return closest;
         }
 
+        /// <summary>Returns true when the tree at the given X position borders a camp and protects the village.</summary>
         private bool IsTreeProtectingVillage(float treeX)
         {
             
@@ -582,6 +616,7 @@ namespace KingdomEnhanced.Features
         }
 
 
+        /// <summary>Clears the cached hover state when the component is destroyed.</summary>
         void OnDestroy()
         {
             _lastPayable = null;

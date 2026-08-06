@@ -12,30 +12,47 @@ namespace KingdomEnhanced.Features
 #if IL2CPP
     [RegisterTypeInIl2Cpp]
 #endif
+    /// <summary>
+    /// In-game window monitoring kingdom state: population, wallet, day, cycle, and threat.
+    /// </summary>
     public class KingdomMonitor : MonoBehaviour
     {
 #if IL2CPP
         public KingdomMonitor(IntPtr ptr) : base(ptr) { }
 #endif
+        // Cached reference to the player's Kingdom
         private Kingdom _kingdom;
+        // Cached reference to the EnemyManager
         private EnemyManager _enemyManager;
         
+        // Global instance, assigned in Start()
         public static KingdomMonitor Instance { get; private set; }
         
+        // Whether the monitor window is currently shown
         private bool _isVisible = true;
+        // Whether the monitor window is currently shown
         public bool IsVisible => _isVisible;
+        // Window rectangle in screen space, draggable and resizable
         private Rect _windowRect = new Rect(10, 10, 250, 350);
+        // Whether the user is currently dragging the resize handle
         private bool _isResizing = false;
 
         
+        // Available visual styles for the monitor window
         public enum MonitorStyle { Classic, Neon, Light, Ghost }
+        // Currently selected monitor style
         private MonitorStyle _currentStyle = MonitorStyle.Classic;
+        // Style names in MonitorStyle order
         private readonly string[] _styleNames = { "Classic", "Neon", "Light", "Ghost" };
+        // Shared button style used inside the window
         private GUIStyle _styleBtn;
+        // Shared 1x1 button background texture
         private Texture2D _btnTex;
+        // Guards one-time construction of GUIStyles
         private bool _stylesBuilt;
 
         
+        // Census counters, polled one step per tick to spread frame cost
         private int _archerCount;
         private int _workerCount;
         private int _peasantCount;
@@ -48,35 +65,36 @@ namespace KingdomEnhanced.Features
         private int _censusStep = 0;
 
         /// <summary>
-        /// 上次用于生成监视器缓存文案的语言代码。
+        /// Language code used when the cached monitor strings were last generated.
         /// </summary>
         private string _localizedLanguageCode;
 
         /// <summary>
-        /// 上次轮询到的岛屿天数，用于语言切换时重建日数文案。
+        /// Last polled island day count, used to rebuild the day text on language change.
         /// </summary>
         private int _currentDay;
 
         /// <summary>
-        /// 上次轮询到的昼夜周期资源键，用于语言切换时重建日数文案。
+        /// Last polled day/night cycle localization key, used to rebuild the day text on language change.
         /// </summary>
         private string _currentCycleKey = "monitor.cycle.unknown";
 
         /// <summary>
-        /// 上次轮询到的威胁状态，用于语言切换时保留威胁文案的富文本颜色。
+        /// Last polled threat state, used to keep the threat text's rich-text color on language change.
         /// </summary>
         private bool _isThreatDangerous;
 
         /// <summary>
-        /// 上次轮询到的钱包金币数量，用于语言切换时重建钱包文案。
+        /// Last polled wallet coin count, used to rebuild the wallet text on language change.
         /// </summary>
         private int _walletCoins;
 
         /// <summary>
-        /// 上次轮询到的钱包宝石数量，用于语言切换时重建钱包文案。
+        /// Last polled wallet gem count, used to rebuild the wallet text on language change.
         /// </summary>
         private int _walletGems;
 
+        // Cached localized strings rendered in the window
         private string _strDay;
         private string _strThreat;
         private string _strGreed;
@@ -90,8 +108,10 @@ namespace KingdomEnhanced.Features
         private string _strKnight;
         private string _strVagrant;
 
+        // Color palettes, one per MonitorStyle
         private StyleColors[] _stylePalette;
 
+        // Color and hex values defining a monitor style
         private struct StyleColors
         {
             public Color bgBottom;
@@ -107,6 +127,7 @@ namespace KingdomEnhanced.Features
             public float baseAlpha;
             public int frameThickness;
 
+            // Assigns all palette values from positional arguments
             public StyleColors(Color bb, Color bt, Color h, Color b, Color f, Color bbgn, Color btnT, Color fc, string s, string d, float a, int ft)
             {
                 bgBottom = bb; bgTop = bt; header = h; body = b; footer = f;
@@ -115,6 +136,9 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>
+        /// Initializes cached references, localized strings, visibility, and style palettes.
+        /// </summary>
         private void Start()
         {
             Instance = this;
@@ -193,9 +217,14 @@ namespace KingdomEnhanced.Features
             };
         }
 
+        // Cached delegate for rendering the window
         private GUI.WindowFunction _drawWindowFunc;
+        // Cached window background style
         private GUIStyle _cachedWindowStyle;
 
+        /// <summary>
+        /// Renders the monitor window on the ImGUI layer when visible.
+        /// </summary>
         private void OnGUI()
         {
             RefreshLocalizedStringsIfLanguageChanged();
@@ -224,6 +253,9 @@ namespace KingdomEnhanced.Features
             GUI.backgroundColor = prevBg;
         }
 
+        /// <summary>
+        /// Builds the shared button style once, then reuses it.
+        /// </summary>
         private void BuildStyles()
         {
             if (_stylesBuilt) return;
@@ -248,6 +280,9 @@ namespace KingdomEnhanced.Features
             };
         }
 
+        /// <summary>
+        /// Draws the window content and handles the resize handle.
+        /// </summary>
         private void DrawWindow(int windowID)
         {
             StyleColors colors = _stylePalette[(int)_currentStyle];
@@ -306,9 +341,13 @@ namespace KingdomEnhanced.Features
         }
 
         
+        /// <summary>Shows the monitor window.</summary>
         public void Show() => _isVisible = true;
+        /// <summary>Hides the monitor window.</summary>
         public void Hide() => _isVisible = false;
+        /// <summary>Toggles the monitor window visibility.</summary>
         public void Toggle() => _isVisible = !_isVisible;
+        /// <summary>Cycles to the next monitor style and rebuilds cached styles.</summary>
         public void NextStyle()
         {
             _currentStyle = (MonitorStyle)(((int)_currentStyle + 1) % _stylePalette.Length);
@@ -316,6 +355,9 @@ namespace KingdomEnhanced.Features
             _cachedWindowStyle = null;
         }
 
+        /// <summary>
+        /// Periodically polls kingdom state and refreshes cached strings while visible.
+        /// </summary>
         private void Update()
         {
             RefreshLocalizedStringsIfLanguageChanged();
@@ -387,7 +429,7 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 检测当前语言是否变更，并在变更后的首帧重建全部缓存化文案。
+        /// Detects a language change and rebuilds all cached strings on the first frame after it.
         /// </summary>
         private void RefreshLocalizedStringsIfLanguageChanged()
         {
@@ -400,7 +442,7 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 使用既有数值和状态缓存重建监视器文案，不改变轮询计算和刷新节奏。
+        /// Rebuilds the monitor strings from cached values and state without changing the polling cadence.
         /// </summary>
         private void RefreshLocalizedStrings()
         {

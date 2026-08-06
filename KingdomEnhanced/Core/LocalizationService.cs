@@ -10,85 +10,85 @@ using UnityEngine;
 namespace KingdomEnhanced.Core
 {
     /// <summary>
-    /// 表示固定 schema 的语言资源文档。
+    /// Represents a fixed-schema localization resource document.
     /// </summary>
     [Serializable]
     public sealed class LocalizationDocument
     {
         /// <summary>
-        /// 语言代码，例如 en-US 或 zh-CN。
+        /// Language code, e.g. en-US or zh-CN.
         /// </summary>
         public string language;
 
         /// <summary>
-        /// 设置界面展示用语言名称。
+        /// Display name shown in the settings UI.
         /// </summary>
         public string displayName;
 
         /// <summary>
-        /// 该语言声明的回退语言代码。
+        /// Fallback language code declared by this document.
         /// </summary>
         public string fallback;
 
         /// <summary>
-        /// 当前语言文档包含的全部资源条目。
+        /// All resource entries contained in this document.
         /// </summary>
         public LocalizationEntry[] entries;
     }
 
     /// <summary>
-    /// 表示单个资源键和值的 JSON 条目。
+    /// Represents a single key-value JSON resource entry.
     /// </summary>
     [Serializable]
     public sealed class LocalizationEntry
     {
         /// <summary>
-        /// 稳定资源键。
+        /// Stable resource key.
         /// </summary>
         public string key;
 
         /// <summary>
-        /// 资源键对应的翻译文本。
+        /// Translated text for the resource key.
         /// </summary>
         public string value;
     }
 
     /// <summary>
-    /// 提供本地化资源加载、语言切换和文本回退能力。
+    /// Provides localization catalog loading, language switching and text fallback.
     /// </summary>
     public static class LocalizationService
     {
         /// <summary>
-        /// 默认语言代码。
+        /// Default language code.
         /// </summary>
         private const string DefaultLanguageCode = "en-US";
 
         /// <summary>
-        /// 已加载的语言资源字典，键为语言代码，值为资源键到文本的映射。
+        /// Loaded language catalogs: language code -> (resource key -> text) map.
         /// </summary>
         private static readonly Dictionary<string, Dictionary<string, string>> LoadedCatalogs =
             new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// 已加载语言代码列表，用于保持稳定的展示顺序。
+        /// Loaded language codes, kept in a stable display order.
         /// </summary>
         private static readonly List<string> AvailableLanguageCodes = new List<string>();
 
         /// <summary>
-        /// 当前生效的语言代码。
+        /// Currently active language code.
         /// </summary>
         private static string _currentLanguageCode = DefaultLanguageCode;
 
         /// <summary>
-        /// 获取当前生效的语言代码。
+        /// Gets the currently active language code.
         /// </summary>
         public static string CurrentLanguageCode => _currentLanguageCode;
 
         /// <summary>
-        /// 初始化本地化资源，并根据配置选择当前语言。
+        /// Initializes localization resources and selects the language from config.
         /// </summary>
-        /// <param name="localizationDirectory">插件 DLL 同级的 Localization 目录。</param>
-        /// <param name="configuredLanguage">配置文件中保存的语言代码。</param>
+        /// <param name="localizationDirectory">Localization directory next to the plugin DLL.</param>
+        /// <param name="configuredLanguage">Language code stored in the config file.</param>
         public static void Initialize(string localizationDirectory, string configuredLanguage)
         {
             LoadedCatalogs.Clear();
@@ -118,7 +118,7 @@ namespace KingdomEnhanced.Core
 
             if (!loadedAnyExternal)
             {
-                // 外部目录缺失或为空时，回退到 DLL 内嵌目录，保证菜单与播报永远有可用文本。
+                // When the external directory is missing or empty, fall back to the embedded catalogs so the menu and narration always have usable text.
                 LoadEmbeddedCatalogs();
             }
 
@@ -126,7 +126,7 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 从当前程序集内嵌资源加载全部本地化目录（DLL 内置兜底）。
+        /// Loads all localization catalogs from the assembly embedded resources (built-in DLL fallback).
         /// </summary>
         private static void LoadEmbeddedCatalogs()
         {
@@ -172,10 +172,10 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 根据资源键获取当前语言文本，并按当前语言、英文、资源键的顺序回退。
+        /// Gets the text for a resource key, falling back through current language, English, then the raw key.
         /// </summary>
-        /// <param name="key">稳定资源键。</param>
-        /// <returns>本地化文本；若资源缺失则返回资源键本身。</returns>
+        /// <param name="key">Stable resource key.</param>
+        /// <returns>Localized text; returns the raw key itself when missing.</returns>
         public static string Get(string key)
         {
             if (string.IsNullOrEmpty(key))
@@ -198,11 +198,11 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 根据资源键获取格式化文本，并沿用与 <see cref="Get"/> 相同的回退策略。
+        /// Gets formatted text for a resource key, using the same fallback strategy as <see cref="Get"/>.
         /// </summary>
-        /// <param name="key">稳定资源键。</param>
-        /// <param name="args">格式化参数。</param>
-        /// <returns>格式化后的本地化文本；格式化失败时返回原模板。</returns>
+        /// <param name="key">Stable resource key.</param>
+        /// <param name="args">Format arguments.</param>
+        /// <returns>Formatted localized text; returns the raw template when formatting fails.</returns>
         public static string Format(string key, params object[] args)
         {
             string template = Get(key);
@@ -223,9 +223,9 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 立即切换当前语言，并持久化到 BepInEx 配置。
+        /// Immediately switches the current language and persists it to the BepInEx config.
         /// </summary>
-        /// <param name="languageCode">目标语言代码。</param>
+        /// <param name="languageCode">Target language code.</param>
         public static void SetLanguage(string languageCode)
         {
             if (!TryResolveLanguageCode(languageCode, out string resolvedLanguageCode))
@@ -239,18 +239,18 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 获取已加载的可用语言代码列表。
+        /// Gets the list of loaded, available language codes.
         /// </summary>
-        /// <returns>当前已加载的语言代码快照。</returns>
+        /// <returns>Snapshot of currently loaded language codes.</returns>
         public static IReadOnlyList<string> GetAvailableLanguages()
         {
             return AvailableLanguageCodes.ToArray();
         }
 
         /// <summary>
-        /// 从单个 JSON 文件读取并校验一种语言资源。
+        /// Reads and validates one language catalog from a single JSON file.
         /// </summary>
-        /// <param name="filePath">资源文件路径。</param>
+        /// <param name="filePath">Path to the resource file.</param>
         private static void LoadLanguageFile(string filePath)
         {
             try
@@ -265,11 +265,11 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 解析并注册一份本地化目录文本（外部文件与内嵌资源共用）。
+        /// Parses and registers one localization catalog (shared by external files and embedded resources).
         /// </summary>
-        /// <param name="jsonText">原始本地化 JSON 文本。</param>
-        /// <param name="sourceName">资源来源名称，仅用于日志。</param>
-        /// <returns>成功注册返回 true，否则返回 false。</returns>
+        /// <param name="jsonText">Raw localization JSON text.</param>
+        /// <param name="sourceName">Resource source name, used for logging only.</param>
+        /// <returns>True when registered successfully, otherwise false.</returns>
         private static bool LoadLanguageText(string jsonText, string sourceName)
         {
             try
@@ -354,34 +354,34 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 使用固定 schema JSON 解析器将本地化文本转换为文档对象。
+        /// Converts localization text to a document object using the fixed-schema JSON parser.
         /// </summary>
-        /// <param name="jsonText">原始本地化 JSON 文本。</param>
-        /// <returns>成功时返回托管本地化文档；失败时返回空。</returns>
+        /// <param name="jsonText">Raw localization JSON text.</param>
+        /// <returns>The parsed localization document on success; null on failure.</returns>
         private static LocalizationDocument DeserializeLocalizationDocument(string jsonText)
         {
             return new LocalizationJsonParser(jsonText).ParseDocument();
         }
 
         /// <summary>
-        /// 提供固定 schema 的本地化 JSON 解析能力。
+        /// Provides fixed-schema JSON parsing for localization documents.
         /// </summary>
         private sealed class LocalizationJsonParser
         {
             /// <summary>
-            /// 原始 JSON 文本。
+            /// Raw JSON text.
             /// </summary>
             private readonly string _jsonText;
 
             /// <summary>
-            /// 当前读取位置。
+            /// Current read position.
             /// </summary>
             private int _position;
 
             /// <summary>
-            /// 初始化固定 schema 本地化 JSON 解析器。
+            /// Initializes the fixed-schema localization JSON parser.
             /// </summary>
-            /// <param name="jsonText">原始 JSON 文本。</param>
+        /// <param name="jsonText">Raw JSON text.</param>
             public LocalizationJsonParser(string jsonText)
             {
                 _jsonText = jsonText ?? throw new ArgumentNullException(nameof(jsonText));
@@ -389,9 +389,9 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 解析完整的本地化文档。
+            /// Parses a complete localization document.
             /// </summary>
-            /// <returns>解析成功后的本地化文档。</returns>
+            /// <returns>The parsed localization document.</returns>
             public LocalizationDocument ParseDocument()
             {
                 SkipWhitespace();
@@ -458,9 +458,9 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 解析本地化条目数组。
+            /// Parses the localization entries array.
             /// </summary>
-            /// <returns>解析成功后的本地化条目数组。</returns>
+            /// <returns>The parsed localization entries array.</returns>
             private LocalizationEntry[] ParseEntriesArray()
             {
                 ExpectCharacter('[');
@@ -488,9 +488,9 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 解析单个本地化条目对象。
+            /// Parses a single localization entry object.
             /// </summary>
-            /// <returns>解析成功后的本地化条目。</returns>
+            /// <returns>The parsed localization entry.</returns>
             private LocalizationEntry ParseEntryObject()
             {
                 ExpectCharacter('{');
@@ -567,9 +567,9 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 解析 JSON 字符串并处理所有支持的转义序列。
+            /// Parses a JSON string and handles all supported escape sequences.
             /// </summary>
-            /// <returns>解析成功后的字符串值。</returns>
+            /// <returns>The parsed string value.</returns>
             private string ParseString()
             {
                 ExpectCharacter('"');
@@ -604,9 +604,9 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 解析 JSON 转义序列。
+            /// Parses a JSON escape sequence.
             /// </summary>
-            /// <returns>转义序列对应的字符。</returns>
+            /// <returns>The character represented by the escape sequence.</returns>
             private char ParseEscapeSequence()
             {
                 if (IsAtEnd())
@@ -641,9 +641,9 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 解析 JSON Unicode 转义序列。
+            /// Parses a JSON unicode escape sequence.
             /// </summary>
-            /// <returns>Unicode 转义对应的字符。</returns>
+            /// <returns>The character represented by the unicode escape.</returns>
             private char ParseUnicodeEscapeSequence()
             {
                 if (_position + 4 > _jsonText.Length)
@@ -661,10 +661,10 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 将单个十六进制字符转换为数值。
+            /// Converts a single hex character to its numeric value.
             /// </summary>
-            /// <param name="hexCharacter">十六进制字符。</param>
-            /// <returns>对应的十进制数值。</returns>
+            /// <param name="hexCharacter">Hex character.</param>
+            /// <returns>The corresponding decimal value.</returns>
             private int ParseHexValue(char hexCharacter)
             {
                 if (hexCharacter >= '0' && hexCharacter <= '9')
@@ -686,7 +686,7 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 跳过当前位置开始的所有 JSON 空白字符。
+            /// Skips all JSON whitespace starting at the current position.
             /// </summary>
             private void SkipWhitespace()
             {
@@ -706,9 +706,9 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 读取并返回一个字符。
+            /// Reads and returns a single character.
             /// </summary>
-            /// <returns>当前位置的字符。</returns>
+            /// <returns>The character at the current position.</returns>
             private char ReadCharacter()
             {
                 if (IsAtEnd())
@@ -720,9 +720,9 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 断言当前位置必须为指定字符。
+            /// Asserts the current position is the expected character.
             /// </summary>
-            /// <param name="expectedCharacter">期望字符。</param>
+            /// <param name="expectedCharacter">Expected character.</param>
             private void ExpectCharacter(char expectedCharacter)
             {
                 if (IsAtEnd())
@@ -738,10 +738,10 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 尝试消费指定字符。
+            /// Attempts to consume the expected character.
             /// </summary>
-            /// <param name="expectedCharacter">待匹配字符。</param>
-            /// <returns>匹配成功返回 true，否则返回 false。</returns>
+            /// <param name="expectedCharacter">Character to match.</param>
+            /// <returns>True when matched, otherwise false.</returns>
             private bool TryConsumeCharacter(char expectedCharacter)
             {
                 if (IsAtEnd() || _jsonText[_position] != expectedCharacter)
@@ -754,10 +754,10 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 断言属性名称在当前对象范围内未重复出现。
+            /// Asserts the property name has not already appeared in the current object scope.
             /// </summary>
-            /// <param name="alreadySeen">该属性是否已出现。</param>
-            /// <param name="propertyName">属性名称。</param>
+            /// <param name="alreadySeen">Whether the property has already appeared.</param>
+            /// <param name="propertyName">Property name.</param>
             private void EnsureUniqueProperty(bool alreadySeen, string propertyName)
             {
                 if (alreadySeen)
@@ -767,7 +767,7 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 确认解析结束后不存在额外的非空白字符。
+            /// Ensures no trailing non-whitespace content remains after parsing.
             /// </summary>
             private void EnsureDocumentEnd()
             {
@@ -779,19 +779,19 @@ namespace KingdomEnhanced.Core
             }
 
             /// <summary>
-            /// 判断是否已经到达 JSON 文本末尾。
+            /// Determines whether the end of the JSON text has been reached.
             /// </summary>
-            /// <returns>到达末尾时返回 true。</returns>
+            /// <returns>True when the end has been reached.</returns>
             private bool IsAtEnd()
             {
                 return _position >= _jsonText.Length;
             }
 
             /// <summary>
-            /// 创建带位置上下文的格式异常。
+            /// Creates a format exception with position context.
             /// </summary>
-            /// <param name="message">异常消息。</param>
-            /// <returns>带位置信息的格式异常。</returns>
+            /// <param name="message">Exception message.</param>
+            /// <returns>A format exception carrying position information.</returns>
             private FormatException CreateFormatException(string message)
             {
                 return new FormatException($"{message} position={_position}");
@@ -799,9 +799,9 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 根据配置值、默认语言和已加载语言列表确定最终语言，并在需要时写回配置。
+        /// Determines the final language from the configured value, default language and loaded catalogs, persisting it back when needed.
         /// </summary>
-        /// <param name="configuredLanguage">配置文件中的语言代码。</param>
+        /// <param name="configuredLanguage">Language code from the config file.</param>
         private static void ApplyConfiguredLanguage(string configuredLanguage)
         {
             if (TryResolveLanguageCode(configuredLanguage, out string configuredResolvedLanguage))
@@ -836,11 +836,11 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 尝试按语言代码解析出已加载语言的规范写法。
+        /// Attempts to resolve a language code to the canonical form of a loaded language.
         /// </summary>
-        /// <param name="languageCode">待解析的语言代码。</param>
-        /// <param name="resolvedLanguageCode">解析成功后的规范语言代码。</param>
-        /// <returns>若语言已加载则返回 true。</returns>
+        /// <param name="languageCode">Language code to resolve.</param>
+        /// <param name="resolvedLanguageCode">Resolved canonical language code.</param>
+        /// <returns>True when the language is loaded.</returns>
         private static bool TryResolveLanguageCode(string languageCode, out string resolvedLanguageCode)
         {
             resolvedLanguageCode = string.Empty;
@@ -862,12 +862,12 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 尝试从指定语言资源中读取某个键的文本。
+        /// Attempts to read the text for a key from the specified language catalog.
         /// </summary>
-        /// <param name="languageCode">语言代码。</param>
-        /// <param name="key">资源键。</param>
-        /// <param name="value">读取到的文本。</param>
-        /// <returns>读取成功返回 true，否则返回 false。</returns>
+        /// <param name="languageCode">Language code.</param>
+        /// <param name="key">Resource key.</param>
+        /// <param name="value">Read text.</param>
+        /// <returns>True when the value was read successfully, otherwise false.</returns>
         private static bool TryGetValue(string languageCode, string key, out string value)
         {
             value = string.Empty;
@@ -885,9 +885,9 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 将语言设置写回 BepInEx 配置文件。
+        /// Persists the language setting to the BepInEx config file.
         /// </summary>
-        /// <param name="languageCode">需要持久化的语言代码。</param>
+        /// <param name="languageCode">Language code to persist.</param>
         private static void PersistLanguageSetting(string languageCode)
         {
             if (Settings.Language == null)
@@ -907,9 +907,9 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 记录安全的本地化警告日志。
+        /// Logs a safe localization warning message.
         /// </summary>
-        /// <param name="message">日志消息。</param>
+        /// <param name="message">Log message.</param>
         private static void LogWarning(string message)
         {
             if (Plugin.Instance != null)

@@ -19,20 +19,24 @@ namespace KingdomEnhanced.Features
 #if IL2CPP
         public WorldManager(IntPtr ptr) : base(ptr) { }
 #endif
+        // HUD label styles for the time and wallet texts
         private GUIStyle _timeStyle;
         private GUIStyle _coinStyle;
 
+        // Accumulated timers and the timestamp of the last siege alert
         private float _statusTimer = 0f;
         private float _radarTimer = 0f;
         private float _lastAttackAlert = 0f;
         
+        // Intervals and cooldown for the periodic status checks
         private const float STATUS_CHECK_INTERVAL = 2.0f;
         private const float RADAR_CHECK_INTERVAL = 4.0f;
         private const float ATTACK_ALERT_COOLDOWN = 60f;
 
+        // Tracks the previous day/night state to detect transitions
         private bool _wasDay = true;
 
-        /// <summary>时间文本缓存:仅当小时/分钟/昼夜/天数/时钟制式变化时才重建字符串,避免每帧分配</summary>
+        /// <summary>Time text cache: the string is rebuilt only when hour/minute/day-night/day count/clock format change, avoiding per-frame allocations</summary>
         private string _cachedTimeText;
         private int _cachedTimeHour = -1;
         private int _cachedTimeMinute = -1;
@@ -40,31 +44,35 @@ namespace KingdomEnhanced.Features
         private int _cachedTimeDay;
         private bool _cachedUse12Hour;
 
-        /// <summary>钱包文本缓存:仅当金币/宝石数值变化时才重建字符串,避免每帧分配</summary>
+        /// <summary>Wallet text cache: the string is rebuilt only when coin/gem values change, avoiding per-frame allocations</summary>
         private string _cachedWalletText;
         private int _cachedCoins = -1;
         private int _cachedGems = -1;
 
-        /// <summary>钱包反射字段缓存:首次发现后复用,避免失败路径每帧全字段反射</summary>
+        /// <summary>Wallet reflection field cache: reused after first discovery, avoiding a full per-frame field scan on failure paths</summary>
         private FieldInfo _walletCoinsField;
         private FieldInfo _walletGemsField;
         private bool _walletReflectDiscovered = false;
 
+        // Reflection-cached enemy list field and discovery flag
         private FieldInfo _enemiesListField;
         private bool _fieldsDiscovered = false;
 
+        /// <summary>Initializes the HUD and discovers the reflected enemy list field.</summary>
         void Start()
         {
             DiscoverFields();
             Debug.Log("[WorldManager] Started - HUD Display Mode");
         }
 
+        /// <summary>Advances the periodic timers each frame when the managers are valid.</summary>
         void Update()
         {
             if (!IsManagersValid()) return;
             UpdateTimers(Time.deltaTime);
         }
 
+        /// <summary>Renders the HUD every GUI frame when the display is enabled.</summary>
         void OnGUI()
         {
             if (!ModMenu.DisplayTimes || !IsManagersValid()) return;
@@ -72,6 +80,7 @@ namespace KingdomEnhanced.Features
             DrawHUD();
         }
 
+        /// <summary>Reflects over EnemyManager to locate and cache the enemy list field once.</summary>
         private void DiscoverFields()
         {
             if (_fieldsDiscovered) return;
@@ -102,6 +111,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Creates the time and wallet GUIStyles once, with dynamic font size adjustment.</summary>
         private void InitializeStyles()
         {
             if (_timeStyle == null)
@@ -111,7 +121,7 @@ namespace KingdomEnhanced.Features
                     normal = { textColor = new Color(1f, 0.9f, 0.5f) },
                     alignment = TextAnchor.MiddleCenter
                 };
-                // 非动态字体不支持字号/样式覆盖,设置会触发每帧日志警告刷屏,故跳过
+                // Non-dynamic fonts do not support font size/style overrides; setting them would spam log warnings every frame, so skip
                 if (IsDynamicFont(_timeStyle)) _timeStyle.fontSize = 16;
             }
 
@@ -126,14 +136,14 @@ namespace KingdomEnhanced.Features
             }
         }
 
-        /// <summary>判断样式字体是否支持动态属性(非动态字体设置 fontSize/fontStyle 会触发引擎警告)</summary>
+        /// <summary>Checks whether the style's font supports dynamic properties (setting fontSize/fontStyle on a non-dynamic font triggers engine warnings)</summary>
         private bool IsDynamicFont(GUIStyle style)
         {
             try { return style.font == null || style.font.dynamic; }
             catch { return false; }
         }
 
-        /// <summary>带缓存的 HUD 文本渲染:仅当值变化时才格式化,避免每帧字符串分配</summary>
+        /// <summary>Cached HUD text rendering: formats only when values change, avoiding per-frame string allocations</summary>
         private void DrawHUD()
         {
             try
@@ -161,7 +171,7 @@ namespace KingdomEnhanced.Features
             catch { }
         }
 
-        /// <summary>缓存的时间文本:小时/分钟/昼夜/天数未变化时直接返回上次结果</summary>
+        /// <summary>Cached time text: returns the previous result while hour/minute/day-night/day count are unchanged</summary>
         private string GetCachedTimeDisplay(Director director)
         {
             try
@@ -191,10 +201,10 @@ namespace KingdomEnhanced.Features
             catch { return LocalizationService.Get("hud.error"); }
         }
 
-        /// <summary>将游戏内累计小时换算为精确的 24 小时制时分,小时与分钟同源计算避免浮点进位偏差</summary>
-        /// <param name="currentTime">游戏内累计小时数。</param>
-        /// <param name="hour">0-23 的小时。</param>
-        /// <param name="minute">0-59 的分钟。</param>
+        /// <summary>Converts accumulated in-game hours to precise 24-hour time; hour and minute are computed from the same source to avoid float rounding drift</summary>
+        /// <param name="currentTime">The accumulated in-game hours.</param>
+        /// <param name="hour">The hour, 0-23.</param>
+        /// <param name="minute">The minute, 0-59.</param>
         private static void GetPreciseTimeOfDay(float currentTime, out int hour, out int minute)
         {
             float totalHours = currentTime % 24f;
@@ -203,7 +213,7 @@ namespace KingdomEnhanced.Features
             minute = totalMinutesOfDay % 60;
         }
 
-        /// <summary>缓存的钱包文本:金币/宝石数值未变化时直接返回上次结果</summary>
+        /// <summary>Cached wallet text: returns the previous result while coin/gem values are unchanged</summary>
         private string GetCachedWalletText((int Coins, int Gems) stats)
         {
             if (_cachedWalletText != null &&
@@ -219,10 +229,10 @@ namespace KingdomEnhanced.Features
             return _cachedWalletText;
         }
 
-        /// <summary>格式化时间显示文本(使用精确的 24 小时制时分)</summary>
-        /// <param name="director">游戏导演实例。</param>
-        /// <param name="hour">精确小时(0-23)。</param>
-        /// <param name="minute">精确分钟(0-59)。</param>
+        /// <summary>Formats the time display text (using precise 24-hour time)</summary>
+        /// <param name="director">The game director instance.</param>
+        /// <param name="hour">The precise hour, 0-23.</param>
+        /// <param name="minute">The precise minute, 0-59.</param>
         private string FormatTimeDisplay(Director director, int hour, int minute)
         {
             if (director == null) return LocalizationService.Get("hud.error");
@@ -255,6 +265,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Draws the time and wallet labels with a black shadow for readability.</summary>
         private void DrawShadowedLabel(Rect rect, string text, GUIStyle style)
         {
             Color originalColor = GUI.color;
@@ -266,6 +277,7 @@ namespace KingdomEnhanced.Features
             GUI.Label(rect, text, style);
         }
 
+        /// <summary>Reads the player's coin and gem counts, falling back to reflection when needed.</summary>
         private (int Coins, int Gems) GetPlayerWalletStats()
         {
             try
@@ -294,7 +306,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
-        /// <summary>反射回退取钱包数值:字段只发现一次后缓存复用,避免每帧全字段反射扫描</summary>
+        /// <summary>Reflection fallback for wallet values: fields are discovered once and cached for reuse, avoiding a full per-frame reflection scan</summary>
 #if IL2CPP
         [Il2CppInterop.Runtime.Attributes.HideFromIl2Cpp]
 #endif
@@ -328,6 +340,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Accumulates timers and triggers the periodic status, repair, weather, portal, and radar checks.</summary>
         private void UpdateTimers(float deltaTime)
         {
             _statusTimer += deltaTime;
@@ -349,6 +362,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Restores all active walls to their initial hit points when invincible walls are enabled.</summary>
         private void RepairWalls()
         {
             var walls = FindObjectsByType<Wall>(FindObjectsSortMode.None);
@@ -359,6 +373,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Disables all active precipitation objects when clear weather is enabled.</summary>
         private void ClearWeather()
         {
             var pre = FindObjectsByType<Precipitation>(FindObjectsSortMode.None);
@@ -367,6 +382,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Applies the configured portal spawn rate to all portals unless it is left at default.</summary>
         private void ApplyPortalRates()
         {
             if (ModMenu.PortalSpawnRate == 1.0f) return;
@@ -376,6 +392,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Runs the periodic game status checks, currently the day/night transition check.</summary>
         private void CheckGameStatus()
         {
             var director = Managers.Inst.director;
@@ -384,6 +401,7 @@ namespace KingdomEnhanced.Features
             CheckDayNightTransition(director);
         }
 
+        /// <summary>Skips ahead to nightfall and announces it, if it is currently daytime.</summary>
         public static void SkipDaytime()
         {
             var director = Managers.Inst?.director;
@@ -399,6 +417,7 @@ namespace KingdomEnhanced.Features
             ModMenu.Speak(LocalizationService.Get("hud.announcement.skip_to_night"));
         }
 
+        /// <summary>Skips ahead to dawn and announces it, if it is currently nighttime.</summary>
         public static void SkipNighttime()
         {
             var director = Managers.Inst?.director;
@@ -413,6 +432,7 @@ namespace KingdomEnhanced.Features
             ModMenu.Speak(LocalizationService.Get("hud.announcement.skip_to_dawn"));
         }
 
+        /// <summary>Announces sunrise/nightfall once when the day/night state changes.</summary>
         private void CheckDayNightTransition(Director director)
         {
             try
@@ -435,6 +455,7 @@ namespace KingdomEnhanced.Features
         }
 
         
+        /// <summary>Periodically announces a siege when many enemies gather at night, respecting the cooldown.</summary>
         private void CheckForGreedAttack()
         {
             try
@@ -455,6 +476,7 @@ namespace KingdomEnhanced.Features
             catch { }
         }
 
+        /// <summary>Returns the enemy list count via the cached field, or 0 on failure.</summary>
         private int GetEnemyCount(EnemyManager enemyManager)
         {
             try
@@ -482,6 +504,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Determines whether a siege alert should fire based on the enemy count and cooldown.</summary>
         private bool ShouldTriggerSiegeAlert(int enemyCount)
         {
             const int SIEGE_THRESHOLD = 15;
@@ -489,6 +512,7 @@ namespace KingdomEnhanced.Features
                    Time.time > _lastAttackAlert + ATTACK_ALERT_COOLDOWN;
         }
 
+        /// <summary>Checks whether the Managers and director are available for use.</summary>
         private bool IsManagersValid()
         {
             try { return Managers.Inst != null && Managers.Inst.director != null; }

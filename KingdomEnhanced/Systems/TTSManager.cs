@@ -23,21 +23,26 @@ namespace KingdomEnhanced.Systems
         private static readonly Queue<string> _pendingQueue = new Queue<string>();
         private static readonly object        _queueLock   = new object();
 
+        // Hard cap on queued messages; the oldest is dropped when exceeded
         private const int MaxQueueLength = 32;
 
-        /// <summary>上次实际播报的文本（去重窗口内丢弃完全相同的重复消息，防止无限循环播报）。</summary>
+        /// <summary>Last text actually spoken; exact duplicates within the dedupe window are dropped to prevent infinite loops.</summary>
         private static string _lastSpokenText = string.Empty;
 
-        /// <summary>上次实际播报的时刻（Time.unscaledTime）。</summary>
+        /// <summary>Timestamp (Time.unscaledTime) of the last actual speech.</summary>
         private static float _lastSpokenTime = float.MinValue;
 
-        /// <summary>去重窗口（秒）：窗口内完全相同的文本直接丢弃。</summary>
+        /// <summary>Dedupe window in seconds: identical text within the window is dropped.</summary>
         private const float DedupeWindowSeconds = 2.0f;
 
+        // History of recently spoken messages for RepeatLast and ReadPreviousMessage
         private static readonly List<string> _messageLog = new List<string>();
+        // Current position in the message history
         private static int _historyIndex = -1;
+        // Maximum number of history entries retained
         private const  int MaxHistory   = 10;
 
+        // Strips HTML-like tags (e.g. rich text color codes) from speech text
         private static readonly Regex _htmlTagRegex = new Regex(@"<.*?>", RegexOptions.Compiled);
 
         // Called once at startup from the main thread
@@ -60,6 +65,7 @@ namespace KingdomEnhanced.Systems
         }
 
         // ── Background thread ────────────────────────────────────────────────
+        /// <summary>Background STA thread loop that creates the SAPI COM object and speaks queued text.</summary>
         private static void SpeakThreadLoop()
         {
             // Create the SAPI COM object on THIS thread (STA requirement)
@@ -116,7 +122,7 @@ namespace KingdomEnhanced.Systems
                             new object[] { text, 0 }
                         );
 
-                        // 记录最近播报文本，供主线程去重
+                        // Record the recently spoken text for main-thread dedupe
                         lock (_queueLock)
                         {
                             _lastSpokenText = text;
@@ -148,6 +154,7 @@ namespace KingdomEnhanced.Systems
         /// <summary>Called every frame from AccessibilityFeature.Update() — now a no-op.</summary>
         public static void Update() { /* speak thread is self-managing */ }
 
+        /// <summary>Queues text for speech after stripping tags and applying the dedupe window.</summary>
         public static void Speak(string text, bool interrupt = true)
         {
             if (string.IsNullOrEmpty(text) || !_initialized) return;
@@ -156,7 +163,7 @@ namespace KingdomEnhanced.Systems
 
             lock (_queueLock)
             {
-                // 去重：去重窗口内与最近播报文本完全相同的内容直接丢弃，避免调用方每帧触发造成无限循环播报
+                // Dedupe: drop exact matches to the last spoken text within the window to prevent infinite loops from per-frame callers
                 if (string.Equals(clean, _lastSpokenText, StringComparison.Ordinal) &&
                     UnityEngine.Time.unscaledTime - _lastSpokenTime < DedupeWindowSeconds)
                 {
@@ -165,7 +172,7 @@ namespace KingdomEnhanced.Systems
 
                 if (interrupt) _pendingQueue.Clear(); // Drop queued phrases
 
-                // 队列上限：超出时丢弃最旧的消息，保证无法无限堆积
+                // Queue cap: drop the oldest message when full so the queue cannot grow unbounded
                 if (_pendingQueue.Count >= MaxQueueLength)
                 {
                     _pendingQueue.Dequeue();
@@ -177,6 +184,7 @@ namespace KingdomEnhanced.Systems
             AddToHistory(clean);
         }
 
+        /// <summary>Replays the most recently spoken message.</summary>
         public static void RepeatLast()
         {
             if (_messageLog.Count == 0) return;
@@ -187,6 +195,7 @@ namespace KingdomEnhanced.Systems
             }
         }
 
+        /// <summary>Speaks the previous message from history, or announces the beginning of history.</summary>
         public static void ReadPreviousMessage()
         {
             if (_messageLog.Count == 0) return;
@@ -200,6 +209,7 @@ namespace KingdomEnhanced.Systems
             Speak($"{_historyIndex + 1} of {_messageLog.Count}: {_messageLog[_historyIndex]}", interrupt: true);
         }
 
+        /// <summary>Records a message in history, skipping consecutive duplicates and trimming to MaxHistory.</summary>
         private static void AddToHistory(string text)
         {
             if (_messageLog.Count > 0 && _messageLog[_messageLog.Count - 1] == text) return;

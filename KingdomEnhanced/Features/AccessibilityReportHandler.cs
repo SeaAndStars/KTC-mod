@@ -9,19 +9,19 @@ using KingdomEnhanced.Utils;
 namespace KingdomEnhanced.Features
 {
     /// <summary>
-        /// 提供 F5-F10 热键触发的无障碍状态播报功能。
+        /// Provides accessibility status announcements triggered by the F5-F10 hotkeys.
     /// </summary>
     public static class AccessibilityReportHandler
     {
         /// <summary>
-        /// 可支付对象类型到价格属性的反射缓存，避免重复查找。
+        /// Reflection cache from payable object type to its Price property, avoiding repeated lookups.
         /// </summary>
         private static readonly System.Collections.Generic.Dictionary<Type, PropertyInfo> _priceCache = new();
 
         /// <summary>
-        /// 播报玩家朝向、昼夜、威胁状态和最近城墙距离。
+        /// Announces the player's facing, day/night state, threat state, and distance to the nearest wall.
         /// </summary>
-        /// <param name="player">当前玩家实例。</param>
+        /// <param name="player">The current player instance.</param>
         public static void CheckCompassAndSafety(Player player)
         {
             string dir = LocalizationService.Get(player.mover.GetDirection() == Side.Left ? "accessibility.direction.left" : "accessibility.direction.right");
@@ -57,9 +57,9 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 播报玩家钱包中的金币和宝石数量。
+        /// Announces the coin and gem counts in the player's wallet.
         /// </summary>
-        /// <param name="player">当前玩家实例。</param>
+        /// <param name="player">The current player instance.</param>
         public static void ReportWallet(Player player)
         {
             int coins = player.wallet.GetCurrency(CurrencyType.Coins);
@@ -68,7 +68,7 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 播报当前岛屿天数与昼夜状态。
+        /// Announces the current island day count and day/night state.
         /// </summary>
         public static void ReportWorld()
         {
@@ -78,9 +78,9 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 播报当前坐骑名称与疲劳状态。
+        /// Announces the current mount's name and tiredness state.
         /// </summary>
-        /// <param name="player">当前玩家实例。</param>
+        /// <param name="player">The current player instance.</param>
         public static void ReportMount(Player player)
         {
             if (player.steed == null) return;
@@ -90,7 +90,7 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 播报附近各类追随者数量。
+        /// Announces the counts of nearby followers of each type.
         /// </summary>
         public static void ReportCompanions()
         {
@@ -103,9 +103,9 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 播报当前选中或最近可支付对象的价格与等级信息。
+        /// Announces price and level information for the currently selected or nearest payable object.
         /// </summary>
-        /// <param name="player">当前玩家实例。</param>
+        /// <param name="player">The current player instance.</param>
         public static void ReportDetailedInfo(Player player)
         {
             var current = player.selectedPayable as MonoBehaviour ?? GetClosestPayable(player);
@@ -145,9 +145,9 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 将当前选中或最近对象的反射字段写入开发日志，并播报操作结果。
+        /// Writes the reflected fields of the selected or nearest payable object to the dev log and announces the result.
         /// </summary>
-        /// <param name="player">当前玩家实例。</param>
+        /// <param name="player">The current player instance.</param>
         public static void DumpPayableInfo(Player player)
         {
             var current = player.selectedPayable as MonoBehaviour ?? GetClosestPayable(player);
@@ -181,10 +181,10 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 查找玩家附近处于激活状态的最近可支付对象。
+        /// Finds the nearest active payable object near the player.
         /// </summary>
-        /// <param name="player">当前玩家实例。</param>
-        /// <returns>最近可支付对象；不存在时返回空。</returns>
+        /// <param name="player">The current player instance.</param>
+        /// <returns>The nearest payable object, or null if none exists.</returns>
         private static MonoBehaviour GetClosestPayable(Player player)
         {
             if (Managers.Inst == null || Managers.Inst.payables == null) return null;
@@ -214,10 +214,10 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 通过对象类型与反射支付字段识别当前语言的货币名称。
+        /// Identifies the localized currency name from the object type and its reflected payment fields.
         /// </summary>
-        /// <param name="target">待识别的可支付对象。</param>
-        /// <returns>当前语言的货币名称。</returns>
+        /// <param name="target">The payable object to identify.</param>
+        /// <returns>The currency name in the current language.</returns>
         private static string GetCurrencyName(MonoBehaviour target)
         {
             if (target.name.Contains("Gem Guard") || target.name.Contains("GemKeeper")) return LocalizationService.Get("accessibility.currency.gems");

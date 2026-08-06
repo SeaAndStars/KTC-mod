@@ -82,6 +82,8 @@ Check your game folder:
 - HUD visibility and layout control  
 - Accessibility & TTS configuration (Queue / Interrupt modes)  
 - Travel speed multiplier  
+- 12-hour clock toggle (HUD section)  
+- One-click settings reset (Settings tab)  
 
 ---
 
@@ -136,7 +138,7 @@ Check your game folder:
 ### HARD (Custom Difficulty)  
 *Experimental Director Overrides*
 
-- Presets: Nightmare, Relentless, Oblivion, No Escape  
+- Custom difficulty presets: Nightmare, Relentless, Oblivion, No Escape  
 
 - Manual Controls:
   - Crown stealing toggle  
@@ -159,6 +161,7 @@ A full **Text-to-Speech (TTS)** system designed for blind and visually impaired 
 - Queue vs Interrupt speech modes  
 - Environmental announcements (village, castle, etc.)  
 - Tree detection to prevent critical mistakes  
+- TTS deduplication (identical announcements are suppressed)  
 
 ### Hotkeys
 - **F5** — Radar (Portals, Chests, Vagrants)  
@@ -174,6 +177,7 @@ A full **Text-to-Speech (TTS)** system designed for blind and visually impaired 
 
 - Reduced CPU usage (radar & detection systems)  
 - Optimized update cycles and caching  
+- Per-frame performance optimizations (cached lookups, fewer per-frame allocations)  
 - Improved exception handling  
 
 > Result: smoother gameplay and cleaner logs
@@ -257,7 +261,7 @@ See `CONTRIBUTING.md` for setup and guidelines.
 
 ## Final Note
 
-**Kingdom Enhanced v2.1.0** removes backend and platform limitations entirely.
+**Kingdom Enhanced v2.2.0** removes backend and platform limitations entirely.
 
 No compatibility issues.  
 No manual setup complexity.  
@@ -266,17 +270,24 @@ No manual setup complexity.
 
 ---
 
-## 语言与本地化
+## 🌐 Localization & Languages
 
-默认语言为 `en-US`，支持 `en-US` 和 `zh-CN`。按 `F1` → `Settings` 切换语言，选择会自动持久化。
+The default language is `en-US`; both `en-US` and `zh-CN` are supported.
+Switch languages via **F1 → Settings → Language** — the selection is persisted automatically.
 
-手动安装时，`KingdomEnhanced.dll` 同级必须包含：
+Since **v2.2.0**, all `Localization/*.json` catalogs are **embedded inside the DLL** as
+embedded resources, so the external `Localization` folder is **optional**.
+
+To customize or override the built-in translations, place your own catalogs next to the DLL:
 
 ```text
 BepInEx/plugins/KingdomEnhanced/
   KingdomEnhanced.dll
-  Localization/en-US.json
-  Localization/zh-CN.json
+  Localization/          (optional — overrides the embedded catalogs)
+    en-US.json
+    zh-CN.json
 ```
 
-`Localization` 目录缺失或资源文件损坏时，模组会优先回退英文；找不到对应文本时显示资源键。
+If the `Localization` folder is missing or its files are corrupt, the mod falls back to the
+embedded catalogs; if a specific key is missing, it falls back to English and finally displays
+the raw resource key.

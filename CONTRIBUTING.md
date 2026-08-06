@@ -47,6 +47,11 @@
 | `BIE6_IL2CPP` | `net6.0` | Release build for IL2CPP game version |
 | `BIE6_Mono` | `netstandard2.1` | Release build for Mono game version |
 
+## Release Tooling
+
+- `tools/generate-interop.ps1` — regenerates the pre-built IL2CPP interop assemblies (required when the game updates; see [IL2CPP / Mono Dual Compatibility](docs/IL2CPP-MONO-COMPAT.md))
+- `build_releases.ps1` — builds all release packages (Mono/IL2CPP × win/linux × x86/x64) and bundles BepInEx be.785 with interop pre-generated
+
 ## Branch Strategy
 
 | Branch | Purpose |

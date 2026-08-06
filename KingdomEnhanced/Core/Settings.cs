@@ -5,88 +5,149 @@ namespace KingdomEnhanced.Core
 {
     public static class Settings
     {
+        // The active BepInEx configuration file
         public static ConfigFile Config;
 
         /// <summary>
-        /// 保存当前生效的界面语言代码。
+        /// Stores the currently active UI language code.
         /// </summary>
         public static ConfigEntry<string> Language;
 
         
+        // Use the new Beta UI style
         public static ConfigEntry<bool> UseBetaUI;
+        // Show the energy/stamina bar
         public static ConfigEntry<bool> ShowStaminaBar;
+        // Show the day/night and coins HUD
         public static ConfigEntry<bool> DisplayTimes;
+        // Show the greed counter HUD
         public static ConfigEntry<bool> ShowGreedCounter;
+        // Use a 12-hour clock (AM/PM) instead of a 24-hour one in the HUD
         public static ConfigEntry<bool> Use12HourClock;
         
         
+        // Enable the hover tracking logic
         public static ConfigEntry<bool> EnableAccessibility;
+        // Enable text-to-speech output
         public static ConfigEntry<bool> EnableTTS;
+        // Queue messages instead of interrupting current speech
         public static ConfigEntry<bool> NarratorQueueMode;
+        // Simplify object names for TTS
         public static ConfigEntry<bool> SimplifyNames;
+        // Announce entering/leaving the castle
         public static ConfigEntry<bool> EnableCastleAnnouncer;
+        // Show debug boxes for announcer zones
         public static ConfigEntry<bool> DebugZones;
 
         
+        // Unlock the cheat menu
         public static ConfigEntry<bool> CheatsUnlocked;
+        // Travel speed multiplier
         public static ConfigEntry<float> SpeedMultiplier;
+        // Infinite mount stamina
         public static ConfigEntry<bool> InfiniteStamina;
+        // Walls repair instantly
         public static ConfigEntry<bool> InvincibleWalls;
+        // Disable item ability cooldowns
         public static ConfigEntry<bool> NoToolCooldowns;
+        // Artemis Bow arrows fired per cast
         public static ConfigEntry<float> ArtemisArrowCount;
+        // Artemis Bow ability range multiplier
         public static ConfigEntry<float> ArtemisRangeMult;
+        // Artemis Bow arrow damage multiplier
         public static ConfigEntry<float> ArtemisArrowDamageMult;
+        // Coin income multiplier
         public static ConfigEntry<float> CoinIncomeMult;
+        // Bag drop multiplier
         public static ConfigEntry<float> BagDropMult;
+        // Number of units to spawn
         public static ConfigEntry<float> SpawnUnitCount;
         
         
+        // Instant construction
         public static ConfigEntry<bool> HyperBuilders;
+        // Expand vagrant camps
         public static ConfigEntry<bool> LargerCamps;
+        // Elite knight buffs
         public static ConfigEntry<bool> BetterKnight;
+        // Rapid housing
         public static ConfigEntry<bool> BetterCitizenHouses;
+        // Lock the season to summer
         public static ConfigEntry<bool> LockSummer;
+        // Force clear weather
         public static ConfigEntry<bool> ClearWeather;
+        // Disable blood moon events
         public static ConfigEntry<bool> NoBloodMoons;
+        // Coins don't sink in water
         public static ConfigEntry<bool> CoinsStayDry;
+        // Archer fire rate boost x2
         public static ConfigEntry<bool> ArcherFireBoost;
+        // Berserker rage mode (earlier)
         public static ConfigEntry<bool> BerserkerRage;
+        // Ninja speed boost x2
         public static ConfigEntry<bool> NinjaSpeedBoost;
+        // Recruit cap override (0 = default)
         public static ConfigEntry<int> RecruitCapOverride;
+        // Tree regrowth speed multiplier
         public static ConfigEntry<float> TreeRegrowthMult;
+        // Animal spawn boost
         public static ConfigEntry<bool> AnimalSpawnBoost;
+        // Instant day skip
         public static ConfigEntry<bool> InstantDaySkip;
+        // Farm output boost x2
         public static ConfigEntry<bool> FarmOutputBoost;
+        // Tower fire rate boost x2
         public static ConfigEntry<bool> TowerFireBoost;
+        // Ballista power boost x2
         public static ConfigEntry<bool> BallistaBoost;
+        // Ballista reload speed multiplier
         public static ConfigEntry<float> BallistaReloadMult;
+        // Ballista projectile speed multiplier
         public static ConfigEntry<float> BallistaFlightMult;
+        // Catapult reload speed boost x3
         public static ConfigEntry<bool> CatapultBoost;
+        // Catapult reload speed multiplier
         public static ConfigEntry<float> CatapultReloadMult;
+        // Catapult projectile speed multiplier
         public static ConfigEntry<float> CatapultFlightMult;
+        // Instant castle upgrade completion
         public static ConfigEntry<bool> InstantCastle;
 
+        // Builder movement speed multiplier
         public static ConfigEntry<float> BuilderSpeedMult;
+        // Builder efficiency multiplier (lower is faster)
         public static ConfigEntry<float> BuilderWorkMult;
 
         
+        // Enable player scaling
         public static ConfigEntry<bool> EnableSizeHack;
+        // Player scale multiplier
         public static ConfigEntry<float> TargetSize;
 
         
+        // Steed run speed scale
         public static ConfigEntry<float> SteedSpeedMult;
+        // Steed charge damage x2
         public static ConfigEntry<bool> ChargeDmgBoost;
+        // Steed buff aura duration multiplier
         public static ConfigEntry<float> BuffAuraDuration;
 
         
+        // Wave size multiplier
         public static ConfigEntry<float> WaveSizeMult;
+        // Enemy speed multiplier
         public static ConfigEntry<float> EnemySpeedMult;
+        // Portal spawn rate multiplier
         public static ConfigEntry<float> PortalSpawnRate;
+        // Disable crown stealing
         public static ConfigEntry<bool> NoCrownStealing;
+        // Greed Queen HP scale
         public static ConfigEntry<float> GreedQueenHPScale;
+        // Director threat ramp multiplier
         public static ConfigEntry<float> DirectorThreatMult;
 
 
+        /// <summary>Binds all configuration entries to the given config file.</summary>
         public static void Init(ConfigFile config)
         {
             Config = config;
