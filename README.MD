@@ -257,7 +257,7 @@ See `CONTRIBUTING.md` for setup and guidelines.
 
 ## Final Note
 
-**Kingdom Enhanced v2.1.0** removes backend and platform limitations entirely.
+**Kingdom Enhanced v2.1.0 +** removes backend and platform limitations entirely.
 
 No compatibility issues.  
 No manual setup complexity.  
