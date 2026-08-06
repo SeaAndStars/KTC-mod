@@ -18,50 +18,61 @@ namespace KingdomEnhanced.Features
     public class KingdomMonitor : MonoBehaviour
     {
 #if IL2CPP
+        /// <summary>IL2CPP constructor required by Unity's Il2Cpp interop.</summary>
         public KingdomMonitor(IntPtr ptr) : base(ptr) { }
 #endif
-        // Cached reference to the player's Kingdom
+        /// <summary>Cached reference to the player's Kingdom.</summary>
         private Kingdom _kingdom;
-        // Cached reference to the EnemyManager
+        /// <summary>Cached reference to the EnemyManager.</summary>
         private EnemyManager _enemyManager;
         
-        // Global instance, assigned in Start()
+        /// <summary>Global instance, assigned in Start().</summary>
         public static KingdomMonitor Instance { get; private set; }
         
-        // Whether the monitor window is currently shown
+        /// <summary>Whether the monitor window is currently shown.</summary>
         private bool _isVisible = true;
-        // Whether the monitor window is currently shown
+        /// <summary>Whether the monitor window is currently shown.</summary>
         public bool IsVisible => _isVisible;
-        // Window rectangle in screen space, draggable and resizable
+        /// <summary>Window rectangle in screen space, draggable and resizable.</summary>
         private Rect _windowRect = new Rect(10, 10, 250, 350);
-        // Whether the user is currently dragging the resize handle
+        /// <summary>Whether the user is currently dragging the resize handle.</summary>
         private bool _isResizing = false;
 
         
-        // Available visual styles for the monitor window
+        /// <summary>Available visual styles for the monitor window.</summary>
         public enum MonitorStyle { Classic, Neon, Light, Ghost }
-        // Currently selected monitor style
+        /// <summary>Currently selected monitor style.</summary>
         private MonitorStyle _currentStyle = MonitorStyle.Classic;
-        // Style names in MonitorStyle order
+        /// <summary>Style names in MonitorStyle order.</summary>
         private readonly string[] _styleNames = { "Classic", "Neon", "Light", "Ghost" };
-        // Shared button style used inside the window
+        /// <summary>Shared button style used inside the window.</summary>
         private GUIStyle _styleBtn;
-        // Shared 1x1 button background texture
+        /// <summary>Shared 1x1 button background texture.</summary>
         private Texture2D _btnTex;
-        // Guards one-time construction of GUIStyles
+        /// <summary>Guards one-time construction of GUIStyles.</summary>
         private bool _stylesBuilt;
 
         
-        // Census counters, polled one step per tick to spread frame cost
+        /// <summary>Census counters, polled one step per tick to spread frame cost.</summary>
+        /// <summary>Archer population count (census step 0).</summary>
         private int _archerCount;
+        /// <summary>Worker population count (census step 1).</summary>
         private int _workerCount;
+        /// <summary>Peasant population count (census step 2).</summary>
         private int _peasantCount;
+        /// <summary>Knight population count (census step 3).</summary>
         private int _knightCount;
+        /// <summary>Enemy population count (census step 7).</summary>
         private int _enemyCount;
+        /// <summary>Beggar population count (census step 4).</summary>
         private int _vagrantCount;
+        /// <summary>Farmer population count (census step 5).</summary>
         private int _farmerCount;
+        /// <summary>Pikeman population count (census step 6).</summary>
         private int _pikemanCount;
+        /// <summary>Timestamp of the next census poll.</summary>
         private float _nextCensusTime;
+        /// <summary>Next census step to poll (0-9, loops).</summary>
         private int _censusStep = 0;
 
         /// <summary>
@@ -94,40 +105,63 @@ namespace KingdomEnhanced.Features
         /// </summary>
         private int _walletGems;
 
-        // Cached localized strings rendered in the window
+        /// <summary>Cached localized strings rendered in the window.</summary>
+        /// <summary>Cached day + cycle text.</summary>
         private string _strDay;
+        /// <summary>Cached threat text with rich-text color.</summary>
         private string _strThreat;
+        /// <summary>Cached enemy/greed count text.</summary>
         private string _strGreed;
+        /// <summary>Cached wallet coins/gems text.</summary>
         private string _strWallet;
         
+        /// <summary>Cached archer population line.</summary>
         private string _strArcher;
+        /// <summary>Cached worker population line.</summary>
         private string _strWorker;
+        /// <summary>Cached peasant population line.</summary>
         private string _strPeasant;
+        /// <summary>Cached farmer population line.</summary>
         private string _strFarmer;
+        /// <summary>Cached pikeman population line.</summary>
         private string _strPikeman;
+        /// <summary>Cached knight population line.</summary>
         private string _strKnight;
+        /// <summary>Cached vagrant population line.</summary>
         private string _strVagrant;
 
-        // Color palettes, one per MonitorStyle
+        /// <summary>Color palettes, one per MonitorStyle.</summary>
         private StyleColors[] _stylePalette;
 
-        // Color and hex values defining a monitor style
+        /// <summary>Color and hex values defining a monitor style.</summary>
         private struct StyleColors
         {
+            /// <summary>Background gradient bottom color.</summary>
             public Color bgBottom;
+            /// <summary>Background gradient top color.</summary>
             public Color bgTop;
+            /// <summary>Header text color.</summary>
             public Color header;
+            /// <summary>Body text color.</summary>
             public Color body;
+            /// <summary>Footer / resize handle color.</summary>
             public Color footer;
+            /// <summary>Button background color.</summary>
             public Color btnBg;
+            /// <summary>Button text color.</summary>
             public Color btnText;
+            /// <summary>Window frame border color.</summary>
             public Color frameColor;
+            /// <summary>Hex color for safe threat state.</summary>
             public string safeHex;
+            /// <summary>Hex color for dangerous threat state.</summary>
             public string dangerHex;
+            /// <summary>Background alpha applied to the window.</summary>
             public float baseAlpha;
+            /// <summary>Window frame border thickness in pixels.</summary>
             public int frameThickness;
 
-            // Assigns all palette values from positional arguments
+            /// <summary>Assigns all palette values from positional arguments.</summary>
             public StyleColors(Color bb, Color bt, Color h, Color b, Color f, Color bbgn, Color btnT, Color fc, string s, string d, float a, int ft)
             {
                 bgBottom = bb; bgTop = bt; header = h; body = b; footer = f;
@@ -217,9 +251,9 @@ namespace KingdomEnhanced.Features
             };
         }
 
-        // Cached delegate for rendering the window
+        /// <summary>Cached delegate for rendering the window.</summary>
         private GUI.WindowFunction _drawWindowFunc;
-        // Cached window background style
+        /// <summary>Cached window background style.</summary>
         private GUIStyle _cachedWindowStyle;
 
         /// <summary>

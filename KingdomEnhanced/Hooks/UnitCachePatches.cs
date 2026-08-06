@@ -3,6 +3,7 @@ using KingdomEnhanced.Features;
 
 namespace KingdomEnhanced.Hooks
 {
+    /// <summary>Registers Awake postfixes so every relevant unit gets attached to the unit cache.</summary>
     public static class UnitCachePatches
     {
         public static void ApplyAll(Harmony harmony)

@@ -10,12 +10,16 @@ using KingdomEnhanced.Core;
 
 namespace KingdomEnhanced.Features
 {
+    /// <summary>
+    /// Performs a delayed, frame-split sequence of payments for a payable object.
+    /// </summary>
 #if IL2CPP
     [RegisterTypeInIl2Cpp]
 #endif
     public class AutoPayHandler : MonoBehaviour
     {
 #if IL2CPP
+        /// <summary>IL2CPP interop constructor.</summary>
         public AutoPayHandler(IntPtr ptr) : base(ptr) { }
 #endif
         public void StartPayment(Payable payable, int amount, Player player)

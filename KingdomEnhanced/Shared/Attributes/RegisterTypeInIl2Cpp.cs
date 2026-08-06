@@ -10,20 +10,27 @@ using Il2CppInterop.Runtime.Injection;
 namespace KingdomEnhanced.Shared.Attributes
 {
 #if IL2CPP
+    /// <summary>Attribute that marks classes to be registered with the IL2CPP interop injector.</summary>
     [AttributeUsage(AttributeTargets.Class)]
     public class RegisterTypeInIl2Cpp : Attribute
     {
+        /// <summary>Assemblies queued for registration until the injector is ready.</summary>
         internal static List<Assembly> registrationQueue = new();
+        /// <summary>Whether the IL2CPP registration system is ready to process assemblies.</summary>
         internal static bool ready;
+        /// <summary>Whether successful registrations should be logged.</summary>
         internal bool LogSuccess = true;
 
+        /// <summary>Creates a registration attribute with default logging enabled.</summary>
         public RegisterTypeInIl2Cpp() { }
 
+        /// <summary>Creates a registration attribute with configurable logging.</summary>
         public RegisterTypeInIl2Cpp(bool logSuccess)
         {
             LogSuccess = logSuccess;
         }
 
+        /// <summary>Registers every class in the assembly that carries this attribute with the IL2CPP injector.</summary>
         public static void RegisterAssembly(Assembly asm)
         {
             IEnumerable<Type> types;
@@ -52,6 +59,7 @@ namespace KingdomEnhanced.Shared.Attributes
             }
         }
 
+        /// <summary>Marks the registration system as ready and flushes all queued assemblies.</summary>
         public static void SetReady()
         {
             ready = true;
@@ -62,6 +70,7 @@ namespace KingdomEnhanced.Shared.Attributes
             registrationQueue.Clear();
         }
 
+        /// <summary>Installs the assembly-load hook and registers all currently loaded assemblies.</summary>
         public static void InitRegisterHook()
         {
             AppDomain.CurrentDomain.AssemblyLoad += (_, args) =>

@@ -5,16 +5,22 @@ using KingdomEnhanced.Utils;
 
 namespace KingdomEnhanced.Systems.Accessibility
 {
+    /// <summary>Sonar-style radar that reports the nearest payable targets to the left and right of the player.</summary>
     public class RadarSystem
     {
+        /// <summary>Radar detection range in world units.</summary>
         private float _range = 60f;
+        /// <summary>Cached reference to the player.</summary>
         private Player _player;
 
+        /// <summary>Creates a radar system bound to the given player.</summary>
+        /// <param name="player">The player to scan around.</param>
         public RadarSystem(Player player)
         {
             _player = player;
         }
 
+        /// <summary>Scans for the nearest payable targets left and right of the player and announces them via speech.</summary>
         public void Pulse()
         {
             if (_player == null) return;
@@ -43,6 +49,12 @@ namespace KingdomEnhanced.Systems.Accessibility
             ModMenu.Speak(results.Count > 0 ? string.Join(", ", results) : "No targets found");
         }
 
+        /// <summary>Processes a single target: resolves its type and keeps the closest distance per type on each side.</summary>
+        /// <param name="mb">The target's MonoBehaviour.</param>
+        /// <param name="playerX">The player's world X position.</param>
+        /// <param name="range">Maximum detection range in world units.</param>
+        /// <param name="left">Closest distances of targets to the left, keyed by type name.</param>
+        /// <param name="right">Closest distances of targets to the right, keyed by type name.</param>
         private void ProcessRadarTarget(MonoBehaviour mb, float playerX, float range, Dictionary<string, float> left, Dictionary<string, float> right)
         {
             float dist = mb.transform.position.x - playerX;

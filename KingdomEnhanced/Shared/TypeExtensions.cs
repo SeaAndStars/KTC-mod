@@ -4,6 +4,7 @@ using System.Reflection.Emit;
 
 namespace KingdomMod
 {
+    /// <summary>Extension helpers that invoke static methods on types via delegates.</summary>
     public static class TypeExtensions
     {
         public static TR GetMethodDelegate<TR>(this Type @this, string method) where TR : Delegate

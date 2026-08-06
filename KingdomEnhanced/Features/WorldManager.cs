@@ -14,48 +14,65 @@ namespace KingdomEnhanced.Features
 #if IL2CPP
     [RegisterTypeInIl2Cpp]
 #endif
+    /// <summary>Runs periodic world checks (wall repairs, weather, portal rates, siege radar, day/night announcements) and draws the HUD time and wallet display.</summary>
     public class WorldManager : MonoBehaviour
     {
 #if IL2CPP
+        /// <summary>IL2CPP interop constructor.</summary>
         public WorldManager(IntPtr ptr) : base(ptr) { }
 #endif
-        // HUD label styles for the time and wallet texts
+        /// <summary>HUD label style for the time text.</summary>
         private GUIStyle _timeStyle;
+        /// <summary>Style for the wallet coin/gem HUD text.</summary>
         private GUIStyle _coinStyle;
 
-        // Accumulated timers and the timestamp of the last siege alert
+        /// <summary>Accumulated timer for the periodic status check.</summary>
         private float _statusTimer = 0f;
+        /// <summary>Accumulated timer for the periodic radar sweep.</summary>
         private float _radarTimer = 0f;
+        /// <summary>Time.time timestamp of the last siege alert.</summary>
         private float _lastAttackAlert = 0f;
         
-        // Intervals and cooldown for the periodic status checks
+        /// <summary>Seconds between periodic status checks.</summary>
         private const float STATUS_CHECK_INTERVAL = 2.0f;
+        /// <summary>Seconds between radar sweeps for the siege alert.</summary>
         private const float RADAR_CHECK_INTERVAL = 4.0f;
+        /// <summary>Minimum seconds between consecutive siege alerts.</summary>
         private const float ATTACK_ALERT_COOLDOWN = 60f;
 
-        // Tracks the previous day/night state to detect transitions
+        /// <summary>Tracks the previous day/night state to detect transitions.</summary>
         private bool _wasDay = true;
 
         /// <summary>Time text cache: the string is rebuilt only when hour/minute/day-night/day count/clock format change, avoiding per-frame allocations</summary>
         private string _cachedTimeText;
+        /// <summary>Hour backing the cached time text; -1 = not cached.</summary>
         private int _cachedTimeHour = -1;
+        /// <summary>Minute backing the cached time text; -1 = not cached.</summary>
         private int _cachedTimeMinute = -1;
+        /// <summary>Day/night state backing the cached time text.</summary>
         private bool _cachedTimeDaytime;
+        /// <summary>Day count backing the cached time text.</summary>
         private int _cachedTimeDay;
+        /// <summary>12-hour clock setting backing the cached time text.</summary>
         private bool _cachedUse12Hour;
 
         /// <summary>Wallet text cache: the string is rebuilt only when coin/gem values change, avoiding per-frame allocations</summary>
         private string _cachedWalletText;
+        /// <summary>Coin count backing the cached wallet text; -1 = not cached.</summary>
         private int _cachedCoins = -1;
+        /// <summary>Gem count backing the cached wallet text; -1 = not cached.</summary>
         private int _cachedGems = -1;
 
         /// <summary>Wallet reflection field cache: reused after first discovery, avoiding a full per-frame field scan on failure paths</summary>
         private FieldInfo _walletCoinsField;
+        /// <summary>Cached wallet gems FieldInfo.</summary>
         private FieldInfo _walletGemsField;
+        /// <summary>True once the wallet reflection fields have been discovered.</summary>
         private bool _walletReflectDiscovered = false;
 
-        // Reflection-cached enemy list field and discovery flag
+        /// <summary>Reflection-cached enemy list field.</summary>
         private FieldInfo _enemiesListField;
+        /// <summary>True once the enemy list reflection field has been discovered.</summary>
         private bool _fieldsDiscovered = false;
 
         /// <summary>Initializes the HUD and discovers the reflected enemy list field.</summary>
@@ -148,8 +165,10 @@ namespace KingdomEnhanced.Features
         {
             try
             {
+                /// <summary>Width of the HUD display in pixels.</summary>
                 const float hudWidth = 320f;
                 float hudX = (Screen.width / 2) - (hudWidth / 2);
+                /// <summary>Top Y position of the HUD display in pixels.</summary>
                 const float hudY = 20f;
 
                 var director = Managers.Inst?.director;
@@ -507,6 +526,7 @@ namespace KingdomEnhanced.Features
         /// <summary>Determines whether a siege alert should fire based on the enemy count and cooldown.</summary>
         private bool ShouldTriggerSiegeAlert(int enemyCount)
         {
+            /// <summary>Enemy count above which a siege alert is triggered.</summary>
             const int SIEGE_THRESHOLD = 15;
             return enemyCount > SIEGE_THRESHOLD && 
                    Time.time > _lastAttackAlert + ATTACK_ALERT_COOLDOWN;

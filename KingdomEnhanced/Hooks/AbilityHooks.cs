@@ -5,8 +5,10 @@ using UnityEngine;
 
 namespace KingdomEnhanced.Hooks
 {
+    /// <summary>Harmony patches that modify ability behaviors when cheat options are enabled.</summary>
     public static class AbilityHooks
     {
+        /// <summary>Patches HelsHead's item ability to spawn extra vanguards and archers.</summary>
         [HarmonyPatch(typeof(HelsHead), "TriggerItemAbility")]
         public static class HelsHeadPatch
         {
@@ -19,6 +21,7 @@ namespace KingdomEnhanced.Hooks
             }
         }
 
+        /// <summary>Patches Thor's hammer item ability to boost lightning strike damage, range and count.</summary>
         [HarmonyPatch(typeof(ThorItem), "TriggerItemAbility")]
         public static class ThorHammerPatch
         {
@@ -33,10 +36,13 @@ namespace KingdomEnhanced.Hooks
             }
         }
 
+        /// <summary>Patches the steed's update loop to apply the travel speed multiplier and infinite stamina.</summary>
         [HarmonyPatch(typeof(Steed), "Update")]
         public static class SteedSpeedPatch
         {
+            /// <summary>Caches each steed's original run speed keyed by instance ID.</summary>
             public static readonly System.Collections.Generic.Dictionary<int, float> _runCache = new();
+            /// <summary>Caches each steed's original walk speed keyed by instance ID.</summary>
             public static readonly System.Collections.Generic.Dictionary<int, float> _walkCache = new();
             
             [HarmonyPostfix]
@@ -72,6 +78,7 @@ namespace KingdomEnhanced.Hooks
             }
         }
 
+        /// <summary>Clears the steed speed cache whenever a player mounts, so cached values are refreshed.</summary>
         [HarmonyPatch(typeof(Player), "Ride")]
         public static class PlayerRidePatch
         {

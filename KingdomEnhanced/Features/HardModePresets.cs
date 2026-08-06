@@ -19,6 +19,9 @@ namespace KingdomEnhanced.Features
         NoEscape = 103
     }
 
+    /// <summary>
+    /// Provides localized and stable names, descriptions, and difficulty data for the hard mode presets.
+    /// </summary>
     public static class HardModePresets
     {
         /// <summary>

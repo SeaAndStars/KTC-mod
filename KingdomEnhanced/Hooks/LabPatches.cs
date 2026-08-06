@@ -312,11 +312,11 @@ namespace KingdomEnhanced.Hooks
             }
         }
 
-        // Cached reflection handle to Catapult.crankRate
+        /// <summary>Cached reflection handle to Catapult.crankRate.</summary>
         private static readonly System.Reflection.FieldInfo CrankRateField =
             typeof(Catapult).GetField("crankRate", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-        // Cached reflection handle to Catapult.crankRateFormation
+        /// <summary>Cached reflection handle to Catapult.crankRateFormation.</summary>
         private static readonly System.Reflection.FieldInfo CrankRateFormationField =
             typeof(Catapult).GetField("crankRateFormation", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
@@ -367,7 +367,7 @@ namespace KingdomEnhanced.Hooks
 
         #endregion
 
-        // Cached reflection handle to the Mover speed field
+        /// <summary>Cached reflection handle to the Mover speed field.</summary>
         private static System.Reflection.FieldInfo _moverSpeedField = null;
 
         /// <summary>Finds and caches the Mover speed field by name and type.</summary>
@@ -408,7 +408,7 @@ namespace KingdomEnhanced.Hooks
             }
         }
 
-        // Re-entry guard for spawning extra wave enemies
+        /// <summary>Re-entry guard for spawning extra wave enemies.</summary>
         private static bool _inWaveSpawnExtra = false;
 
         /// <summary>Spawns additional copies of each enemy when the wave size multiplier is set.</summary>

@@ -11,24 +11,36 @@ namespace KingdomEnhanced.Systems
 #if IL2CPP
     [RegisterTypeInIl2Cpp]
 #endif
+    /// <summary>Singleton MonoBehaviour that renders the steed stamina bar overlay via OnGUI.</summary>
     public class StaminaBarHolder : MonoBehaviour
     {
 #if IL2CPP
+        /// <summary>IL2CPP interop constructor.</summary>
         public StaminaBarHolder(IntPtr ptr) : base(ptr) { }
 #endif
+        /// <summary>Singleton instance of the stamina bar holder.</summary>
         public static StaminaBarHolder Instance { get; private set; }
 
+        /// <summary>Master toggle for drawing the stamina bar.</summary>
         public bool enableStaminaBar = true;
+        /// <summary>Visual style index (see GetStyleName).</summary>
         public int visualStyle = 0;
+        /// <summary>Position mode index (see GetPositionName).</summary>
         public int positionMode = 0; 
 
+        /// <summary>Manual X screen position used in position mode 5.</summary>
         public float manualX = 500;
+        /// <summary>Manual Y screen position used in position mode 5.</summary>
         public float manualY = 500;
 
+        /// <summary>Cached GUIStyle for filled bar boxes (white texture background).</summary>
         private static GUIStyle _boxStyle;
+        /// <summary>Cached GUIStyle for the status text label.</summary>
         private static GUIStyle _textStyle;
+        /// <summary>1x1 white texture used as the box background.</summary>
         private static Texture2D _whiteTex;
 
+        /// <summary>Creates the singleton stamina bar holder GameObject if it does not exist.</summary>
         public static void Initialize()
         {
             if (Instance != null) return;
@@ -38,6 +50,7 @@ namespace KingdomEnhanced.Systems
             Instance = obj.AddComponent<StaminaBarHolder>();
         }
 
+        /// <summary>Renders the steed stamina bar overlay each GUI frame when enabled.</summary>
         private void OnGUI()
         {
             if (_whiteTex == null)
@@ -54,6 +67,7 @@ namespace KingdomEnhanced.Systems
             DrawStaminaBar(0);
         }
 
+        /// <summary>Computes the steed stamina percentage and draws the bar in the selected style.</summary>
         private void DrawStaminaBar(int playerId)
         {
             var player = Managers.Inst.kingdom.GetPlayer(playerId);
@@ -108,17 +122,20 @@ namespace KingdomEnhanced.Systems
             }
         }
 
+        /// <summary>Draws the classic solid bar style.</summary>
         void DrawClassic(float x, float y, float pct, Color c)
         {
             DrawColoredBox(new Rect(x - 31, y - 1, 62, 10), Color.black);
             DrawColoredBox(new Rect(x - 30, y, 60 * pct, 8), c);
         }
+        /// <summary>Draws the RPG bar style with a status text label.</summary>
         void DrawRPG(float x, float y, float pct, Color c, string txt)
         {
             DrawColoredBox(new Rect(x - 26, y - 1, 52, 8), Color.black);
             DrawColoredBox(new Rect(x - 25, y, 50 * pct, 6), c);
             GUI.Label(new Rect(x - 25, y + 8, 50, 20), txt, _textStyle);
         }
+        /// <summary>Draws the retro segmented bar style.</summary>
         void DrawRetro(float x, float y, float pct, Color c)
         {
             int blocks = Mathf.CeilToInt(pct * 10);
@@ -129,6 +146,7 @@ namespace KingdomEnhanced.Systems
                 DrawColoredBox(r, i < blocks ? c : new Color(0.2f, 0.2f, 0.2f));
             }
         }
+        /// <summary>Draws the dual bar style with an extra fatigue strip when tired.</summary>
         void DrawDual(float x, float y, float pct, Color c, Steed s)
         {
             DrawClassic(x, y, pct, c);
@@ -140,6 +158,7 @@ namespace KingdomEnhanced.Systems
             }
         }
 
+        /// <summary>Returns the display name of the current visual style.</summary>
         public string GetStyleName()
         {
             switch (visualStyle)
@@ -152,6 +171,7 @@ namespace KingdomEnhanced.Systems
             }
         }
 
+        /// <summary>Returns the display name of the current position mode.</summary>
         public string GetPositionName()
         {
             switch (positionMode)
@@ -166,7 +186,9 @@ namespace KingdomEnhanced.Systems
             }
         }
 
+        /// <summary>Draws a filled box in the given color and rect.</summary>
         private void DrawColoredBox(Rect r, Color c) { GUI.color = c; GUI.Box(r, "", _boxStyle); GUI.color = Color.white; }
+        /// <summary>Returns true when the game is in a playing state.</summary>
         private static bool IsPlaying() 
         { 
             try 

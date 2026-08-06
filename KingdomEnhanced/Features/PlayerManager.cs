@@ -10,16 +10,22 @@ namespace KingdomEnhanced.Features
 #if IL2CPP
     [RegisterTypeInIl2Cpp]
 #endif
+    /// <summary>Per-frame manager that applies size hacks, infinite stamina and the F2 wallet-refill cheat to the player.</summary>
     public class PlayerManager : MonoBehaviour
     {
 #if IL2CPP
+        /// <summary>IL2CPP interop constructor.</summary>
         public PlayerManager(IntPtr ptr) : base(ptr) { }
 #endif
+        /// <summary>Cached reference to the player instance.</summary>
         private Player _player;
+        /// <summary>Cached default steed run speed; -1f means not captured yet.</summary>
         private float _defaultSpeed = -1f;
 
+        /// <summary>Unity Start callback; intentionally empty because PlayerManager is not on the Player's GameObject.</summary>
         void Start() { } // PlayerManager is NOT on the Player's GameObject
 
+        /// <summary>Per-frame update: applies size hacks and handles the F2 wallet-refill cheat.</summary>
         void Update()
         {
             // Find player if not yet cached
@@ -59,6 +65,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Applies infinite stamina to the player's steed when enabled.</summary>
         void LateUpdate()
         {
             if (ModMenu.InfiniteStamina && _player != null && _player.steed != null)
@@ -69,6 +76,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Triggers the banker to pay out 100 coins via SendMessage.</summary>
         public static void ForceBankerPayout()
         {
             var banker = FindFirstObjectByType<Banker>();
@@ -81,6 +89,7 @@ namespace KingdomEnhanced.Features
             else ModMenu.Speak("Banker not found.");
         }
 
+        /// <summary>Resets the cached default speed when destroyed.</summary>
         void OnDestroy()
         {
             _defaultSpeed = -1f;

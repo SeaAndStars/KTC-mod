@@ -22,14 +22,21 @@ namespace KingdomEnhanced.Features
     public class AccessibilityFeature : MonoBehaviour
     {
 #if IL2CPP
+        /// <summary>IL2CPP constructor required by Unity's Il2Cpp interop.</summary>
         public AccessibilityFeature(IntPtr ptr) : base(ptr) { }
 #endif
-        // Cached reference to the player
+        /// <summary>
+        /// Cached reference to the player.
+        /// </summary>
         private Player _player;
-        // The payable last hovered, used to detect hover changes
+        /// <summary>
+        /// The payable last hovered, used to detect hover changes.
+        /// </summary>
         private MonoBehaviour _lastPayable = null;
 
-        // Radar helper created once the player is found
+        /// <summary>
+        /// Radar helper created once the player is found.
+        /// </summary>
         private RadarSystem _radarSystem; 
 
         /// <summary>Resets the base camp announcement flag when the scene starts.</summary>
@@ -38,32 +45,54 @@ namespace KingdomEnhanced.Features
             _baseCampAnnounced = false;
         }
 
-        // Whether the player was inside the castle on the last check
+        /// <summary>
+        /// Whether the player was inside the castle on the last check.
+        /// </summary>
         private bool _wasInCastle = false;
         
-        // Guards the one-time base camp direction announcement
+        /// <summary>
+        /// Guards the one-time base camp direction announcement.
+        /// </summary>
         private bool _baseCampAnnounced = false;
-        // Whether the player was inside a vagrant camp on the last check
+        /// <summary>
+        /// Whether the player was inside a vagrant camp on the last check.
+        /// </summary>
         private bool _wasInVillage = false; 
         
-        // Last announcement timestamp, used for spam throttling
+        /// <summary>
+        /// Last announcement timestamp, used for spam throttling.
+        /// </summary>
         private float _spamTimer = 0f;
-        // Last announced message, used to detect hover changes
+        /// <summary>
+        /// Last announced message, used to detect hover changes.
+        /// </summary>
         private string _lastSpokenMsg = "";
-        // Last announced canonical name
+        /// <summary>
+        /// Last announced canonical name.
+        /// </summary>
         private string _lastName = "";
-        // Last announced price
+        /// <summary>
+        /// Last announced price.
+        /// </summary>
         private int _lastPrice = -1;
 
 
-        // Timestamp of the last closest-payable scan
+        /// <summary>
+        /// Timestamp of the last closest-payable scan.
+        /// </summary>
         private float _lastPayableCheckTime = 0f;
-        // Minimum interval between closest-payable scans
+        /// <summary>
+        /// Minimum interval between closest-payable scans.
+        /// </summary>
         private const float PAYABLE_CHECK_INTERVAL = 0.15f; 
 
-        // Matches names ending in a digit (upgrade candidates)
+        /// <summary>
+        /// Matches names ending in a digit (upgrade candidates).
+        /// </summary>
         private static readonly Regex _endsWithDigitRegex = new Regex(@"\d$", RegexOptions.Compiled);
-        // Matches names ending in a capital letter (upgrade candidates)
+        /// <summary>
+        /// Matches names ending in a capital letter (upgrade candidates).
+        /// </summary>
         private static readonly Regex _endsWithUpperRegex = new Regex(@"[A-Z]$", RegexOptions.Compiled);
 
         /// <summary>Drains the TTS queue and handles input, hover, and proximity announcements each frame.</summary>
@@ -112,6 +141,9 @@ namespace KingdomEnhanced.Features
             HandleBaseCampOrientation();
         }
 
+        /// <summary>
+        /// Handles hover announcements for the currently targeted payable.
+        /// </summary>
         void HandleHover()
         {
             var current = _player.selectedPayable as MonoBehaviour; 
@@ -369,24 +401,48 @@ namespace KingdomEnhanced.Features
             }
         }
 
-        // Timer controlling how often the trigger zones are refreshed
+        /// <summary>
+        /// Timer controlling how often the trigger zones are refreshed.
+        /// </summary>
         private float _zoneUpdateTimer = 0f;
-        // Leftmost and rightmost wall X positions defining the castle zone
+        /// <summary>
+        /// Leftmost wall X position defining the castle zone.
+        /// </summary>
         private float _castleMinX = 0f;
+        /// <summary>
+        /// Rightmost wall X position defining the castle zone.
+        /// </summary>
         private float _castleMaxX = 0f;
-        // X intervals between the trees bordering each vagrant camp
+        /// <summary>
+        /// X intervals between the trees bordering each vagrant camp.
+        /// </summary>
         private List<Vector2> _campIntervals = new List<Vector2>();
         
-        // Debug visualization box: rect, color, and label
+        /// <summary>
+        /// Debug visualization box: rect, color, and label.
+        /// </summary>
         private struct TriggerZone {
+            /// <summary>
+            /// World-space rectangle of the zone.
+            /// </summary>
             public Rect Box;
+            /// <summary>
+            /// Fill color of the debug box.
+            /// </summary>
             public Color Color;
+            /// <summary>
+            /// Localized label drawn under the box.
+            /// </summary>
             public string Label;
         }
-        // Debug zones drawn in OnGUI when DebugZones is enabled
+        /// <summary>
+        /// Debug zones drawn in OnGUI when DebugZones is enabled.
+        /// </summary>
         private List<TriggerZone> _debugZones = new List<TriggerZone>();
         
-        // Cooldown between castle/camp enter-leave announcements
+        /// <summary>
+        /// Cooldown between castle/camp enter-leave announcements.
+        /// </summary>
         private float _announcerCooldown = 0f;
 
         /// <summary>Rebuilds the castle and camp trigger zones plus their debug boxes.</summary>
@@ -531,7 +587,9 @@ namespace KingdomEnhanced.Features
             }
         }
 
-        // Cached label style for debug zone boxes
+        /// <summary>
+        /// Cached label style for debug zone boxes.
+        /// </summary>
         private GUIStyle _debugLabelStyle;
 
         /// <summary>Draws the debug zone boxes when the DebugZones option is enabled.</summary>

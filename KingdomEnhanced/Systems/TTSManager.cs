@@ -14,16 +14,19 @@ namespace KingdomEnhanced.Systems
     /// </summary>
     public static class TTSManager
     {
-        // The SpVoice COM object lives entirely on the background STA thread
+        /// <summary>The SpVoice COM object lives entirely on the background STA thread.</summary>
         private static Thread _speakThread;
+        /// <summary>Flag controlling the background speak thread loop.</summary>
         private static volatile bool _threadRunning = false;
+        /// <summary>True once the background thread has been started.</summary>
         private static bool _initialized = false;
 
-        // Thread-safe queue: main thread writes, speak thread reads
+        /// <summary>Thread-safe queue: main thread writes, speak thread reads.</summary>
         private static readonly Queue<string> _pendingQueue = new Queue<string>();
+        /// <summary>Lock guarding the queue and the last-spoken state.</summary>
         private static readonly object        _queueLock   = new object();
 
-        // Hard cap on queued messages; the oldest is dropped when exceeded
+        /// <summary>Hard cap on queued messages; the oldest is dropped when exceeded.</summary>
         private const int MaxQueueLength = 32;
 
         /// <summary>Last text actually spoken; exact duplicates within the dedupe window are dropped to prevent infinite loops.</summary>
@@ -35,17 +38,17 @@ namespace KingdomEnhanced.Systems
         /// <summary>Dedupe window in seconds: identical text within the window is dropped.</summary>
         private const float DedupeWindowSeconds = 2.0f;
 
-        // History of recently spoken messages for RepeatLast and ReadPreviousMessage
+        /// <summary>History of recently spoken messages for RepeatLast and ReadPreviousMessage.</summary>
         private static readonly List<string> _messageLog = new List<string>();
-        // Current position in the message history
+        /// <summary>Current position in the message history.</summary>
         private static int _historyIndex = -1;
-        // Maximum number of history entries retained
+        /// <summary>Maximum number of history entries retained.</summary>
         private const  int MaxHistory   = 10;
 
-        // Strips HTML-like tags (e.g. rich text color codes) from speech text
+        /// <summary>Strips HTML-like tags (e.g. rich text color codes) from speech text.</summary>
         private static readonly Regex _htmlTagRegex = new Regex(@"<.*?>", RegexOptions.Compiled);
 
-        // Called once at startup from the main thread
+        /// <summary>Called once at startup from the main thread.</summary>
         public static void Initialize()
         {
             if (_initialized) return;

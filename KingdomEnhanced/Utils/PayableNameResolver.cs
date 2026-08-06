@@ -11,7 +11,7 @@ namespace KingdomEnhanced.Utils
     /// </summary>
     public static class PayableNameResolver
     {
-        // Maps raw in-game object names to stable canonical English names
+        /// <summary>Maps raw in-game object names to stable canonical English names.</summary>
         private static readonly Dictionary<string, string> _nameMapping = new Dictionary<string, string>
         {
             { "P1", "Peasant" },
@@ -84,19 +84,19 @@ namespace KingdomEnhanced.Utils
             { "Forge", "Forge" }
         };
 
-        // Removes digits and dashes (runtime instance markers)
+        /// <summary>Removes digits and dashes (runtime instance markers).</summary>
         private static readonly Regex _digitDashRegex = new Regex(@"[\d-]", RegexOptions.Compiled);
-        // Removes a trailing space followed by a single capital letter (instance marker)
+        /// <summary>Removes a trailing space followed by a single capital letter (instance marker).</summary>
         private static readonly Regex _trailingUpperRegex = new Regex(@"\s[A-Z]$", RegexOptions.Compiled);
-        // Removes " P#" tokens such as the worker marker "P2"
+        /// <summary>Removes " P#" tokens such as the worker marker "P2".</summary>
         private static readonly Regex _pNumberRegex = new Regex(@"\sP\d+", RegexOptions.Compiled);
-        // Inserts a space between camelCase words
+        /// <summary>Inserts a space between camelCase words.</summary>
         private static readonly Regex _camelCaseRegex = new Regex("([a-z])([A-Z])", RegexOptions.Compiled);
-        // Collapses runs of whitespace into a single space
+        /// <summary>Collapses runs of whitespace into a single space.</summary>
         private static readonly Regex _multiSpaceRegex = new Regex(@"\s+", RegexOptions.Compiled);
-        // Removes parenthesized suffixes such as "(Clone)"
+        /// <summary>Removes parenthesized suffixes such as "(Clone)".</summary>
         private static readonly Regex _parenRegex = new Regex(@"\s*\(.*?\)", RegexOptions.Compiled);
-        // Strips biome/landscape keywords when name simplification is enabled
+        /// <summary>Strips biome/landscape keywords when name simplification is enabled.</summary>
         private static readonly Regex _biomeRegex = new Regex(
             @"(?i)\b(bamboo|iron|stone|dead|lands|scaffold|wreck|grove|grace|pin|sale|jade|norse|norselands|shogun|dire|plague|europe|greece|cypress|pine|olive|wild|pear|p2|olympus|dynasty|viking|challenge|hickory|oak|birch|apple|cherry|palm|spruce|fir|willow|maple|walnut|chestnut)\b", RegexOptions.Compiled);
 

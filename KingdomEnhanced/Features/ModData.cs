@@ -15,45 +15,81 @@ namespace KingdomEnhanced.Features
     public class ModData : MonoBehaviour
     {
 #if IL2CPP
+        /// <summary>IL2CPP constructor required by Unity's Il2Cpp interop.</summary>
         public ModData(IntPtr ptr) : base(ptr) { }
 #endif
 
-        // Archer — base fire rate (shoot cooldown) cached at spawn
+        /// <summary>
+        /// Archer — base fire rate (shoot cooldown) cached at spawn.
+        /// </summary>
         public float baseFireRate;
         
-        // Berserker / Ninja — base run speed cached at spawn
+        /// <summary>
+        /// Berserker / Ninja — base run speed cached at spawn.
+        /// </summary>
         public float baseSpeed;
         
-        // Farm — base coin yield cached at spawn
+        /// <summary>
+        /// Farm — base coin yield cached at spawn.
+        /// </summary>
         public float baseCoinYield;
         
-        // Bolt — base damage and launch force cached at spawn
+        /// <summary>
+        /// Bolt — base damage and launch force cached at spawn.
+        /// </summary>
         public int baseDamage;
+        /// <summary>
+        /// Base launch force cached at spawn.
+        /// </summary>
         public float baseForce;
         
-        // Portal — base spawn interval cached at spawn
+        /// <summary>
+        /// Portal — base spawn interval cached at spawn.
+        /// </summary>
         public float baseSpawnInterval;
         
-        // Mover — base move speed cached on first update
+        /// <summary>
+        /// Mover — base move speed cached on first update.
+        /// </summary>
         public float moverBaseSpeed;
         
         /// <summary>Last speed value actually written to the Mover, used to skip duplicate reflection writes.</summary>
         public float lastAppliedMoverSpeed = float.MinValue;
         
-        // ArtemisBow — base arrow count, range, and damage cached before modification
+        /// <summary>
+        /// ArtemisBow — base arrow count, range, and damage cached before modification.
+        /// </summary>
         public int artemisBaseArrows;
+        /// <summary>
+        /// Base arrow range cached before modification.
+        /// </summary>
         public float artemisBaseRange;
+        /// <summary>
+        /// Base arrow damage cached before modification.
+        /// </summary>
         public int artemisBaseDamage;
         
-        // Knight — base HP
+        /// <summary>
+        /// Knight — base HP.
+        /// </summary>
         public int knightBaseHp;
         
-        // Worker — base speed and work time
+        /// <summary>
+        /// Worker — base speed and work time.
+        /// </summary>
         public float workerBaseSpeed;
+        /// <summary>
+        /// Base work time cached before modification.
+        /// </summary>
         public float workerBaseWorkTime;
 
-        // Catapult — base crank rates cached before modification
+        /// <summary>
+        /// Catapult — base crank rates cached before modification.
+        /// </summary>
         public float baseCrankRate;
+        /// <summary>
+        /// Base formation crank rate cached before modification.
+        /// </summary>
         public float baseCrankRateFormation;
 
         /// <summary>Last crank rate actually written to the Catapult, used to skip duplicate reflection writes.</summary>
@@ -69,10 +105,14 @@ namespace KingdomEnhanced.Features
         /// <summary>Whether the Archer is inside a tower (cached to avoid per-frame GetComponentInParent).</summary>
         public bool cachedInTower = false;
 
-        // Ballista — accumulated fractional reload work
+        /// <summary>
+        /// Ballista — accumulated fractional reload work.
+        /// </summary>
         public float ballistaFractionalWork;
 
-        // Guards one-time caching of base values
+        /// <summary>
+        /// Guards one-time caching of base values.
+        /// </summary>
         public bool isInitialized = false;
 
         /// <summary>Gets the ModData component on the object, adding it if missing.</summary>

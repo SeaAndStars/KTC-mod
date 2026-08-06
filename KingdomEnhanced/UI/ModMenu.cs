@@ -15,6 +15,9 @@ using KingdomEnhanced.Shared.Attributes;
 
 namespace KingdomEnhanced.UI
 {
+    /// <summary>
+    /// Sidebar tab categories of the mod menu.
+    /// </summary>
     public enum TabCategory { Main, Cheats, Lab, Hard, Info, Guide, Settings, Report }
 
     /// <summary>
@@ -165,148 +168,259 @@ namespace KingdomEnhanced.UI
 #if IL2CPP
     [RegisterTypeInIl2Cpp]
 #endif
+    /// <summary>
+    /// The in-game mod menu: renders all feature toggles, sliders and buttons
+    /// in an IMGUI window and persists settings to the BepInEx config.
+    /// </summary>
     public class ModMenu : MonoBehaviour
     {
 #if IL2CPP
         public ModMenu(IntPtr ptr) : base(ptr) { }
 #endif
         #region PUBLIC SETTINGS
+        /// <summary>Toggles the mount stamina bar overlay on the HUD.</summary>
         public static bool ShowStaminaBar;
+        /// <summary>Master switch for accessibility narration, radar and proximity alerts.</summary>
         public static bool EnableAccessibility;
+        /// <summary>Enables text-to-speech output for narration.</summary>
         public static bool EnableTTS           = true;
+        /// <summary>Queues narration messages instead of interrupting the current speech.</summary>
         public static bool NarratorQueueMode   = false;
+        /// <summary>Simplifies object names before narration.</summary>
         public static bool SimplifyNames       = true;
+        /// <summary>Announces entering and leaving the castle area via TTS.</summary>
         public static bool EnableCastleAnnouncer = false;
+        /// <summary>Draws debug boxes for announcer trigger zones.</summary>
         public static bool DebugZones = false;
+        /// <summary>Shows the HUD overlay (day/night time and coins).</summary>
         public static bool DisplayTimes;
+        /// <summary>Uses 12-hour clock with AM/PM instead of 24-hour format in the HUD.</summary>
         public static bool Use12HourClock = false;
+        /// <summary>Unlocks the Cheats tab in the mod menu.</summary>
         public static bool CheatsUnlocked;
+        /// <summary>Prevents mount stamina from depleting.</summary>
         public static bool InfiniteStamina;
+        /// <summary>Walls self-repair to full hit points.</summary>
         public static bool InvincibleWalls;
+        /// <summary>Disables item ability cooldowns.</summary>
         public static bool NoToolCooldowns;
+        /// <summary>Arrows fired per Artemis Bow ability cast.</summary>
         public static float ArtemisArrowCount    = 6f;
+        /// <summary>Artemis Bow ability range multiplier.</summary>
         public static float ArtemisRangeMult     = 1.0f;
+        /// <summary>Artemis Bow arrow damage multiplier.</summary>
         public static float ArtemisArrowDamageMult = 1.0f;
+        /// <summary>Boosts builder movement and work speed for near-instant construction.</summary>
         public static bool HyperBuilders;
+        /// <summary>Expands vagrant camps (more beggars, faster spawn interval).</summary>
         public static bool LargerCamps;
+        /// <summary>Accelerates citizen house construction.</summary>
         public static bool BetterCitizenHouses;
+        /// <summary>Grants elite knight buffs (50 hit points).</summary>
         public static bool BetterKnight;
+        /// <summary>Locks the season to summer.</summary>
         public static bool LockSummer;
+        /// <summary>Forces clear weather by disabling precipitation.</summary>
         public static bool ClearWeather;
+        /// <summary>Disables blood moon events.</summary>
         public static bool NoBloodMoons;
+        /// <summary>Keeps coins from sinking in water.</summary>
         public static bool CoinsStayDry;
+        /// <summary>Enables scaling of the monarch sprite.</summary>
         public static bool EnableSizeHack = false;
+        /// <summary>Player scale multiplier, active when size hack is enabled.</summary>
         public static float  TargetSize      = 1.0f;
+        /// <summary>Mounted travel speed multiplier.</summary>
         public static float  SpeedMultiplier = 1.0f;
+        /// <summary>Shows the greed counter overlay on the HUD.</summary>
         public static bool   ShowGreedCounter = false;
 
+        /// <summary>Coin income multiplier.</summary>
         public static float CoinIncomeMult  = 1.0f;
+        /// <summary>Bag drop multiplier.</summary>
         public static float BagDropMult     = 1.0f;
 
+        /// <summary>Doubles the archer fire rate.</summary>
         public static bool  ArcherFireBoost  = false;
+        /// <summary>Enables berserker rage mode with earlier activation.</summary>
         public static bool  BerserkerRage    = false;
+        /// <summary>Doubles the ninja movement speed.</summary>
         public static bool  NinjaSpeedBoost  = false;
+        /// <summary>Recruit cap override (0 = game default).</summary>
         public static int   RecruitCap       = 0;
+        /// <summary>Tree regrowth speed multiplier.</summary>
         public static float TreeRegrowthMult = 1.0f;
+        /// <summary>Boosts animal spawning.</summary>
         public static bool  AnimalSpawnBoost = false;
+        /// <summary>Skips the daytime/nighttime stopper for instant day transitions.</summary>
         public static bool  InstantDaySkip   = false;
+        /// <summary>Doubles farm coin output.</summary>
         public static bool  FarmOutputBoost  = false;
+        /// <summary>Doubles the tower archer fire rate.</summary>
         public static bool  TowerFireBoost   = false;
+        /// <summary>Doubles ballista bolt damage.</summary>
         public static bool  BallistaBoost    = false;
+        /// <summary>Ballista reload speed multiplier.</summary>
         public static float BallistaReloadMult = 1.0f;
+        /// <summary>Ballista bolt flight speed multiplier.</summary>
         public static float BallistaFlightMult = 1.0f;
+        /// <summary>Boosts catapult reload speed.</summary>
         public static bool  CatapultBoost    = false;
+        /// <summary>Catapult reload speed multiplier.</summary>
         public static float CatapultReloadMult = 1.0f;
+        /// <summary>Catapult projectile flight speed multiplier.</summary>
         public static float CatapultFlightMult = 1.0f;
+        /// <summary>Completes castle upgrades instantly.</summary>
         public static bool  InstantCastle    = false;
 
+        /// <summary>Builder movement speed multiplier.</summary>
         public static float BuilderSpeedMult = 1.0f;
+        /// <summary>Builder work efficiency multiplier (lower is faster).</summary>
         public static float BuilderEfficiencyMult = 1.0f;
 
+        /// <summary>Steed run speed scale.</summary>
         public static float SteedSpeedMult   = 1.0f;
+        /// <summary>Doubles steed charge damage.</summary>
         public static bool  ChargeDmgBoost   = false;
+        /// <summary>Steed buff aura duration multiplier.</summary>
         public static float BuffAuraDuration = 1.0f;
 
+        /// <summary>Enemy wave size multiplier.</summary>
         public static float WaveSizeMult       = 1.0f;
+        /// <summary>Enemy movement speed multiplier.</summary>
         public static float EnemySpeedMult     = 1.0f;
+        /// <summary>Portal spawn rate multiplier.</summary>
         public static float PortalSpawnRate    = 1.0f;
+        /// <summary>Disables crown stealing by enemies.</summary>
         public static bool  NoCrownStealing    = false;
+        /// <summary>Greed Queen hit point scale.</summary>
         public static float GreedQueenHPScale  = 1.0f;
+        /// <summary>Director threat ramp multiplier.</summary>
         public static float DirectorThreatMult = 1.0f;
 
+        /// <summary>Mod menu window scale.</summary>
         public static float WindowScale   = 1.0f;
+        /// <summary>Mod menu background opacity.</summary>
         public static float MenuOpacity   = 0.98f;
+        /// <summary>Kingdom monitor panel opacity.</summary>
         public static float MonitorOpacity = 0.95f;
 
+        /// <summary>Last accessibility narration message.</summary>
         public static string LastAccessMessage = "";
+        /// <summary>Remaining display time of the last access message.</summary>
         public static float  MessageTimer      = 0f;
+        /// <summary>Number of units spawned per spawn action.</summary>
         public static float  SpawnUnitCount    = 1f;
 
         #endregion
 
         #region COLORS
+        /// <summary>Theme color: window background.</summary>
         private static readonly Color C_BG              = new Color(0.06f, 0.05f, 0.03f);
+        /// <summary>Theme color: panel background.</summary>
         public static readonly Color C_PANEL            = new Color(0.10f, 0.08f, 0.05f);
+        /// <summary>Theme color: card background.</summary>
         public static readonly Color C_CARD             = new Color(0.13f, 0.10f, 0.06f);
+        /// <summary>Theme color: panel border.</summary>
         public static readonly Color C_BORDER           = new Color(0.55f, 0.42f, 0.18f);
+        /// <summary>Theme color: gold accent (headings, active tabs).</summary>
         public static readonly Color C_GOLD             = new Color(0.90f, 0.72f, 0.30f);
+        /// <summary>Theme color: dimmed gold.</summary>
         private static readonly Color C_GOLD_DIM        = new Color(0.70f, 0.55f, 0.20f);
+        /// <summary>Theme color: primary text.</summary>
         public static readonly Color C_TEXT             = new Color(0.95f, 0.90f, 0.75f);
+        /// <summary>Theme color: dimmed secondary text.</summary>
         public static readonly Color C_TEXT_DIM         = new Color(0.60f, 0.55f, 0.45f);
+        /// <summary>Theme color: active accent.</summary>
         public static readonly Color C_ACCENT_ACTIVE    = new Color(1.00f, 0.80f, 0.35f);
+        /// <summary>Theme color: danger red.</summary>
         private static readonly Color C_DANGER          = new Color(0.75f, 0.25f, 0.20f);
 
+        /// <summary>State color: feature enabled.</summary>
         public static readonly Color C_ON               = new Color(0.22f, 0.72f, 0.32f, 1f);
+        /// <summary>State color: feature disabled.</summary>
         public static readonly Color C_OFF              = new Color(0.45f, 0.18f, 0.18f, 1f);
+        /// <summary>Theme color: button background.</summary>
         public static readonly Color C_BTN              = C_CARD;
+        /// <summary>Theme color: hot button background.</summary>
         public static readonly Color C_BTN_HOT          = new Color(0.18f, 0.14f, 0.08f, 1f);
+        /// <summary>Theme color: danger red.</summary>
         public static readonly Color C_DANGER_BG        = C_DANGER;
+        /// <summary>State color: locked feature text.</summary>
         public static readonly Color C_LOCK             = new Color(0.96f, 0.35f, 0.35f, 1f);
+        /// <summary>Theme color: locked feature background.</summary>
         public static readonly Color C_LOCK_BG          = new Color(0.35f, 0.10f, 0.10f, 1f);
+        /// <summary>Theme color: coming-soon background.</summary>
         public static readonly Color C_SOON_BG          = new Color(0.22f, 0.22f, 0.22f, 1f);
 
         #endregion
 
         #region CONSTANTS
+        /// <summary>Sidebar tab order across all categories.</summary>
         private static readonly TabCategory[] TAB_CATEGORIES =
         {
             TabCategory.Main, TabCategory.Cheats, TabCategory.Lab, TabCategory.Hard,
             TabCategory.Info, TabCategory.Guide, TabCategory.Settings, TabCategory.Report
         };
+        /// <summary>Sidebar width in pixels.</summary>
         private const float SIDEBAR_W = 140f;
+        /// <summary>Header height in pixels.</summary>
         private const float HEADER_H = 60f;
+        /// <summary>Display version string of the mod.</summary>
         private static readonly string MOD_VERSION = ModVersion.DISPLAY;
+        /// <summary>Localization key for the menu credit line.</summary>
         private const string MENU_CREDIT_KEY = "menu.credit";
+        /// <summary>Key that toggles the mod menu (F1).</summary>
         private const KeyCode MENU_TOGGLE_KEY = KeyCode.F1;
 
         #endregion
 
         #region STATE
+        /// <summary>Whether the mod menu is currently visible.</summary>
         private bool         _isVisible = false;
+        /// <summary>Currently selected tab category.</summary>
         private TabCategory  _activeTab = TabCategory.Main;
+        /// <summary>Screen rectangle of the mod menu window.</summary>
         private Rect         _windowRect = new Rect(30, 110, 600, 500);
+        /// <summary>Whether the user is dragging the resize handle.</summary>
         private bool         _isResizing = false;
+        /// <summary>Scroll position per tab category.</summary>
         private Vector2[]    _scrollPos = new Vector2[8];
 
+        /// <summary>Center-screen feedback message text.</summary>
         private string _feedbackMsg = "";
+        /// <summary>Remaining display time of the feedback message.</summary>
         private float  _feedbackTimer = 0f;
 
+        /// <summary>Whether the reset button awaits a second confirmation click.</summary>
         private bool  _resetConfirmPending = false;
+        /// <summary>Countdown for the reset confirmation window.</summary>
         private float _resetConfirmTimer   = 0f;
 
+        /// <summary>All feature metadata built by ModMenuFeatures.</summary>
         private FeatureMeta[] _features;
+        /// <summary>Report tab status per feature id (0 untested, 1 works, 2 broken).</summary>
         private Dictionary<string, int> _featureStatus = new Dictionary<string, int>();
 
         #endregion
 
         #region NOTIFICATIONS
+        /// <summary>A transient toast notification shown on screen.</summary>
         public class Notification
         {
+            /// <summary>Notification text.</summary>
             public string Message;
+            /// <summary>Time (unscaled) when the notification expires.</summary>
             public float ExpiryTimestamp;
+            /// <summary>Current fade alpha of the notification.</summary>
             public float Alpha = 1f;
+            /// <summary>Text color of the notification.</summary>
             public Color TextColor;
 
+            /// <summary>Creates a notification expiring after the given duration.</summary>
+            /// <param name="msg">Notification text.</param>
+            /// <param name="dur">Display duration in seconds.</param>
+            /// <param name="color">Text color.</param>
             public Notification(string msg, float dur, Color color)
             {
                 Message    = msg;
@@ -314,8 +428,11 @@ namespace KingdomEnhanced.UI
                 TextColor  = color;
             }
 
+            /// <summary>Determines whether the notification has expired (with a 1s grace period).</summary>
+            /// <returns>True once the notification is no longer displayed.</returns>
             public bool IsExpired() => Time.unscaledTime > ExpiryTimestamp + 1f;
 
+            /// <summary>Updates the fade alpha near the end of the notification lifetime.</summary>
             public void UpdateAlpha()
             {
                 float left = ExpiryTimestamp - Time.unscaledTime;
@@ -323,27 +440,45 @@ namespace KingdomEnhanced.UI
             }
         }
 
+        /// <summary>A transient toast notification shown on screen.</summary>
         private static readonly List<Notification> _notifications = new List<Notification>();
+        /// <summary>Display duration of a notification in seconds.</summary>
         private const float NotificationDuration = 5f;
+        /// <summary>Maximum number of notifications kept at once.</summary>
         private const int MaxNotifications = 8;
 
         #endregion
 
         #region STYLES
+        /// <summary>GUI style: window frame.</summary>
         private GUIStyle _styleWindow;
+        /// <summary>GUI style: window title.</summary>
         private GUIStyle _styleTitle;
+        /// <summary>GUI style: subtitle text.</summary>
         private GUIStyle _styleSubtitle;
+        /// <summary>GUI style: section heading.</summary>
         private GUIStyle _styleSectionLabel;
+        /// <summary>GUI style: body text.</summary>
         private GUIStyle _styleBodyText;
+        /// <summary>GUI style: dimmed italic text.</summary>
         private GUIStyle _styleDimText;
+        /// <summary>GUI style: primary button.</summary>
         private GUIStyle _styleBtn;
+        /// <summary>GUI style: dimmed button.</summary>
         private GUIStyle _styleBtnDim;
+        /// <summary>GUI style: sidebar tab button.</summary>
         private GUIStyle _styleTabBtn;
+        /// <summary>GUI style: small state pill button.</summary>
         private GUIStyle _stylePill;
+        /// <summary>GUI style: notification text.</summary>
         private GUIStyle _styleNotif;
+        /// <summary>GUI style: credit footer.</summary>
         private GUIStyle _styleCredit;
+        /// <summary>GUI style: locked feature hint.</summary>
         private GUIStyle _styleLocked;
+        /// <summary>GUI style: card container.</summary>
         private GUIStyle _styleCard;
+        /// <summary>Whether the GUI styles have been built once.</summary>
         private bool _stylesBuilt = false;
 
         #endregion
@@ -409,6 +544,7 @@ namespace KingdomEnhanced.UI
             _notifications.RemoveAll(n => n.IsExpired());
         }
 
+        /// <summary>Cached window draw delegate for GUI.Window.</summary>
         private GUI.WindowFunction _drawWindowFunc;
 
         void OnGUI()
@@ -428,6 +564,7 @@ namespace KingdomEnhanced.UI
             GUI.backgroundColor = originalBg;
         }
 
+        /// <summary>Builds all cached GUIStyles once on first render.</summary>
         private void BuildStyles()
         {
             if (_stylesBuilt) return;
@@ -689,6 +826,7 @@ namespace KingdomEnhanced.UI
             }
         }
 
+        /// <summary>Loads all feature toggles and values from the BepInEx config into the static fields.</summary>
         private void LoadFromSettings()
         {
             ShowStaminaBar        = Settings.ShowStaminaBar.Value;
@@ -751,6 +889,7 @@ namespace KingdomEnhanced.UI
             DirectorThreatMult    = Settings.DirectorThreatMult.Value;
         }
 
+        /// <summary>Persists all feature toggles and values from the static fields to the BepInEx config.</summary>
         private void SaveToSettings()
         {
             Settings.ShowStaminaBar.Value        = ShowStaminaBar;
@@ -813,6 +952,7 @@ namespace KingdomEnhanced.UI
             Settings.DirectorThreatMult.Value    = DirectorThreatMult;
         }
 
+        /// <summary>Draws the feature rows for the currently selected tab, grouped into section cards.</summary>
         private void DrawCurrentTab()
         {
             if (_activeTab == TabCategory.Cheats && !CheatsUnlocked)
@@ -855,6 +995,7 @@ namespace KingdomEnhanced.UI
             }
         }
 
+        /// <summary>Draws the extra lab controls (instant day/night skip buttons).</summary>
         private void DrawLabExtras()
         {
             GUILayout.BeginVertical(_styleCard);
@@ -940,6 +1081,7 @@ namespace KingdomEnhanced.UI
             GUILayout.EndHorizontal();
         }
 
+        /// <summary>Draws the unlock gate for the Cheats tab.</summary>
         private void DrawCheatsGate()
         {
             GUILayout.BeginVertical(_styleCard);
@@ -967,6 +1109,7 @@ namespace KingdomEnhanced.UI
             GUILayout.Space(6f);
         }
 
+        /// <summary>Draws the guide tab listing every feature with its current state.</summary>
         private void DrawGuideTab()
         {
             GUILayout.BeginVertical(_styleCard);
@@ -1019,6 +1162,7 @@ namespace KingdomEnhanced.UI
             GUILayout.EndVertical();
         }
 
+        /// <summary>Draws the report tab with per-feature test status and a copy-to-clipboard report builder.</summary>
         private void DrawReportTab()
         {
             GUILayout.BeginVertical(_styleCard);
@@ -1092,6 +1236,7 @@ namespace KingdomEnhanced.UI
             GUILayout.EndVertical();
         }
 
+        /// <summary>Draws the info tab with version and hotkey tips.</summary>
         private void DrawInfoTab()
         {
             GUILayout.BeginVertical(_styleCard);
@@ -1107,6 +1252,7 @@ namespace KingdomEnhanced.UI
             GUILayout.EndVertical();
         }
 
+        /// <summary>Draws the settings tab (window scale, opacity, language and one-click reset).</summary>
         private void DrawSettingsTab()
         {
             GUILayout.BeginVertical(_styleCard);
@@ -1187,6 +1333,7 @@ namespace KingdomEnhanced.UI
             LoadFromSettings();
         }
 
+        /// <summary>Draws the center-screen feedback message overlay.</summary>
         private void DrawFeedbackOverlay()
         {
             if (_feedbackTimer <= 0) return;
@@ -1196,6 +1343,7 @@ namespace KingdomEnhanced.UI
             GUI.color = Color.white;
         }
 
+        /// <summary>Draws the stacked notification toasts in the corner of the screen.</summary>
         private void DrawNotificationLog()
         {
             
@@ -1267,6 +1415,7 @@ namespace KingdomEnhanced.UI
             }
         }
 
+        /// <summary>Sets the first player wallet to 100 coins.</summary>
         public static void FillWallet()
         {
             var player = Managers.Inst?.kingdom?.GetPlayer(0);
@@ -1276,6 +1425,7 @@ namespace KingdomEnhanced.UI
             Speak(LocalizationService.Get("menu.notification.wallet_filled"), C_GOLD);
         }
 
+        /// <summary>Cycles the stamina bar visual style.</summary>
         public static void CycleStaminaBarStyle()
         {
             if (StaminaBarHolder.Instance == null) return;
@@ -1284,6 +1434,7 @@ namespace KingdomEnhanced.UI
             Speak(LocalizationService.Format("menu.notification.stamina_style", StaminaBarHolder.Instance.GetStyleName()));
         }
 
+        /// <summary>Cycles the stamina bar screen position.</summary>
         public static void CycleStaminaBarPosition()
         {
             if (StaminaBarHolder.Instance == null) return;

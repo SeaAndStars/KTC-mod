@@ -13,8 +13,13 @@ using System.Collections.Generic;
 
 namespace KingdomEnhanced.Features
 {
+    /// <summary>
+    /// Harmony patches that add hard mode selectors to the biome select screen and
+    /// override the menu difficulty label with the active hard mode preset name.
+    /// </summary>
     public class DifficultyUIPatch
     {
+        /// <summary>Clones the last difficulty selector to add one entry per hard mode preset.</summary>
         [HarmonyPatch(typeof(BiomeSelect), nameof(BiomeSelect.ShowBiomeSelect))]
         public static class BiomeSelect_ShowBiomeSelect_Patch
         {
@@ -92,6 +97,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Overrides the menu difficulty text with the active hard mode preset name.</summary>
         [HarmonyPatch(typeof(Menu), "UpdateMenuStatus")]
         public static class Menu_UpdateMenuStatus_Patch
         {
