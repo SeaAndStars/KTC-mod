@@ -244,6 +244,12 @@ BepInEx/plugins/
 ### Contributing
 See `CONTRIBUTING.md` for setup and guidelines.
 
+### Documentation
+- [Usage Guide](docs/USAGE.md) — hotkeys, menu tabs, features and settings
+- [Building & Development](docs/BUILDING.md) — build targets, interop and release packaging
+- [Architecture](docs/ARCHITECTURE.md) — module layout and data flow
+- [IL2CPP / Mono Compatibility](docs/IL2CPP-MONO-COMPAT.md) — dual-backend runtime details
+
 ### Bug Reports
 1. Press **F1 → Report**
 2. Copy report
