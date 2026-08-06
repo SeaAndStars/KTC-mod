@@ -23,6 +23,17 @@ namespace KingdomEnhanced.Systems
         private static readonly Queue<string> _pendingQueue = new Queue<string>();
         private static readonly object        _queueLock   = new object();
 
+        private const int MaxQueueLength = 32;
+
+        /// <summary>上次实际播报的文本（去重窗口内丢弃完全相同的重复消息，防止无限循环播报）。</summary>
+        private static string _lastSpokenText = string.Empty;
+
+        /// <summary>上次实际播报的时刻（Time.unscaledTime）。</summary>
+        private static float _lastSpokenTime = float.MinValue;
+
+        /// <summary>去重窗口（秒）：窗口内完全相同的文本直接丢弃。</summary>
+        private const float DedupeWindowSeconds = 2.0f;
+
         private static readonly List<string> _messageLog = new List<string>();
         private static int _historyIndex = -1;
         private const  int MaxHistory   = 10;
@@ -104,6 +115,13 @@ namespace KingdomEnhanced.Systems
                             null, spVoice,
                             new object[] { text, 0 }
                         );
+
+                        // 记录最近播报文本，供主线程去重
+                        lock (_queueLock)
+                        {
+                            _lastSpokenText = text;
+                            _lastSpokenTime = UnityEngine.Time.unscaledTime;
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -135,13 +153,28 @@ namespace KingdomEnhanced.Systems
             if (string.IsNullOrEmpty(text) || !_initialized) return;
 
             string clean = _htmlTagRegex.Replace(text, string.Empty);
-            AddToHistory(clean);
 
             lock (_queueLock)
             {
+                // 去重：去重窗口内与最近播报文本完全相同的内容直接丢弃，避免调用方每帧触发造成无限循环播报
+                if (string.Equals(clean, _lastSpokenText, StringComparison.Ordinal) &&
+                    UnityEngine.Time.unscaledTime - _lastSpokenTime < DedupeWindowSeconds)
+                {
+                    return;
+                }
+
                 if (interrupt) _pendingQueue.Clear(); // Drop queued phrases
+
+                // 队列上限：超出时丢弃最旧的消息，保证无法无限堆积
+                if (_pendingQueue.Count >= MaxQueueLength)
+                {
+                    _pendingQueue.Dequeue();
+                }
+
                 _pendingQueue.Enqueue(clean);
             }
+
+            AddToHistory(clean);
         }
 
         public static void RepeatLast()

@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
+using BepInEx.Configuration;
 using KingdomEnhanced.Features;
 using KingdomEnhanced.Systems;
 using KingdomEnhanced.Core;
@@ -15,33 +17,149 @@ namespace KingdomEnhanced.UI
 {
     public enum TabCategory { Main, Cheats, Lab, Hard, Info, Guide, Settings, Report }
 
+    /// <summary>
+    /// 描述一个可在 ModMenu 中展示的功能项元数据。
+    /// </summary>
     public struct FeatureMeta
     {
+        /// <summary>
+        /// 功能稳定标识。
+        /// </summary>
         public string Id;
+
+        /// <summary>
+        /// 兼容旧调用者提供的最终功能标题文本。
+        /// </summary>
         public string Label;
+
+        /// <summary>
+        /// 功能标题资源键。
+        /// </summary>
+        public string LabelKey;
+
+        /// <summary>
+        /// 兼容旧调用者提供的最终功能分组标题文本。
+        /// </summary>
         public string Section;
+
+        /// <summary>
+        /// 功能分组标题资源键。
+        /// </summary>
+        public string SectionKey;
+
+        /// <summary>
+        /// 功能所属标签页分类。
+        /// </summary>
         public TabCategory Category;
+
+        /// <summary>
+        /// 兼容旧调用者提供的最终功能说明文本。
+        /// </summary>
         public string Description;
 
-        
+        /// <summary>
+        /// 功能说明资源键。
+        /// </summary>
+        public string DescriptionKey;
+
+        /// <summary>
+        /// 读取布尔功能当前值的委托。
+        /// </summary>
         public Func<bool> GetValue;
+
+        /// <summary>
+        /// 写入布尔功能当前值的委托。
+        /// </summary>
         public Action<bool> SetValue;
 
-        
+        /// <summary>
+        /// 读取滑条功能当前值的委托。
+        /// </summary>
         public Func<float> GetFloatValue;
+
+        /// <summary>
+        /// 写入滑条功能当前值的委托。
+        /// </summary>
         public Action<float> SetFloatValue;
+
+        /// <summary>
+        /// 滑条功能允许的最小值。
+        /// </summary>
         public float MinVal;
+
+        /// <summary>
+        /// 滑条功能允许的最大值。
+        /// </summary>
         public float MaxVal;
 
-        
+        /// <summary>
+        /// 按钮功能点击后执行的动作。
+        /// </summary>
         public Action OnAction;
 
-        
+        /// <summary>
+        /// 判断当前功能是否锁定的委托。
+        /// </summary>
         public Func<bool> IsLocked;
+
+        /// <summary>
+        /// 兼容旧调用者提供的最终锁定原因文本委托。
+        /// </summary>
         public Func<string> GetLockReason;
 
-        
+        /// <summary>
+        /// 返回锁定原因资源键的委托。
+        /// </summary>
+        public Func<string> GetLockReasonKey;
+
+        /// <summary>
+        /// 判断当前功能是否需要显示冲突提示的委托。
+        /// </summary>
         public Func<bool> HasConflict;
+
+        /// <summary>
+        /// 获取当前语言下的功能标题文本。
+        /// </summary>
+        /// <returns>已解析的功能标题文本。</returns>
+        public string GetLabelText()
+        {
+            return Label ?? LocalizationService.Get(LabelKey);
+        }
+
+        /// <summary>
+        /// 获取当前语言下的功能分组标题文本。
+        /// </summary>
+        /// <returns>已解析的分组标题文本。</returns>
+        public string GetSectionText()
+        {
+            return Section ?? LocalizationService.Get(SectionKey);
+        }
+
+        /// <summary>
+        /// 获取当前语言下的功能说明文本。
+        /// </summary>
+        /// <returns>已解析的功能说明文本。</returns>
+        public string GetDescriptionText()
+        {
+            return Description ?? LocalizationService.Get(DescriptionKey);
+        }
+
+        /// <summary>
+        /// 获取当前语言下的功能锁定原因文本。
+        /// </summary>
+        /// <returns>已解析的锁定原因文本；若无委托则回退为通用锁定文案。</returns>
+        public string GetLockReasonText()
+        {
+            if (GetLockReason != null)
+            {
+                return GetLockReason();
+            }
+
+            string reasonKey = GetLockReasonKey != null
+                ? GetLockReasonKey()
+                : "feature.lock.locked";
+            return LocalizationService.Get(reasonKey);
+        }
     }
 
 #if IL2CPP
@@ -61,6 +179,7 @@ namespace KingdomEnhanced.UI
         public static bool EnableCastleAnnouncer = false;
         public static bool DebugZones = false;
         public static bool DisplayTimes;
+        public static bool Use12HourClock = false;
         public static bool CheatsUnlocked;
         public static bool InfiniteStamina;
         public static bool InvincibleWalls;
@@ -149,11 +268,15 @@ namespace KingdomEnhanced.UI
         #endregion
 
         #region CONSTANTS
-        private static readonly string[] TAB_LABELS = { "MAIN", "CHEATS", "LAB", "HARD", "INFO", "GUIDE", "SETTINGS", "REPORT" };
+        private static readonly TabCategory[] TAB_CATEGORIES =
+        {
+            TabCategory.Main, TabCategory.Cheats, TabCategory.Lab, TabCategory.Hard,
+            TabCategory.Info, TabCategory.Guide, TabCategory.Settings, TabCategory.Report
+        };
         private const float SIDEBAR_W = 140f;
         private const float HEADER_H = 60f;
         private static readonly string MOD_VERSION = ModVersion.DISPLAY;
-        private const string CREATOR_CREDIT = "by Zaykus | Thanks to Abevol";
+        private const string MENU_CREDIT_KEY = "menu.credit";
         private const KeyCode MENU_TOGGLE_KEY = KeyCode.F1;
 
         #endregion
@@ -231,7 +354,7 @@ namespace KingdomEnhanced.UI
             _features = ModMenuFeatures.Build();
             LoadFromSettings();
             TTSManager.Initialize();
-            Speak("Kingdom Enhanced initialized", C_ON);
+            Speak(LocalizationService.Get("menu.notification.initialized"), C_ON);
         }
 
         void Update()
@@ -405,6 +528,86 @@ namespace KingdomEnhanced.UI
             };
         }
 
+        /// <summary>
+        /// 根据标签页分类返回对应的主菜单标签资源键。
+        /// </summary>
+        /// <param name="category">目标标签页分类。</param>
+        /// <returns>标签资源键。</returns>
+        private static string GetTabLabelKey(TabCategory category)
+        {
+            switch (category)
+            {
+                case TabCategory.Main: return "menu.tab.main";
+                case TabCategory.Cheats: return "menu.tab.cheats";
+                case TabCategory.Lab: return "menu.tab.lab";
+                case TabCategory.Hard: return "menu.tab.hard";
+                case TabCategory.Info: return "menu.tab.info";
+                case TabCategory.Guide: return "menu.tab.guide";
+                case TabCategory.Settings: return "menu.tab.settings";
+                case TabCategory.Report: return "menu.tab.report";
+                default: return "menu.tab.main";
+            }
+        }
+
+        /// <summary>
+        /// 根据标签页分类返回报告页徽标缩写资源键。
+        /// </summary>
+        /// <param name="category">目标标签页分类。</param>
+        /// <returns>报告页缩写资源键。</returns>
+        private static string GetReportBadgeKey(TabCategory category)
+        {
+            switch (category)
+            {
+                case TabCategory.Main: return "menu.report.badge.main";
+                case TabCategory.Cheats: return "menu.report.badge.cheats";
+                case TabCategory.Lab: return "menu.report.badge.lab";
+                case TabCategory.Hard: return "menu.report.badge.hard";
+                case TabCategory.Info: return "menu.report.badge.info";
+                case TabCategory.Guide: return "menu.report.badge.guide";
+                case TabCategory.Settings: return "menu.report.badge.settings";
+                case TabCategory.Report: return "menu.report.badge.report";
+                default: return "menu.report.badge.main";
+            }
+        }
+
+        /// <summary>
+        /// 获取当前语言下的标签页标题文本。
+        /// </summary>
+        /// <param name="category">目标标签页分类。</param>
+        /// <returns>已解析的标签页标题文本。</returns>
+        private static string GetTabLabelText(TabCategory category)
+        {
+            return LocalizationService.Get(GetTabLabelKey(category));
+        }
+
+        /// <summary>
+        /// 将滑条数值格式化为菜单中使用的倍率文本。
+        /// </summary>
+        /// <param name="value">需要格式化的数值。</param>
+        /// <returns>保持现有精度规则的倍率文本。</returns>
+        private static string FormatScaledValue(float value)
+        {
+            return value < 0.01f
+                ? $"{value:F4}"
+                : value < 0.1f
+                    ? $"{value:F3}"
+                    : value < 1f
+                        ? $"{value:F2}"
+                        : $"{value:F1}";
+        }
+
+        /// <summary>
+        /// 获取语言代码在当前界面语言下的展示文本。
+        /// </summary>
+        /// <param name="languageCode">语言代码。</param>
+        /// <returns>语言显示名；缺失时回退为语言代码。</returns>
+        private static string GetLanguageOptionLabel(string languageCode)
+        {
+            string key = $"settings.language.option.{languageCode}";
+            string value = LocalizationService.Get(key);
+            return string.Equals(value, key, StringComparison.Ordinal) ? languageCode : value;
+        }
+
         #endregion
 
         #region UI RENDERING
@@ -416,7 +619,7 @@ namespace KingdomEnhanced.UI
             GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Height(HEADER_H));
             GUILayout.BeginVertical();
             GUILayout.Space(8);
-            GUILayout.Label("Kingdom Enhanced", _styleTitle);
+            GUILayout.Label(LocalizationService.Get("menu.title"), _styleTitle);
             GUILayout.Label(MOD_VERSION, _styleSubtitle);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
@@ -427,22 +630,23 @@ namespace KingdomEnhanced.UI
             
             GUILayout.BeginVertical(GUI.skin.box, GUILayout.Width(SIDEBAR_W));
             GUILayout.Space(10);
-            for (int i = 0; i < TAB_LABELS.Length; i++)
+            for (int i = 0; i < TAB_CATEGORIES.Length; i++)
             {
-                bool active = (int)_activeTab == i;
+                TabCategory tabCategory = TAB_CATEGORIES[i];
+                bool active = _activeTab == tabCategory;
                 Color originalColor = GUI.color;
                 GUI.color = active ? C_GOLD : Color.white;
                 
-                if (GUILayout.Button(TAB_LABELS[i], _styleTabBtn, GUILayout.Height(32)))
+                if (GUILayout.Button(GetTabLabelText(tabCategory), _styleTabBtn, GUILayout.Height(32)))
                 {
                     if ((int)_activeTab != i) _scrollPos[i] = Vector2.zero;
-                    _activeTab = (TabCategory)i;
+                    _activeTab = tabCategory;
                 }
                     
                 GUI.color = originalColor;
             }
             GUILayout.FlexibleSpace();
-            GUILayout.Label(CREATOR_CREDIT, _styleCredit);
+            GUILayout.Label(LocalizationService.Get(MENU_CREDIT_KEY), _styleCredit);
             GUILayout.Space(10);
             GUILayout.EndVertical();
 
@@ -490,6 +694,7 @@ namespace KingdomEnhanced.UI
             ShowStaminaBar        = Settings.ShowStaminaBar.Value;
             DisplayTimes          = Settings.DisplayTimes.Value;
             ShowGreedCounter      = Settings.ShowGreedCounter.Value;
+            Use12HourClock        = Settings.Use12HourClock.Value;
             EnableAccessibility   = Settings.EnableAccessibility.Value;
             EnableTTS             = Settings.EnableTTS.Value;
             NarratorQueueMode     = Settings.NarratorQueueMode.Value;
@@ -551,6 +756,7 @@ namespace KingdomEnhanced.UI
             Settings.ShowStaminaBar.Value        = ShowStaminaBar;
             Settings.DisplayTimes.Value          = DisplayTimes;
             Settings.ShowGreedCounter.Value      = ShowGreedCounter;
+            Settings.Use12HourClock.Value        = Use12HourClock;
             Settings.EnableAccessibility.Value   = EnableAccessibility;
             Settings.EnableTTS.Value             = EnableTTS;
             Settings.NarratorQueueMode.Value     = NarratorQueueMode;
@@ -616,20 +822,21 @@ namespace KingdomEnhanced.UI
             }
 
             
-            string lastSection = null;
+            string lastSectionId = null;
             bool inCard = false;
 
             foreach (var f in _features)
             {
                 if (f.Category != _activeTab) continue;
 
-                if (f.Section != lastSection)
+                string sectionId = f.SectionKey ?? f.Section;
+                if (sectionId != lastSectionId)
                 {
                     if (inCard) GUILayout.EndVertical(); 
                     GUILayout.BeginVertical(_styleCard);
                     inCard = true;
-                    GuiHelper.DrawSection(f.Section, _styleSectionLabel);
-                    lastSection = f.Section;
+                    DrawFeatureSection(f);
+                    lastSectionId = sectionId;
                 }
 
                 DrawFeatureRow(f);
@@ -651,19 +858,19 @@ namespace KingdomEnhanced.UI
         private void DrawLabExtras()
         {
             GUILayout.BeginVertical(_styleCard);
-            GuiHelper.DrawSection("TIME CONTROLS", _styleSectionLabel);
+            GuiHelper.DrawSection("menu.lab.section.time_controls", _styleSectionLabel);
             
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Instantly Time Jump", _styleBodyText, GUILayout.Width(180));
+            GUILayout.Label(LocalizationService.Get("menu.lab.instant_time_jump"), _styleBodyText, GUILayout.Width(180));
             
-            if (GUILayout.Button("Skip Daytime", _styleBtn, GUILayout.ExpandWidth(true), GUILayout.Height(30)))
+            if (GUILayout.Button(LocalizationService.Get("menu.lab.button.skip_daytime"), _styleBtn, GUILayout.ExpandWidth(true), GUILayout.Height(30)))
             {
                 Features.WorldManager.SkipDaytime();
             }
             
             GUILayout.Space(10);
             
-            if (GUILayout.Button("Skip Nighttime", _styleBtn, GUILayout.ExpandWidth(true), GUILayout.Height(30)))
+            if (GUILayout.Button(LocalizationService.Get("menu.lab.button.skip_nighttime"), _styleBtn, GUILayout.ExpandWidth(true), GUILayout.Height(30)))
             {
                 Features.WorldManager.SkipNighttime();
             }
@@ -677,15 +884,15 @@ namespace KingdomEnhanced.UI
             GUILayout.BeginHorizontal();
             
             
-            GUILayout.Label(f.Label, _styleBodyText, GUILayout.Width(180));
+            GUILayout.Label(f.GetLabelText(), _styleBodyText, GUILayout.Width(180));
             
             
             bool isLocked = f.IsLocked != null && f.IsLocked();
             
             if (isLocked)
             {
-                string reason = f.GetLockReason != null ? f.GetLockReason() : "Locked";
-                GUILayout.Label($"<i>[{reason}]</i>", _styleLocked, GUILayout.ExpandWidth(true));
+                string reason = f.GetLockReasonText();
+                GUILayout.Label(LocalizationService.Format("menu.feature.locked_reason", reason), _styleLocked, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
                 return;
             }
@@ -707,7 +914,7 @@ namespace KingdomEnhanced.UI
             {
                 float val = f.GetFloatValue();
                 // Adaptive precision: show enough decimals to see small values
-                string valStr = val < 0.01f ? $"{val:F4}" : val < 0.1f ? $"{val:F3}" : val < 1f ? $"{val:F2}" : $"{val:F1}";
+                string valStr = FormatScaledValue(val);
                 GUILayout.Label(valStr, _styleBodyText, GUILayout.Width(46));
                 float newVal = GUILayout.HorizontalSlider(val, f.MinVal, f.MaxVal, GUILayout.ExpandWidth(true));
                 if (Math.Abs(newVal - val) > 0.00001f) f.SetFloatValue(newVal);
@@ -715,7 +922,7 @@ namespace KingdomEnhanced.UI
             else if (f.OnAction != null)
             {
                 
-                if (GUILayout.Button("Apply", _styleBtn, GUILayout.Width(100))) f.OnAction();
+                if (GUILayout.Button(LocalizationService.Get("common.button.apply"), _styleBtn, GUILayout.Width(100))) f.OnAction();
             }
             else if (f.GetValue != null)
             {
@@ -723,7 +930,7 @@ namespace KingdomEnhanced.UI
                 bool val = f.GetValue();
 
                 GUI.backgroundColor = val ? C_ON : C_OFF;
-                if (GUILayout.Button(val ? "ON" : "OFF", _stylePill, GUILayout.Width(60)))
+                if (GUILayout.Button(LocalizationService.Get(val ? "common.state.on" : "common.state.off"), _stylePill, GUILayout.Width(60)))
                 {
                     f.SetValue(!val);
                 }
@@ -736,24 +943,35 @@ namespace KingdomEnhanced.UI
         private void DrawCheatsGate()
         {
             GUILayout.BeginVertical(_styleCard);
-            GuiHelper.DrawSection("ACCESS REQUIRED", _styleSectionLabel);
-            GUILayout.Label("Cheats are disabled by default to preserve gameplay progression.", _styleBodyText);
+            GuiHelper.DrawSection("menu.cheats.section.access_required", _styleSectionLabel);
+            GUILayout.Label(LocalizationService.Get("menu.cheats.access_description"), _styleBodyText);
             GUILayout.Space(10);
             
-            if (GUILayout.Button("Unlock Cheats", _styleBtn, GUILayout.Height(32)))
+            if (GUILayout.Button(LocalizationService.Get("menu.cheats.unlock_button"), _styleBtn, GUILayout.Height(32)))
             {
                 CheatsUnlocked = true;
                 Settings.CheatsUnlocked.Value = true;
-                Speak("Cheats unlocked", C_ON);
+                Speak(LocalizationService.Get("menu.notification.cheats_unlocked"), C_ON);
             }
             GUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// 绘制兼容旧最终文本和新资源键的功能分组标题。
+        /// </summary>
+        /// <param name="feature">功能元数据。</param>
+        private void DrawFeatureSection(FeatureMeta feature)
+        {
+            GUILayout.Space(18f);
+            GUILayout.Label(feature.GetSectionText(), _styleSectionLabel);
+            GUILayout.Space(6f);
         }
 
         private void DrawGuideTab()
         {
             GUILayout.BeginVertical(_styleCard);
-            GuiHelper.DrawSection("FEATURE REFERENCE", _styleSectionLabel);
-            GUILayout.Label("All features and settings explained dynamically.", _styleSubtitle);
+            GuiHelper.DrawSection("menu.guide.section.title", _styleSectionLabel);
+            GUILayout.Label(LocalizationService.Get("menu.guide.description"), _styleSubtitle);
             GUILayout.Space(10);
 
             
@@ -761,7 +979,10 @@ namespace KingdomEnhanced.UI
             {
                 GUILayout.Space(6);
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"<b>[{f.Category.ToString().ToUpper()}]</b> — {f.Label}", _styleTitle, GUILayout.Height(20));
+                GUILayout.Label(
+                    LocalizationService.Format("menu.guide.entry_title", GetTabLabelText(f.Category), f.GetLabelText()),
+                    _styleTitle,
+                    GUILayout.Height(20));
                 GUILayout.FlexibleSpace();
                 
                 
@@ -770,28 +991,28 @@ namespace KingdomEnhanced.UI
 
                 if (f.IsLocked != null && f.IsLocked())
                 {
-                    stateStr = f.GetLockReason != null ? f.GetLockReason() : "Locked";
+                    stateStr = f.GetLockReasonText();
                     stateColor = C_LOCK;
                 }
                 else if (f.GetFloatValue != null)
                 {
                     float gv = f.GetFloatValue();
-                    stateStr = gv < 0.01f ? $"{gv:F4}x" : gv < 0.1f ? $"{gv:F3}x" : gv < 1f ? $"{gv:F2}x" : $"{gv:F1}x";
+                    stateStr = LocalizationService.Format("common.value.multiplier", FormatScaledValue(gv));
                 }
                 else if (f.OnAction != null)
                 {
-                    stateStr = "Action";
+                    stateStr = LocalizationService.Get("common.state.action");
                 }
                 else if (f.GetValue != null)
                 {
-                    stateStr = f.GetValue() ? "ON" : "OFF";
+                    stateStr = LocalizationService.Get(f.GetValue() ? "common.state.on" : "common.state.off");
                     stateColor = f.GetValue() ? C_ON : Color.white;
                 }
 
                 GUILayout.Label(stateStr, new GUIStyle(_styleTitle) { normal = { textColor = stateColor } }, GUILayout.Height(20));
                 GUILayout.EndHorizontal();
                 
-                GUILayout.Label(f.Description, _styleDimText);
+                GUILayout.Label(f.GetDescriptionText(), _styleDimText);
                 GUILayout.Space(4);
             }
 
@@ -801,8 +1022,8 @@ namespace KingdomEnhanced.UI
         private void DrawReportTab()
         {
             GUILayout.BeginVertical(_styleCard);
-            GuiHelper.DrawSection("TESTING REPORT", _styleSectionLabel);
-            GUILayout.Label("Mark each feature after testing. Copy to Clipboard to share your report.", _styleDimText);
+            GuiHelper.DrawSection("menu.report.section.title", _styleSectionLabel);
+            GUILayout.Label(LocalizationService.Get("menu.report.description"), _styleDimText);
             GUILayout.Space(8);
 
             
@@ -811,36 +1032,39 @@ namespace KingdomEnhanced.UI
                 if (!_featureStatus.ContainsKey(f.Id)) _featureStatus[f.Id] = 0;
                 int status = _featureStatus[f.Id];
 
-                string statusLabel = status == 1 ? "<color=#44cc66>✓ Works</color>" : status == 2 ? "<color=#cc4444>✗ Broken</color>" : "<color=#888888>? Not Tested</color>";
+                string statusLabel = status == 1
+                    ? LocalizationService.Get("menu.report.status.works")
+                    : status == 2
+                        ? LocalizationService.Get("menu.report.status.broken")
+                        : LocalizationService.Get("menu.report.status.not_tested");
 
                 GUILayout.BeginHorizontal();
                 
                 
-                string catName = f.Category.ToString().ToUpper();
-                string catDisplay = catName.Length >= 4 ? catName.Substring(0, 4) : catName;
-                GUILayout.Label($"<b>[{catDisplay}]</b>", _styleBodyText, GUILayout.Width(60));
+                string catDisplay = LocalizationService.Get(GetReportBadgeKey(f.Category));
+                GUILayout.Label(LocalizationService.Format("menu.report.badge_format", catDisplay), _styleBodyText, GUILayout.Width(60));
                 
-                GUILayout.Label(f.Label, _styleBodyText, GUILayout.Width(180));
+                GUILayout.Label(f.GetLabelText(), _styleBodyText, GUILayout.Width(180));
                 GUILayout.Label(statusLabel, _styleBodyText, GUILayout.ExpandWidth(true));
 
                 Color prev = GUI.color;
                 
                 GUI.color = status == 1 ? C_ON : Color.white;
-                if (GUILayout.Button("Works", _styleBtn, GUILayout.Width(60))) _featureStatus[f.Id] = status == 1 ? 0 : 1;
+                if (GUILayout.Button(LocalizationService.Get("menu.report.button.works"), _styleBtn, GUILayout.Width(60))) _featureStatus[f.Id] = status == 1 ? 0 : 1;
                 
                 GUI.color = status == 2 ? C_LOCK : Color.white;
-                if (GUILayout.Button("Broken", _styleBtn, GUILayout.Width(60))) _featureStatus[f.Id] = status == 2 ? 0 : 2;
+                if (GUILayout.Button(LocalizationService.Get("menu.report.button.broken"), _styleBtn, GUILayout.Width(60))) _featureStatus[f.Id] = status == 2 ? 0 : 2;
                 
                 GUI.color = prev;
                 GUILayout.EndHorizontal();
             }
 
             GUILayout.Space(14);
-            if (GUILayout.Button("Copy Report to Clipboard", _styleBtn, GUILayout.Height(36)))
+            if (GUILayout.Button(LocalizationService.Get("menu.report.button.copy"), _styleBtn, GUILayout.Height(36)))
             {
                 var sb = new StringBuilder();
-                sb.AppendLine($"=== Kingdom Enhanced — Testing Report ({System.DateTime.Now:yyyy-MM-dd HH:mm}) ===");
-                sb.AppendLine($"Version  : {MOD_VERSION}");
+                sb.AppendLine(LocalizationService.Format("menu.report.copy.header", System.DateTime.Now));
+                sb.AppendLine(LocalizationService.Format("menu.report.copy.version", MOD_VERSION));
                 
                 foreach(var cat in (TabCategory[])Enum.GetValues(typeof(TabCategory)))
                 {
@@ -848,17 +1072,21 @@ namespace KingdomEnhanced.UI
                     if (items.Count == 0) continue;
 
                     sb.AppendLine();
-                    sb.AppendLine($"--- {cat.ToString().ToUpper()} ---");
+                    sb.AppendLine(LocalizationService.Format("menu.report.copy.category", GetTabLabelText(cat)));
                     foreach (var f in items)
                     {
                         int s = _featureStatus.ContainsKey(f.Id) ? _featureStatus[f.Id] : 0;
-                        string statusStr = s == 1 ? "[Works]     " : s == 2 ? "[BROKEN]    " : "[Not Tested]";
-                        sb.AppendLine($"  {statusStr}  {f.Label}");
+                        string statusStr = s == 1
+                            ? LocalizationService.Get("menu.report.copy.status.works")
+                            : s == 2
+                                ? LocalizationService.Get("menu.report.copy.status.broken")
+                                : LocalizationService.Get("menu.report.copy.status.not_tested");
+                        sb.AppendLine(LocalizationService.Format("menu.report.copy.item", statusStr, f.GetLabelText()));
                     }
                 }
 
                 GUIUtility.systemCopyBuffer = sb.ToString();
-                ShowFeedback("Report copied to clipboard!");
+                ShowFeedback(LocalizationService.Get("menu.feedback.report_copied"));
             }
 
             GUILayout.EndVertical();
@@ -867,32 +1095,56 @@ namespace KingdomEnhanced.UI
         private void DrawInfoTab()
         {
             GUILayout.BeginVertical(_styleCard);
-            GuiHelper.DrawSection("MOD INFORMATION", _styleSectionLabel);
-            GUILayout.Label($"Kingdom Enhanced v{MOD_VERSION}", _styleTitle);
+            GuiHelper.DrawSection("menu.info.section.title", _styleSectionLabel);
+            GUILayout.Label(LocalizationService.Format("menu.info.version", MOD_VERSION), _styleTitle);
             GUILayout.Space(10);
-            GUILayout.Label("Developer: Zaykus", _styleBodyText);
-            GUILayout.Label("Special Thanks: Abevol", _styleBodyText);
+            GUILayout.Label(LocalizationService.Get("menu.info.developer"), _styleBodyText);
+            GUILayout.Label(LocalizationService.Get("menu.info.special_thanks"), _styleBodyText);
             GUILayout.Space(20);
-            GUILayout.Label("Press F1 to toggle this menu.", _styleDimText);
-            GUILayout.Label("Press F3 to toggle the Kingdom Monitor.", _styleDimText);
-            GUILayout.Label("Press F4 to toggle HUD Display.", _styleDimText);
+            GUILayout.Label(LocalizationService.Get("menu.info.tip.f1"), _styleDimText);
+            GUILayout.Label(LocalizationService.Get("menu.info.tip.f3"), _styleDimText);
+            GUILayout.Label(LocalizationService.Get("menu.info.tip.f4"), _styleDimText);
             GUILayout.EndVertical();
         }
 
         private void DrawSettingsTab()
         {
             GUILayout.BeginVertical(_styleCard);
-            GuiHelper.DrawSection("GLOBAL SETTINGS", _styleSectionLabel);
+            GuiHelper.DrawSection("settings.section.global", _styleSectionLabel);
 
-            GUILayout.Label("Window Scale", _styleBodyText);
+            GUILayout.Label(LocalizationService.Get("settings.window_scale.label"), _styleBodyText);
             WindowScale = GUILayout.HorizontalSlider(WindowScale, 0.5f, 2.0f);
             
-            GUILayout.Label("Menu Opacity", _styleBodyText);
+            GUILayout.Label(LocalizationService.Get("settings.menu_opacity.label"), _styleBodyText);
             MenuOpacity = GUILayout.HorizontalSlider(MenuOpacity, 0.5f, 1.0f);
 
             GUILayout.Space(10);
 
-            if (GUILayout.Button("Reset All Settings", _styleBtn))
+            GUILayout.Label(LocalizationService.Get("settings.language.label"), _styleBodyText);
+            GUILayout.BeginHorizontal();
+            foreach (string languageCode in LocalizationService.GetAvailableLanguages())
+            {
+                bool isActiveLanguage = string.Equals(LocalizationService.CurrentLanguageCode, languageCode, StringComparison.OrdinalIgnoreCase);
+                Color originalBackground = GUI.backgroundColor;
+                GUI.backgroundColor = isActiveLanguage ? C_ON : C_BTN;
+                if (GUILayout.Button(GetLanguageOptionLabel(languageCode), isActiveLanguage ? _styleBtn : _styleBtnDim, GUILayout.Height(28f)))
+                {
+                    LocalizationService.SetLanguage(languageCode);
+                }
+
+                GUI.backgroundColor = originalBackground;
+                GUILayout.Space(6f);
+            }
+
+            GUILayout.EndHorizontal();
+            GUILayout.Label(
+                LocalizationService.Format("settings.language.current", GetLanguageOptionLabel(LocalizationService.CurrentLanguageCode)),
+                _styleDimText);
+            GUILayout.Label(LocalizationService.Get("settings.language.help"), _styleDimText);
+
+            GUILayout.Space(10);
+
+            if (GUILayout.Button(LocalizationService.Get("settings.reset.button"), _styleBtn))
             {
                 if (!_resetConfirmPending)
                 {
@@ -901,20 +1153,40 @@ namespace KingdomEnhanced.UI
                 }
                 else
                 {
-                    
-                    ShowFeedback("Settings Reset!");
+                    ResetAllSettings();
+                    ShowFeedback(LocalizationService.Get("settings.reset.success"));
                     _resetConfirmPending = false;
                 }
             }
             
             if (_resetConfirmPending)
             {
-                GUILayout.Label("Press again within 3 seconds to confirm.", _styleLocked);
+                GUILayout.Label(LocalizationService.Get("settings.reset.confirm"), _styleLocked);
             }
 
             GUILayout.EndVertical();
         }
         
+        /// <summary>
+        /// 一键重置:将全部已绑定 ConfigEntry 恢复为默认值,并刷新内存中的功能开关与界面设置。
+        /// </summary>
+        private void ResetAllSettings()
+        {
+            var fields = typeof(Settings).GetFields(BindingFlags.Public | BindingFlags.Static);
+            foreach (var field in fields)
+            {
+                Type fieldType = field.FieldType;
+                if (!fieldType.IsGenericType || fieldType.GetGenericTypeDefinition() != typeof(ConfigEntry<>)) continue;
+
+                var entry = field.GetValue(null) as ConfigEntryBase;
+                if (entry != null) entry.BoxedValue = entry.DefaultValue;
+            }
+
+            WindowScale = 1.0f;
+            MenuOpacity = 0.98f;
+            LoadFromSettings();
+        }
+
         private void DrawFeedbackOverlay()
         {
             if (_feedbackTimer <= 0) return;
@@ -967,13 +1239,14 @@ namespace KingdomEnhanced.UI
             Speak(text, Color.white);
         }
 
-        
+        /// <summary>
+        /// 播报文本（可打断）：interrupt 为 true 时清空待播报队列。
+        /// </summary>
+        /// <param name="text">待播报文本。</param>
+        /// <param name="interrupt">是否打断当前队列中未播报的消息。</param>
         public static void Speak(string text, bool interrupt)
         {
-            
-            
-            
-            if (EnableTTS) TTSManager.Speak(text);
+            if (EnableTTS) TTSManager.Speak(text, interrupt);
             Speak(text, Color.white);
         }
         
@@ -985,12 +1258,12 @@ namespace KingdomEnhanced.UI
             if (isGem)
             {
                 player.wallet.Gems = Mathf.Min(100, player.wallet.Gems + amount);
-                Speak($"+{amount} Gems", C_GOLD);
+                Speak(LocalizationService.Format("menu.notification.gems_added", amount), C_GOLD);
             }
             else
             {
                 player.wallet.Coins = Mathf.Min(100, player.wallet.Coins + amount);
-                Speak($"+{amount} Coins", C_GOLD);
+                Speak(LocalizationService.Format("menu.notification.coins_added", amount), C_GOLD);
             }
         }
 
@@ -1000,7 +1273,7 @@ namespace KingdomEnhanced.UI
             if (player == null || player.wallet == null) return;
 
             player.wallet.Coins = 100;
-            Speak("Wallet Filled to Max!", C_GOLD);
+            Speak(LocalizationService.Get("menu.notification.wallet_filled"), C_GOLD);
         }
 
         public static void CycleStaminaBarStyle()
@@ -1008,7 +1281,7 @@ namespace KingdomEnhanced.UI
             if (StaminaBarHolder.Instance == null) return;
             StaminaBarHolder.Instance.visualStyle =
                 (StaminaBarHolder.Instance.visualStyle + 1) % 4;
-            Speak($"Style: {StaminaBarHolder.Instance.GetStyleName()}");
+            Speak(LocalizationService.Format("menu.notification.stamina_style", StaminaBarHolder.Instance.GetStyleName()));
         }
 
         public static void CycleStaminaBarPosition()
@@ -1016,7 +1289,7 @@ namespace KingdomEnhanced.UI
             if (StaminaBarHolder.Instance == null) return;
             StaminaBarHolder.Instance.positionMode =
                 (StaminaBarHolder.Instance.positionMode + 1) % 6;
-            Speak($"Position: {StaminaBarHolder.Instance.GetPositionName()}");
+            Speak(LocalizationService.Format("menu.notification.stamina_position", StaminaBarHolder.Instance.GetPositionName()));
         }
 
         #endregion

@@ -461,3 +461,9 @@ using BepInEx.Unity.Mono;
 3. 所有 `MonoBehaviour` 添加 `[RegisterTypeInIl2Cpp]` 属性和 `(IntPtr)` 构造函数（`#if IL2CPP` 包裹）
 4. 集合操作优先使用 `CompatCollections` 工厂方法
 5. 需要 Il2Cpp 专用 API 时用 `#if IL2CPP` 包裹
+
+### 10.3 本地化资源解析
+
+本地化服务不依赖 Unity 内置 JSON API 或第三方 JSON 库。它使用项目内的无第三方依赖固定 schema JSON 解析器，读取语言标识、显示名称、回退语言和条目数组；该固定结构同时适用于 `net6.0` IL2CPP 与 `netstandard2.1` Mono。
+
+运行时从 `KingdomEnhanced.dll` 同级的 `Localization` 目录读取 `en-US.json` 与 `zh-CN.json`。文件缺失、损坏或键缺失时依次回退英文和资源键，不影响插件加载。
