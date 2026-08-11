@@ -3,89 +3,274 @@ using UnityEngine;
 
 namespace KingdomEnhanced.Core
 {
+    /// <summary>
+    /// Holds all configurable settings of the mod and binds them to the BepInEx configuration file.
+    /// </summary>
     public static class Settings
     {
+        /// <summary>
+        /// The active BepInEx configuration file.
+        /// </summary>
         public static ConfigFile Config;
 
         /// <summary>
-        /// 保存当前生效的界面语言代码。
+        /// Stores the currently active UI language code.
         /// </summary>
         public static ConfigEntry<string> Language;
 
         
+        /// <summary>
+        /// Use the new Beta UI style
+        /// </summary>
         public static ConfigEntry<bool> UseBetaUI;
+        /// <summary>
+        /// Show the energy/stamina bar
+        /// </summary>
         public static ConfigEntry<bool> ShowStaminaBar;
+        /// <summary>
+        /// Show the day/night and coins HUD
+        /// </summary>
         public static ConfigEntry<bool> DisplayTimes;
+        /// <summary>
+        /// Show the greed counter HUD
+        /// </summary>
         public static ConfigEntry<bool> ShowGreedCounter;
+        /// <summary>
+        /// Use a 12-hour clock (AM/PM) instead of a 24-hour one in the HUD
+        /// </summary>
+        public static ConfigEntry<bool> Use12HourClock;
         
         
+        /// <summary>
+        /// Enable the hover tracking logic
+        /// </summary>
         public static ConfigEntry<bool> EnableAccessibility;
+        /// <summary>
+        /// Enable text-to-speech output
+        /// </summary>
         public static ConfigEntry<bool> EnableTTS;
+        /// <summary>
+        /// Queue messages instead of interrupting current speech
+        /// </summary>
         public static ConfigEntry<bool> NarratorQueueMode;
+        /// <summary>
+        /// Simplify object names for TTS
+        /// </summary>
         public static ConfigEntry<bool> SimplifyNames;
+        /// <summary>
+        /// Announce entering/leaving the castle
+        /// </summary>
         public static ConfigEntry<bool> EnableCastleAnnouncer;
+        /// <summary>
+        /// Show debug boxes for announcer zones
+        /// </summary>
         public static ConfigEntry<bool> DebugZones;
 
         
+        /// <summary>
+        /// Unlock the cheat menu
+        /// </summary>
         public static ConfigEntry<bool> CheatsUnlocked;
+        /// <summary>
+        /// Travel speed multiplier
+        /// </summary>
         public static ConfigEntry<float> SpeedMultiplier;
+        /// <summary>
+        /// Infinite mount stamina
+        /// </summary>
         public static ConfigEntry<bool> InfiniteStamina;
+        /// <summary>
+        /// Walls repair instantly
+        /// </summary>
         public static ConfigEntry<bool> InvincibleWalls;
+        /// <summary>
+        /// Disable item ability cooldowns
+        /// </summary>
         public static ConfigEntry<bool> NoToolCooldowns;
+        /// <summary>
+        /// Artemis Bow arrows fired per cast
+        /// </summary>
         public static ConfigEntry<float> ArtemisArrowCount;
+        /// <summary>
+        /// Artemis Bow ability range multiplier
+        /// </summary>
         public static ConfigEntry<float> ArtemisRangeMult;
+        /// <summary>
+        /// Artemis Bow arrow damage multiplier
+        /// </summary>
         public static ConfigEntry<float> ArtemisArrowDamageMult;
+        /// <summary>
+        /// Coin income multiplier
+        /// </summary>
         public static ConfigEntry<float> CoinIncomeMult;
+        /// <summary>
+        /// Bag drop multiplier
+        /// </summary>
         public static ConfigEntry<float> BagDropMult;
+        /// <summary>
+        /// Number of units to spawn
+        /// </summary>
         public static ConfigEntry<float> SpawnUnitCount;
         
         
+        /// <summary>
+        /// Instant construction
+        /// </summary>
         public static ConfigEntry<bool> HyperBuilders;
+        /// <summary>
+        /// Expand vagrant camps
+        /// </summary>
         public static ConfigEntry<bool> LargerCamps;
+        /// <summary>
+        /// Elite knight buffs
+        /// </summary>
         public static ConfigEntry<bool> BetterKnight;
+        /// <summary>
+        /// Rapid housing
+        /// </summary>
         public static ConfigEntry<bool> BetterCitizenHouses;
+        /// <summary>
+        /// Lock the season to summer
+        /// </summary>
         public static ConfigEntry<bool> LockSummer;
+        /// <summary>
+        /// Force clear weather
+        /// </summary>
         public static ConfigEntry<bool> ClearWeather;
+        /// <summary>
+        /// Disable blood moon events
+        /// </summary>
         public static ConfigEntry<bool> NoBloodMoons;
+        /// <summary>
+        /// Coins don't sink in water
+        /// </summary>
         public static ConfigEntry<bool> CoinsStayDry;
+        /// <summary>
+        /// Archer fire rate boost x2
+        /// </summary>
         public static ConfigEntry<bool> ArcherFireBoost;
+        /// <summary>
+        /// Berserker rage mode (earlier)
+        /// </summary>
         public static ConfigEntry<bool> BerserkerRage;
+        /// <summary>
+        /// Ninja speed boost x2
+        /// </summary>
         public static ConfigEntry<bool> NinjaSpeedBoost;
+        /// <summary>
+        /// Recruit cap override (0 = default)
+        /// </summary>
         public static ConfigEntry<int> RecruitCapOverride;
+        /// <summary>
+        /// Tree regrowth speed multiplier
+        /// </summary>
         public static ConfigEntry<float> TreeRegrowthMult;
+        /// <summary>
+        /// Animal spawn boost
+        /// </summary>
         public static ConfigEntry<bool> AnimalSpawnBoost;
+        /// <summary>
+        /// Instant day skip
+        /// </summary>
         public static ConfigEntry<bool> InstantDaySkip;
+        /// <summary>
+        /// Farm output boost x2
+        /// </summary>
         public static ConfigEntry<bool> FarmOutputBoost;
+        /// <summary>
+        /// Tower fire rate boost x2
+        /// </summary>
         public static ConfigEntry<bool> TowerFireBoost;
+        /// <summary>
+        /// Ballista power boost x2
+        /// </summary>
         public static ConfigEntry<bool> BallistaBoost;
+        /// <summary>
+        /// Ballista reload speed multiplier
+        /// </summary>
         public static ConfigEntry<float> BallistaReloadMult;
+        /// <summary>
+        /// Ballista projectile speed multiplier
+        /// </summary>
         public static ConfigEntry<float> BallistaFlightMult;
+        /// <summary>
+        /// Catapult reload speed boost x3
+        /// </summary>
         public static ConfigEntry<bool> CatapultBoost;
+        /// <summary>
+        /// Catapult reload speed multiplier
+        /// </summary>
         public static ConfigEntry<float> CatapultReloadMult;
+        /// <summary>
+        /// Catapult projectile speed multiplier
+        /// </summary>
         public static ConfigEntry<float> CatapultFlightMult;
+        /// <summary>
+        /// Instant castle upgrade completion
+        /// </summary>
         public static ConfigEntry<bool> InstantCastle;
 
+        /// <summary>
+        /// Builder movement speed multiplier
+        /// </summary>
         public static ConfigEntry<float> BuilderSpeedMult;
+        /// <summary>
+        /// Builder efficiency multiplier (lower is faster)
+        /// </summary>
         public static ConfigEntry<float> BuilderWorkMult;
 
         
+        /// <summary>
+        /// Enable player scaling
+        /// </summary>
         public static ConfigEntry<bool> EnableSizeHack;
+        /// <summary>
+        /// Player scale multiplier
+        /// </summary>
         public static ConfigEntry<float> TargetSize;
 
         
+        /// <summary>
+        /// Steed run speed scale
+        /// </summary>
         public static ConfigEntry<float> SteedSpeedMult;
+        /// <summary>
+        /// Steed charge damage x2
+        /// </summary>
         public static ConfigEntry<bool> ChargeDmgBoost;
+        /// <summary>
+        /// Steed buff aura duration multiplier
+        /// </summary>
         public static ConfigEntry<float> BuffAuraDuration;
 
         
+        /// <summary>
+        /// Wave size multiplier
+        /// </summary>
         public static ConfigEntry<float> WaveSizeMult;
+        /// <summary>
+        /// Enemy speed multiplier
+        /// </summary>
         public static ConfigEntry<float> EnemySpeedMult;
+        /// <summary>
+        /// Portal spawn rate multiplier
+        /// </summary>
         public static ConfigEntry<float> PortalSpawnRate;
+        /// <summary>
+        /// Disable crown stealing
+        /// </summary>
         public static ConfigEntry<bool> NoCrownStealing;
+        /// <summary>
+        /// Greed Queen HP scale
+        /// </summary>
         public static ConfigEntry<float> GreedQueenHPScale;
+        /// <summary>
+        /// Director threat ramp multiplier
+        /// </summary>
         public static ConfigEntry<float> DirectorThreatMult;
 
 
+        /// <summary>Binds all configuration entries to the given config file.</summary>
         public static void Init(ConfigFile config)
         {
             Config = config;
@@ -97,6 +282,7 @@ namespace KingdomEnhanced.Core
             ShowStaminaBar    = Config.Bind("1. Visuals", "ShowStaminaBar", false, "Show the energy/stamina bar");
             DisplayTimes      = Config.Bind("1. Visuals", "DisplayTimes", false, "Show day/night and coins HUD");
             ShowGreedCounter  = Config.Bind("1. Visuals", "ShowGreedCounter", false, "Show greed counter HUD");
+            Use12HourClock    = Config.Bind("1. Visuals", "Use12HourClock", false, "Use 12-hour clock (AM/PM) instead of 24-hour in the HUD");
 
             
             EnableAccessibility   = Config.Bind("2. Accessibility", "EnableAccessibility", true, "Enable logic for hover tracking");

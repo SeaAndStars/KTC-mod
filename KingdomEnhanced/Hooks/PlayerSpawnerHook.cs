@@ -7,9 +7,11 @@ using Object = UnityEngine.Object;
 
 namespace KingdomEnhanced.Hooks
 {
+    /// <summary>Attaches the mod's world manager components to a persistent GameObject once the player spawns.</summary>
     [HarmonyPatch(typeof(Player), nameof(Player.Start))]
     public static class PlayerSpawnerHook
     {
+        /// <summary>Guards against attaching the manager components more than once.</summary>
         private static bool _isInitialized = false;
 
         [HarmonyPostfix]

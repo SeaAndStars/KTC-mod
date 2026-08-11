@@ -1,5 +1,6 @@
 ﻿namespace KingdomMod;
 
+/// <summary>Named identifiers for the game's prefab IDs.</summary>
 public enum GamePrefabID
 {
     Invalid = -1,

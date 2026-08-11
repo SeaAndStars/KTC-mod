@@ -18,6 +18,8 @@ Kingdom Enhanced is a BepInEx mod for Kingdom Two Crowns, providing quality-of-l
 Directory.Build.props          ← MSBuild auto-imported: BepInEx paths per OS
 KingdomEnhanced.csproj         ← Three configurations + conditional DLL refs
 deps/KTC-ModDevLibs/           ← Git submodule: IL2CPP & Mono dev libraries
+interop/                       ← Pre-generated IL2CPP interop assemblies (see below)
+tools/generate-interop.ps1     ← Regenerates interop assemblies when the game updates
 ```
 
 | Configuration | TFM | Defines | DLL Source |
@@ -35,6 +37,7 @@ KingdomEnhanced/
 ├── Core/              # Entry point and configuration
 │   ├── Plugin.cs           # BepInEx dual-base-class entry (BasePlugin / BaseUnityPlugin)
 │   ├── Settings.cs         # Persistent config via BepInEx ConfigFile
+│   ├── LocalizationService.cs # Embedded/external JSON localization (en-US, zh-CN)
 │   └── ModVersion.cs       # Version constants
 ├── Hooks/             # Harmony patches (game method interception)
 │   ├── AbilityHooks.cs     # Item ability cooldowns / Artemis Bow
@@ -42,7 +45,8 @@ KingdomEnhanced/
 │   ├── CurrencyWaterHooks.cs
 │   ├── LabPatches.cs       # Experimental feature patches
 │   ├── MapHooks.cs
-│   └── PlayerSpawnerHook.cs # Attaches Feature managers on player spawn
+│   ├── PlayerSpawnerHook.cs # Attaches Feature managers on player spawn
+│   └── UnitCachePatches.cs  # Harmony patches feeding the unit cache
 ├── Features/          # Gameplay feature modules (MonoBehaviours)
 │   ├── AccessibilityFeature.cs      # Hover narration, keyboard reports (F5-F10)
 │   ├── AccessibilityReportHandler.cs # F5-F10 report logic (separated from above)
@@ -55,7 +59,10 @@ KingdomEnhanced/
 │   ├── HardModeFeature.cs           # Hard-mode feature controller
 │   ├── HardModePresets.cs           # Difficulty preset definitions
 │   ├── KingdomMonitor.cs            # Real-time kingdom stats dashboard (F3)
+│   ├── ModData.cs                   # Mod-wide shared data containers
 │   ├── PlayerManager.cs             # Player speed, size, invincibility
+│   ├── UnitCacheManager.cs          # Cached unit prefab/difficulty lookups
+│   ├── UnitCacheRegistrar.cs        # Registers unit prefab IDs into the cache
 │   └── WorldManager.cs              # Season, weather, time, structure overrides
 ├── Systems/           # Standalone subsystems
 │   ├── StaminaBarHolder.cs   # Mount stamina visual overlay
@@ -92,6 +99,7 @@ BepInEx ConfigFile (Settings.cs)
         ├──▶ Features/*.cs       (read ModMenu static state)
         ├──▶ Hooks/*.cs          (read Settings config at patch time)
         ├──▶ Systems/*.cs        (independent subsystems)
+        ├──▶ LocalizationService.cs (UI labels & TTS announcements)
         └──▶ UI/ModMenu.cs       (IMGUI rendering)
 ```
 
@@ -100,6 +108,7 @@ BepInEx ConfigFile (Settings.cs)
 - `Plugin.cs` → **Dual base-class**: `#if IL2CPP: BasePlugin / #else: BaseUnityPlugin`. Calls `RegisterTypeInIl2Cpp.RegisterAssembly()` on IL2CPP. Initializes `ModMenu` + `AccessibilityFeature` as GameObjects, sets up Harmony.
 - `ModMenu.cs` → Central hub: manages all runtime state, renders IMGUI, coordinates features via `ModMenuFeatures.Build()`.
 - `Settings.cs` → Single config entry point: all persistent settings via BepInEx `ConfigFile`. Bidirectionally synced with `ModMenu` static state.
+- `LocalizationService.cs` → Loads `Localization/*.json` catalogs (embedded resources by default, external folder as optional override), resolves keys with English/raw-key fallback.
 - `RegisterTypeInIl2Cpp` → IL2CPP-only attribute. Scans assembly for annotated `MonoBehaviour` classes and auto-registers them with `ClassInjector`.
 - `ArmyManager.cs` / `WorldManager.cs` / `PlayerManager.cs` → Feature execution layer — attached to a `DontDestroyOnLoad` GameObject by `PlayerSpawnerHook`.
 

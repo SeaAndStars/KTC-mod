@@ -6,24 +6,24 @@ using KingdomEnhanced.Features;
 namespace KingdomEnhanced.UI
 {
     /// <summary>
-    /// 构建 ModMenu 全部功能项的元数据。
+    /// Builds the metadata for all ModMenu feature items.
     /// </summary>
     public static class ModMenuFeatures
     {
         /// <summary>
-        /// 构建布尔开关类型的功能元数据。
+        /// Builds feature metadata for a boolean toggle.
         /// </summary>
-        /// <param name="id">功能稳定标识。</param>
-        /// <param name="labelKey">功能标题资源键。</param>
-        /// <param name="cat">功能所属标签页。</param>
-        /// <param name="sectionKey">功能分组资源键。</param>
-        /// <param name="descriptionKey">功能说明资源键。</param>
-        /// <param name="get">读取当前值的委托。</param>
-        /// <param name="set">写入当前值的委托。</param>
-        /// <param name="isLocked">判断功能是否锁定的委托。</param>
-        /// <param name="lockReasonKey">返回锁定原因资源键的委托。</param>
-        /// <param name="hasConflict">判断功能是否存在冲突提示的委托。</param>
-        /// <returns>可供菜单绘制的功能元数据。</returns>
+        /// <param name="id">Stable feature identifier.</param>
+        /// <param name="labelKey">Feature title resource key.</param>
+        /// <param name="cat">Tab category the feature belongs to.</param>
+        /// <param name="sectionKey">Feature section resource key.</param>
+        /// <param name="descriptionKey">Feature description resource key.</param>
+        /// <param name="get">Delegate reading the current value.</param>
+        /// <param name="set">Delegate writing the current value.</param>
+        /// <param name="isLocked">Delegate determining whether the feature is locked.</param>
+        /// <param name="lockReasonKey">Delegate returning the lock reason resource key.</param>
+        /// <param name="hasConflict">Delegate determining whether a conflict warning should be shown.</param>
+        /// <returns>Feature metadata ready for menu rendering.</returns>
         public static FeatureMeta Toggle(string id, string labelKey, TabCategory cat, string sectionKey, string descriptionKey,
             Func<bool> get, Action<bool> set, Func<bool> isLocked = null,
             Func<string> lockReasonKey = null, Func<bool> hasConflict = null)
@@ -45,17 +45,17 @@ namespace KingdomEnhanced.UI
         }
 
         /// <summary>
-        /// 构建按钮动作类型的功能元数据。
+        /// Builds feature metadata for a button action.
         /// </summary>
-        /// <param name="id">功能稳定标识。</param>
-        /// <param name="labelKey">功能标题资源键。</param>
-        /// <param name="cat">功能所属标签页。</param>
-        /// <param name="sectionKey">功能分组资源键。</param>
-        /// <param name="descriptionKey">功能说明资源键。</param>
-        /// <param name="act">点击按钮后执行的动作。</param>
-        /// <param name="isLocked">判断功能是否锁定的委托。</param>
-        /// <param name="lockReasonKey">返回锁定原因资源键的委托。</param>
-        /// <returns>可供菜单绘制的功能元数据。</returns>
+        /// <param name="id">Stable feature identifier.</param>
+        /// <param name="labelKey">Feature title resource key.</param>
+        /// <param name="cat">Tab category the feature belongs to.</param>
+        /// <param name="sectionKey">Feature section resource key.</param>
+        /// <param name="descriptionKey">Feature description resource key.</param>
+        /// <param name="act">Action executed when the button is clicked.</param>
+        /// <param name="isLocked">Delegate determining whether the feature is locked.</param>
+        /// <param name="lockReasonKey">Delegate returning the lock reason resource key.</param>
+        /// <returns>Feature metadata ready for menu rendering.</returns>
         public static FeatureMeta Button(string id, string labelKey, TabCategory cat, string sectionKey, string descriptionKey,
             Action act, Func<bool> isLocked = null, Func<string> lockReasonKey = null)
         {
@@ -76,18 +76,18 @@ namespace KingdomEnhanced.UI
         }
 
         /// <summary>
-        /// 构建滑条类型的功能元数据。
+        /// Builds feature metadata for a slider.
         /// </summary>
-        /// <param name="id">功能稳定标识。</param>
-        /// <param name="labelKey">功能标题资源键。</param>
-        /// <param name="cat">功能所属标签页。</param>
-        /// <param name="sectionKey">功能分组资源键。</param>
-        /// <param name="descriptionKey">功能说明资源键。</param>
-        /// <param name="get">读取当前值的委托。</param>
-        /// <param name="set">写入当前值的委托。</param>
-        /// <param name="min">滑条最小值。</param>
-        /// <param name="max">滑条最大值。</param>
-        /// <returns>可供菜单绘制的功能元数据。</returns>
+        /// <param name="id">Stable feature identifier.</param>
+        /// <param name="labelKey">Feature title resource key.</param>
+        /// <param name="cat">Tab category the feature belongs to.</param>
+        /// <param name="sectionKey">Feature section resource key.</param>
+        /// <param name="descriptionKey">Feature description resource key.</param>
+        /// <param name="get">Delegate reading the current value.</param>
+        /// <param name="set">Delegate writing the current value.</param>
+        /// <param name="min">Slider minimum value.</param>
+        /// <param name="max">Slider maximum value.</param>
+        /// <returns>Feature metadata ready for menu rendering.</returns>
         public static FeatureMeta Slider(string id, string labelKey, TabCategory cat, string sectionKey, string descriptionKey,
             Func<float> get, Action<float> set, float min, float max)
         {
@@ -109,9 +109,9 @@ namespace KingdomEnhanced.UI
         }
 
         /// <summary>
-        /// 构建全部功能项元数据集合。
+        /// Builds the complete feature metadata collection.
         /// </summary>
-        /// <returns>按既有展示顺序排列的功能元数据数组。</returns>
+        /// <returns>Feature metadata array in the existing display order.</returns>
         public static FeatureMeta[] Build()
         {
             var list = new List<FeatureMeta>();
@@ -133,10 +133,14 @@ namespace KingdomEnhanced.UI
                 () => ModMenu.DisplayTimes,
                 v =>
                 {
-                    // 与 F4 热键行为保持一致:同步持久化配置,避免重启后状态回弹
+                    // Keep consistent with the F4 hotkey: persist the config immediately so the state does not snap back after restart
                     ModMenu.DisplayTimes = v;
                     Settings.DisplayTimes.Value = v;
                 }));
+            list.Add(Toggle("use_12h_clock", "feature.use_12h_clock.label", TabCategory.Main, "feature.section.hud",
+                "feature.use_12h_clock.description",
+                () => ModMenu.Use12HourClock, v => ModMenu.Use12HourClock = v,
+                () => !ModMenu.DisplayTimes, () => "feature.lock.requires_hud"));
             list.Add(Button("monitor_style", "feature.monitor_style.label", TabCategory.Main, "feature.section.hud",
                 "feature.monitor_style.description",
                 () => KingdomMonitor.Instance?.NextStyle(),

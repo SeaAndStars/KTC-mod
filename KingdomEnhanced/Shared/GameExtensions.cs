@@ -7,8 +7,10 @@ using UnityEngine;
 
 namespace KingdomEnhanced.Shared
 {
+    /// <summary>Convenience lookup helpers for game objects, payables and characters.</summary>
     public class GameExtensions
     {
+        /// <summary>Finds the first payable object carrying a component of type T, or null if none exists.</summary>
         public static T GetPayableOfType<T>() where T : Component
         {
             var payables = Managers.Inst.payables;
@@ -23,6 +25,7 @@ namespace KingdomEnhanced.Shared
             return null;
         }
 
+        /// <summary>Finds all payable objects carrying a component of type T.</summary>
         public static List<T> GetPayablesOfType<T>() where T : Component
         {
             var result = new List<T>();
@@ -38,6 +41,7 @@ namespace KingdomEnhanced.Shared
             return result;
         }
 
+        /// <summary>Finds the first payable blocker carrying a component of type T, or null if none exists.</summary>
         public static T GetPayableBlockerOfType<T>() where T : Component
         {
             var payables = Managers.Inst.payables;
@@ -52,6 +56,7 @@ namespace KingdomEnhanced.Shared
             return null;
         }
 
+        /// <summary>Finds all objects with the given tag that carry a component of type T.</summary>
         public static List<T> FindObjectsWithTagOfType<T>(string tagName)
         {
             var list = new List<T>();
@@ -67,6 +72,7 @@ namespace KingdomEnhanced.Shared
             return list;
         }
 
+        /// <summary>Finds all kingdom characters carrying a component of type T.</summary>
         public static List<Character> FindCharactersOfType<T>()
         {
             var list = new List<Character>();
@@ -81,6 +87,7 @@ namespace KingdomEnhanced.Shared
             return list;
         }
 
+        /// <summary>Counts kingdom archers matching the given archer category.</summary>
         public static int GetArcherCount(ArcherType archerType)
         {
             var result = 0;
@@ -106,6 +113,7 @@ namespace KingdomEnhanced.Shared
             return result;
         }
 
+        /// <summary>Categories of archers used when counting them via GetArcherCount.</summary>
         public enum ArcherType { Free, GuardSlot, KnightSoldier }
     }
 }

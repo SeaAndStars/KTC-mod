@@ -5,8 +5,12 @@ using UnityEngine;
 
 namespace KingdomEnhanced.Features
 {
+    /// <summary>
+    /// Harmony patches that inject the custom hard mode difficulty levels into the game.
+    /// </summary>
     public class DifficultyIntegration
     {
+        /// <summary>Injects the custom hard mode difficulty levels when BiomeHolder awakens.</summary>
         [HarmonyPatch(typeof(BiomeHolder), "Awake")]
         public static class BiomeHolder_Awake_Patch
         {

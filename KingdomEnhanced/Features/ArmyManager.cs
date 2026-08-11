@@ -8,22 +8,30 @@ using KingdomEnhanced.Shared.Attributes;
 
 namespace KingdomEnhanced.Features
 {
+    /// <summary>
+    /// Central manager for periodic unit buffs, camp boosts, cheat actions, and prefab resolution.
+    /// </summary>
 #if IL2CPP
     [RegisterTypeInIl2Cpp]
 #endif
     public class ArmyManager : MonoBehaviour
     {
 #if IL2CPP
+        /// <summary>IL2CPP interop constructor.</summary>
         public ArmyManager(IntPtr ptr) : base(ptr) { }
 #endif
         #region State
+        /// <summary>Accumulated time that triggers periodic camp boosts every 5 seconds.</summary>
         private float _campTimer = 0f;
+        /// <summary>Accumulated time that triggers builder buff application every second.</summary>
         private float _builderTimer = 0f;
+        /// <summary>Accumulated time that triggers unit buff application every 2 seconds.</summary>
         private float _unitBuffTimer = 0f;
         #endregion
 
         #region Standard Updates
 
+        /// <summary>Per-frame ticker that drives periodic camp boosts, builder buffs, and unit buffs.</summary>
         void Update()
         {
             UnitCacheManager.CheckColdBoot(); // Phase 2.5: Cold Boot Initialization
@@ -46,6 +54,7 @@ namespace KingdomEnhanced.Features
         #endregion
 
         #region Unit Buff Hooks
+        /// <summary>Re-applies berserker/ninja postfix buffs and knight hit point overrides to cached units.</summary>
         private void ApplyUnitBuffs() {
             foreach (var b in UnitCacheManager.Berserkers) {
                 if (b != null && b.gameObject.activeInHierarchy) {
@@ -81,6 +90,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Re-applies worker movement speed, work time, and weapon reload multipliers to cached workers.</summary>
         private void ApplyBuilderBuffs() {
             var workers = UnitCacheManager.Workers;
             var ballistas = UnitCacheManager.Ballistas;
@@ -147,6 +157,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Periodically applies larger-camp settings to all cached beggar camps.</summary>
         private void BoostCamps() {
             var camps = UnitCacheManager.BeggarCamps;
             bool larger = ModMenu.LargerCamps;
@@ -161,6 +172,7 @@ namespace KingdomEnhanced.Features
 
         #region Actions & Cheats
 
+        /// <summary>Destroys all dropped currency on the ground and reports how many were cleared.</summary>
         public static void ClearCoins()
         {
             var coins = UnityEngine.Object.FindObjectsByType<DroppableCurrency>(FindObjectsSortMode.None);
@@ -176,6 +188,7 @@ namespace KingdomEnhanced.Features
             ModMenu.Speak($"Cleared {count} coins from the ground!", ModMenu.C_ON);
         }
 
+        /// <summary>Recruits nearby vagrants as peasants up to the per-use cap and reports the result.</summary>
         public static void RecruitBeggars() {
             var beggars = UnitCacheManager.Beggars;
             var player = Managers.Inst?.kingdom?.GetPlayer(0);
@@ -216,8 +229,10 @@ namespace KingdomEnhanced.Features
 
         #region Prefab Resolution
 
+        /// <summary>Cached Peasant prefab found by FindPeasantPrefab.</summary>
         private static GameObject _peasantPrefabCache;
         
+        /// <summary>Finds and caches the inactive Peasant prefab; returns null if not found.</summary>
         private static GameObject FindPeasantPrefab() {
             if (_peasantPrefabCache != null) return _peasantPrefabCache;
             
@@ -231,6 +246,7 @@ namespace KingdomEnhanced.Features
             return null;
         }
 
+        /// <summary>Drops the given type of tool above every idle peasant in the kingdom.</summary>
         public static void DropTools(string type) {
             string toolName = (type == "Archer") ? "ToolBow" : "ToolHammer";
             var toolPrefab = FindTool(toolName);
@@ -248,8 +264,10 @@ namespace KingdomEnhanced.Features
             else ModMenu.Speak("No unemployed Peasants found.");
         }
 
+        /// <summary>Cache of resolved unit prefabs keyed by prefab name.</summary>
         private static readonly Dictionary<string, GameObject> _unitCache = new();
 
+        /// <summary>Finds and caches a unit prefab by name (Peasant handled specially); returns null if not found.</summary>
         public static GameObject FindPrefab(string name) {
              if (_unitCache.TryGetValue(name, out var cached) && cached != null) return cached;
              
@@ -271,8 +289,10 @@ namespace KingdomEnhanced.Features
              return null;
         }
 
+        /// <summary>Cache of resolved tool prefabs keyed by tool name.</summary>
         private static readonly Dictionary<string, GameObject> _toolCache = new();
 
+        /// <summary>Finds and caches a tool prefab by name, excluding shop objects; returns null if not found.</summary>
         private static GameObject FindTool(string name) {
             if (_toolCache.TryGetValue(name, out var cached) && cached != null)
                 return cached;
@@ -291,6 +311,7 @@ namespace KingdomEnhanced.Features
 
         #region Advanced Actions
 
+        /// <summary>Despawns every active enemy and reports how many were killed.</summary>
         public static void KillAllEnemies()
         {
             var enemies = UnitCacheManager.Enemies;
@@ -310,6 +331,7 @@ namespace KingdomEnhanced.Features
             else ModMenu.Speak("No enemies found.", ModMenu.C_LOCK);
         }
 
+        /// <summary>Crumble-destroys every active portal and reports how many were destroyed.</summary>
         public static void DestroyAllPortals()
         {
             var portals = UnitCacheManager.Portals;
@@ -329,6 +351,7 @@ namespace KingdomEnhanced.Features
             else ModMenu.Speak("No portals found.", ModMenu.C_LOCK);
         }
 
+        /// <summary>Spawns peasants near the player up to the recruit cap minus the current peasant count.</summary>
         public static void SpawnMaxArmy()
         {
             var prefab = FindPrefab("Peasant");
@@ -357,6 +380,7 @@ namespace KingdomEnhanced.Features
             ModMenu.Speak($"Spawned {toSpawn} peasants!", ModMenu.C_ON);
         }
 
+        /// <summary>Spawns a number of units of the given name near the player, respecting biome restrictions.</summary>
         public static void SpawnUnit(string unitName, int amount)
         {
             if (Managers.Inst != null && Managers.Inst.game != null)
@@ -392,6 +416,7 @@ namespace KingdomEnhanced.Features
             ModMenu.Speak($"Spawned {amount} {unitName}(s)!", ModMenu.C_ON);
         }
 
+        /// <summary>Spawns the requested hermit near the player if the player does not already own one.</summary>
         public static void SpawnHermit(string hermitName)
         {
             var activeHermits = UnityEngine.Object.FindObjectsByType<Hermit>(FindObjectsSortMode.None);
@@ -441,6 +466,7 @@ namespace KingdomEnhanced.Features
             ModMenu.Speak($"Spawned {hermitName} hermit!", ModMenu.C_ON);
         }
 
+        /// <summary>Spawns a number of enemies of the given type in front of the player.</summary>
         public static void SpawnEnemy(EnemyType type, int amount)
         {
             var em = Managers.Inst?.enemies;

@@ -3,7 +3,7 @@
 set -e
 
 SKIP_MONO=false
-# 可选 BepInEx plugins 根目录；为空时保持仅构建行为。
+# Optional BepInEx plugins root; when empty, only builds without deploying.
 PLUGINS_PATH=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -24,7 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CSPROJ="$SCRIPT_DIR/KingdomEnhanced/KingdomEnhanced.csproj"
 FAILED=false
 
-# 将指定构建输出及完整本地化目录部署到本地 BepInEx plugins 目录。
+# Deploys a build output and the full localization directory to the local BepInEx plugins directory.
 deploy_build_output() {
     local configuration="$1"
 
@@ -39,18 +39,18 @@ deploy_build_output() {
     local localization_dir="$plugin_dir/Localization"
 
     if [[ ! -f "$dll_source" ]]; then
-        echo "找不到构建 DLL：$dll_source" >&2
+        echo "Build DLL not found: $dll_source" >&2
         exit 1
     fi
     if [[ ! -d "$localization_source" ]]; then
-        echo "找不到本地化目录：$localization_source" >&2
+        echo "Localization directory not found: $localization_source" >&2
         exit 1
     fi
 
     mkdir -p "$localization_dir"
     cp "$dll_source" "$plugin_dir/"
     cp -R "$localization_source"/. "$localization_dir/"
-    echo "已部署 $configuration 到：$plugin_dir"
+    echo "Deployed $configuration to: $plugin_dir"
 }
 
 echo -e "\033[36m========================================\033[0m"

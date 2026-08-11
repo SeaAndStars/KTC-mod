@@ -8,10 +8,14 @@ using Rulers;
 
 namespace KingdomEnhanced.Hooks
 {
+    /// <summary>
+    /// Harmony patches for lab toggles: season, blood moons, unit speed, building output, and enemy scaling.
+    /// </summary>
     public static class LabPatches
     {
         #region Registration
 
+        /// <summary>Registers all lab patches with best-effort error handling.</summary>
         public static void ApplyAll(Harmony harmony)
         {
             TryPatch(harmony, "Season Lock",    typeof(SeasonalEventManager), "CheckSeasonalEvents",
@@ -82,6 +86,7 @@ namespace KingdomEnhanced.Hooks
                 prefix: new HarmonyMethod(typeof(LabPatches), nameof(ArtemisBowTriggerPrefix)));
         }
 
+        /// <summary>Patches a target method if it exists, logging success or failure.</summary>
         private static void TryPatch(Harmony harmony, string name, Type type, string method,
             Type[] parameters = null, HarmonyMethod prefix = null, HarmonyMethod postfix = null)
         {
@@ -109,10 +114,13 @@ namespace KingdomEnhanced.Hooks
 
         #region World Patches
 
+        /// <summary>Blocks seasonal events when the summer lock is enabled.</summary>
         public static bool SeasonPrefix() => !ModMenu.LockSummer;
 
+        /// <summary>Blocks blood moon events when disabled.</summary>
         public static bool BloodMoonPrefix() => !ModMenu.NoBloodMoons;
 
+        /// <summary>Disables the time stopper so the day skips instantly when enabled.</summary>
         public static bool TimeStopperPrefix(TimeStopper __instance)
         {
             if (ModMenu.InstantDaySkip)
@@ -123,6 +131,7 @@ namespace KingdomEnhanced.Hooks
             return true;
         }
 
+        /// <summary>Forces item abilities to be activatable when cooldowns are disabled.</summary>
         public static bool RulerCanActivatePrefix(ItemBasedRulerAbility __instance, ref bool __result)
         {
             if (!ModMenu.NoToolCooldowns) return true;
@@ -130,6 +139,7 @@ namespace KingdomEnhanced.Hooks
             return false;
         }
 
+        /// <summary>Resets ruler ability cooldowns after activation when enabled.</summary>
         public static void RulerActivatePostfix(ItemBasedRulerAbility __instance)
         {
             if (!ModMenu.NoToolCooldowns) return;
@@ -140,12 +150,14 @@ namespace KingdomEnhanced.Hooks
                 currentItem._nextActivationTime = 0f;
         }
 
+        /// <summary>Resets item ability cooldowns after triggering when enabled.</summary>
         public static void ItemTriggerPostfix(ItemOfPower __instance)
         {
             if (ModMenu.NoToolCooldowns && __instance != null)
                 __instance._nextActivationTime = 0f;
         }
 
+        /// <summary>Caches Artemis base values once, then applies arrow count, range, and damage multipliers.</summary>
         public static void ArtemisBowTriggerPrefix(ArtemisBow __instance)
         {
             if (__instance == null) return;
@@ -166,6 +178,7 @@ namespace KingdomEnhanced.Hooks
 
         #region Unit Patches
 
+        /// <summary>Caches the archer's base fire rate at spawn.</summary>
         public static void ArcherAwakePostfix(Archer __instance)
         {
             if (__instance == null) return;
@@ -173,17 +186,26 @@ namespace KingdomEnhanced.Hooks
             if (md.baseFireRate == 0f) md.baseFireRate = __instance.shootCooldownTime;
         }
 
+        /// <summary>Applies archer and tower fire rate boosts from the cached base rate.</summary>
         public static void ArcherUpdatePostfix(Archer __instance)
         {
             if (__instance == null || (!ModMenu.ArcherFireBoost && !ModMenu.TowerFireBoost)) return;
             var md = ModData.GetOrAdd(__instance.gameObject);
             if (md.baseFireRate == 0f) return;
+
+            if (!md.towerCheckCached)
+            {
+                md.cachedInTower = __instance.GetComponentInParent<Tower>() != null;
+                md.towerCheckCached = true;
+            }
+
             float mult = 1.0f;
             if (ModMenu.ArcherFireBoost)  mult *= 2.0f;
-            if (ModMenu.TowerFireBoost && __instance.GetComponentInParent<Tower>() != null) mult *= 2.0f;
+            if (ModMenu.TowerFireBoost && md.cachedInTower) mult *= 2.0f;
             __instance.shootCooldownTime = md.baseFireRate / mult;
         }
 
+        /// <summary>Caches the berserker's base run speed at spawn.</summary>
         public static void BerserkerAwakePostfix(Berserker __instance)
         {
             if (__instance == null) return;
@@ -191,6 +213,7 @@ namespace KingdomEnhanced.Hooks
             if (md.baseSpeed == 0f) md.baseSpeed = __instance.runSpeed;
         }
 
+        /// <summary>Applies berserker rage speed when enabled, restoring base speed otherwise.</summary>
         public static void BerserkerPostfix(Berserker __instance)
         {
             if (__instance == null) return;
@@ -205,6 +228,7 @@ namespace KingdomEnhanced.Hooks
             }
         }
 
+        /// <summary>Caches the ninja's base run speed at spawn.</summary>
         public static void NinjaAwakePostfix(Ninja __instance)
         {
             if (__instance == null) return;
@@ -212,6 +236,7 @@ namespace KingdomEnhanced.Hooks
             if (md.baseSpeed == 0f) md.baseSpeed = __instance.runSpeed;
         }
 
+        /// <summary>Applies ninja speed boost when enabled, restoring base speed otherwise.</summary>
         public static void NinjaPostfix(Ninja __instance)
         {
             if (__instance == null) return;
@@ -224,6 +249,7 @@ namespace KingdomEnhanced.Hooks
 
         #region Building Patches
 
+        /// <summary>Caches the farmland's base coin yield at spawn.</summary>
         public static void FarmAwakePostfix(Farmland __instance)
         {
             if (__instance == null) return;
@@ -231,6 +257,7 @@ namespace KingdomEnhanced.Hooks
             if (md.baseCoinYield == 0f) md.baseCoinYield = __instance.coinYield;
         }
 
+        /// <summary>Applies the farm output boost from the cached base yield.</summary>
         public static void FarmOutputPostfix(Farmland __instance)
         {
             if (__instance == null) return;
@@ -241,6 +268,7 @@ namespace KingdomEnhanced.Hooks
                 : (int)md.baseCoinYield;
         }
 
+        /// <summary>Caches bolt base damage and force once, then applies the ballista boost on launch.</summary>
         public static void BallistaLaunchPrefix(Bolt __instance)
         {
             if (__instance == null || __instance._boltData == null) return;
@@ -264,6 +292,7 @@ namespace KingdomEnhanced.Hooks
             __instance._boltData._shootForce = md.baseForce  * ModMenu.BallistaFlightMult;
         }
 
+        /// <summary>Accelerates ballista reload progress by the reload multiplier while reloading.</summary>
         public static void BallistaUpdatePostfix(Ballista __instance)
         {
             if (!ModMenu.BallistaBoost || ModMenu.BallistaReloadMult <= 1.0f) return;
@@ -283,29 +312,48 @@ namespace KingdomEnhanced.Hooks
             }
         }
 
+        /// <summary>Cached reflection handle to Catapult.crankRate.</summary>
+        private static readonly System.Reflection.FieldInfo CrankRateField =
+            typeof(Catapult).GetField("crankRate", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+        /// <summary>Cached reflection handle to Catapult.crankRateFormation.</summary>
+        private static readonly System.Reflection.FieldInfo CrankRateFormationField =
+            typeof(Catapult).GetField("crankRateFormation", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+        /// <summary>Caches crank rates once and applies the catapult reload multiplier via reflection.</summary>
         public static void CatapultUpdatePostfix(Catapult __instance)
         {
             if (!ModMenu.CatapultBoost || ModMenu.CatapultReloadMult <= 1.0f) return;
             var md = ModData.GetOrAdd(__instance.gameObject);
-            
-            // IL2CPP dummy assemblies often hide these as private fields or properties
-            var crankField = typeof(Catapult).GetField("crankRate", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            var crankFormationField = typeof(Catapult).GetField("crankRateFormation", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-            if (crankField == null) return;
+            if (CrankRateField == null) return;
 
             if (md.baseCrankRate == 0f)
             {
-                md.baseCrankRate = (float)crankField.GetValue(__instance);
-                if (crankFormationField != null)
-                    md.baseCrankRateFormation = (float)crankFormationField.GetValue(__instance);
+                md.baseCrankRate = (float)CrankRateField.GetValue(__instance);
+                if (CrankRateFormationField != null)
+                    md.baseCrankRateFormation = (float)CrankRateFormationField.GetValue(__instance);
             }
 
-            crankField.SetValue(__instance, md.baseCrankRate * ModMenu.CatapultReloadMult);
-            if (crankFormationField != null)
-                crankFormationField.SetValue(__instance, md.baseCrankRateFormation * ModMenu.CatapultReloadMult);
+            float targetRate = md.baseCrankRate * ModMenu.CatapultReloadMult;
+            if (Math.Abs(md.lastAppliedCrankRate - targetRate) > 0.0001f)
+            {
+                CrankRateField.SetValue(__instance, targetRate);
+                md.lastAppliedCrankRate = targetRate;
+            }
+
+            if (CrankRateFormationField != null)
+            {
+                float targetFormation = md.baseCrankRateFormation * ModMenu.CatapultReloadMult;
+                if (Math.Abs(md.lastAppliedCrankRateFormation - targetFormation) > 0.0001f)
+                {
+                    CrankRateFormationField.SetValue(__instance, targetFormation);
+                    md.lastAppliedCrankRateFormation = targetFormation;
+                }
+            }
         }
 
+        /// <summary>Scales launch velocity for catapult-launched projectiles when boosted.</summary>
         public static void LaunchableLaunchPrefix(Launchable __instance, ref Vector2 __0, GameObject __1)
         {
             if (!ModMenu.CatapultBoost || __1 == null) return;
@@ -319,8 +367,10 @@ namespace KingdomEnhanced.Hooks
 
         #endregion
 
+        /// <summary>Cached reflection handle to the Mover speed field.</summary>
         private static System.Reflection.FieldInfo _moverSpeedField = null;
 
+        /// <summary>Finds and caches the Mover speed field by name and type.</summary>
         private static System.Reflection.FieldInfo GetMoverSpeedField()
         {
             if (_moverSpeedField != null) return _moverSpeedField;
@@ -335,6 +385,7 @@ namespace KingdomEnhanced.Hooks
             return _moverSpeedField;
         }
 
+        /// <summary>Caches the base mover speed and applies the enemy speed multiplier via reflection.</summary>
         public static void MoverUpdatePostfix(Mover __instance)
         {
             if (__instance == null) return;
@@ -347,12 +398,20 @@ namespace KingdomEnhanced.Hooks
                 md.moverBaseSpeed = (float)f.GetValue(__instance);
                 md.isInitialized = true;
             }
-            
-            f.SetValue(__instance, md.moverBaseSpeed * ModMenu.EnemySpeedMult);
+
+            // Only reflect-write when the target speed differs from the last applied value, avoiding per-frame Get/Set on every unit
+            float target = md.moverBaseSpeed * ModMenu.EnemySpeedMult;
+            if (Math.Abs(md.lastAppliedMoverSpeed - target) > 0.0001f)
+            {
+                f.SetValue(__instance, target);
+                md.lastAppliedMoverSpeed = target;
+            }
         }
 
+        /// <summary>Re-entry guard for spawning extra wave enemies.</summary>
         private static bool _inWaveSpawnExtra = false;
 
+        /// <summary>Spawns additional copies of each enemy when the wave size multiplier is set.</summary>
         public static void SpawnEnemyPrefix(EnemyWaveSpawner __instance, EnemyBlueprint __0)
         {
             if (ModMenu.WaveSizeMult <= 1.0f || _inWaveSpawnExtra) return;
@@ -366,6 +425,7 @@ namespace KingdomEnhanced.Hooks
             _inWaveSpawnExtra = false;
         }
 
+        /// <summary>Caches the portal's base spawn interval at spawn.</summary>
         public static void PortalAwakePostfix(Portal __instance)
         {
             if (__instance == null) return;
@@ -373,6 +433,7 @@ namespace KingdomEnhanced.Hooks
             if (md.baseSpawnInterval == 0f) md.baseSpawnInterval = __instance._spawnInterval;
         }
 
+        /// <summary>Applies the portal spawn rate multiplier from the cached base interval.</summary>
         public static void PortalApplyRate(Portal __instance)
         {
             if (__instance == null) return;
@@ -381,12 +442,14 @@ namespace KingdomEnhanced.Hooks
             __instance._spawnInterval = md.baseSpawnInterval / ModMenu.PortalSpawnRate;
         }
 
+        /// <summary>Prevents crown stealing unless hard mode is active or the option is enabled.</summary>
         public static bool NoCrownStealPrefix()
         {
             if (DifficultyRules.IsHardModeActive()) return true;
             return !ModMenu.NoCrownStealing;
         }
 
+        /// <summary>Scales the Greed Queen's hit points at spawn when configured.</summary>
         public static void GreedQueenHPPostfix(GreedQueen __instance)
         {
             if (__instance == null || ModMenu.GreedQueenHPScale == 1.0f) return;

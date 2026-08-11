@@ -7,6 +7,7 @@ using KingdomEnhanced.UI;
 
 namespace KingdomEnhanced.Hooks
 {
+    /// <summary>Patches currency bags to increase the overflow limit and resize currency prefabs.</summary>
     [HarmonyPatch(typeof(CurrencyBag), "Init")]
     public static class CurrencyHooks
     {
@@ -51,6 +52,7 @@ namespace KingdomEnhanced.Hooks
         }
     }
 
+    /// <summary>Scales coin income by the configured multiplier when currency is added to the wallet.</summary>
     [HarmonyPatch(typeof(Wallet), "AddCurrency", typeof(CurrencyType), typeof(int))]
     public static class AddCurrencyPatch
     {

@@ -4,27 +4,27 @@ using KingdomEnhanced.Core;
 namespace KingdomEnhanced.Shared
 {
     /// <summary>
-    /// 提供 ModMenu 共用的 GUI 绘制辅助能力。
+    /// Provides shared GUI drawing helpers used by the ModMenu.
     /// </summary>
     public static class GuiHelper
     {
         /// <summary>
-        /// Unity GL 三角形绘制常量。
+        /// Unity GL triangle drawing constant.
         /// </summary>
         public const int GL_TRIANGLES = 4;
 
         /// <summary>
-        /// 绘制分隔线时复用的材质实例。
+        /// Reusable material instance when drawing separator lines.
         /// </summary>
         private static Material _lineMaterial;
 
         /// <summary>
-        /// 滑条范围与重置按钮复用的样式实例。
+        /// Reusable style instance for the slider range text and reset button.
         /// </summary>
         private static GUIStyle _sliderRangeStyle;
 
         /// <summary>
-        /// 获取用于绘制线段的材质。
+        /// Gets the material used to draw line segments.
         /// </summary>
         private static Material LineMaterial
         {
@@ -44,12 +44,12 @@ namespace KingdomEnhanced.Shared
         }
 
         /// <summary>
-        /// 以指定颜色和粗细绘制一条屏幕空间直线。
+        /// Draws a screen-space straight line with the given color and thickness.
         /// </summary>
-        /// <param name="start">线段起点。</param>
-        /// <param name="end">线段终点。</param>
-        /// <param name="color">线段颜色。</param>
-        /// <param name="thickness">线段粗细。</param>
+        /// <param name="start">Start point of the segment.</param>
+        /// <param name="end">End point of the segment.</param>
+        /// <param name="color">Color of the segment.</param>
+        /// <param name="thickness">Thickness of the segment.</param>
         public static void DrawLine(Vector2 start, Vector2 end, Color color, float thickness)
         {
             if (Event.current.type != EventType.Repaint) return;
@@ -77,10 +77,10 @@ namespace KingdomEnhanced.Shared
         }
 
         /// <summary>
-        /// 绘制一个按资源键解析后的分组标题。
+        /// Draws a section title resolved from a localization key.
         /// </summary>
-        /// <param name="titleKey">分组标题资源键。</param>
-        /// <param name="style">标题样式。</param>
+        /// <param name="titleKey">Localization key of the section title.</param>
+        /// <param name="style">Style of the title.</param>
         public static void DrawSection(string titleKey, GUIStyle style)
         {
             GUILayout.Space(18f);
@@ -89,15 +89,15 @@ namespace KingdomEnhanced.Shared
         }
 
         /// <summary>
-        /// 绘制浮点滑条与对应的重置、范围、当前值文本。
+        /// Draws a float slider with reset, range, and current value text.
         /// </summary>
-        /// <param name="label">已完成本地化的标签文本。</param>
-        /// <param name="value">当前滑条值。</param>
-        /// <param name="min">最小值。</param>
-        /// <param name="max">最大值。</param>
-        /// <param name="defaultValue">重置时恢复的默认值。</param>
-        /// <param name="labelStyle">标签样式。</param>
-        /// <param name="dimStyle">弱化文本样式。</param>
+        /// <param name="label">Label text, already localized.</param>
+        /// <param name="value">Current slider value.</param>
+        /// <param name="min">Minimum value.</param>
+        /// <param name="max">Maximum value.</param>
+        /// <param name="defaultValue">Default value restored on reset.</param>
+        /// <param name="labelStyle">Style of the label.</param>
+        /// <param name="dimStyle">Dimmed text style.</param>
         public static void DrawSlider(string label, ref float value, float min, float max, float defaultValue,
             GUIStyle labelStyle, GUIStyle dimStyle)
         {
@@ -120,15 +120,15 @@ namespace KingdomEnhanced.Shared
         }
 
         /// <summary>
-        /// 绘制整数滑条与对应的重置、范围、当前值文本。
+        /// Draws an integer slider with reset, range, and current value text.
         /// </summary>
-        /// <param name="label">已完成本地化的标签文本。</param>
-        /// <param name="value">当前滑条值。</param>
-        /// <param name="min">最小值。</param>
-        /// <param name="max">最大值。</param>
-        /// <param name="defaultValue">重置时恢复的默认值。</param>
-        /// <param name="labelStyle">标签样式。</param>
-        /// <param name="dimStyle">弱化文本样式。</param>
+        /// <param name="label">Label text, already localized.</param>
+        /// <param name="value">Current slider value.</param>
+        /// <param name="min">Minimum value.</param>
+        /// <param name="max">Maximum value.</param>
+        /// <param name="defaultValue">Default value restored on reset.</param>
+        /// <param name="labelStyle">Style of the label.</param>
+        /// <param name="dimStyle">Dimmed text style.</param>
         public static void DrawIntSlider(string label, ref int value, int min, int max, int defaultValue,
             GUIStyle labelStyle, GUIStyle dimStyle)
         {
@@ -152,9 +152,9 @@ namespace KingdomEnhanced.Shared
         }
 
         /// <summary>
-        /// 初始化滑条范围和重置按钮共用样式。
+        /// Initializes the shared slider range and reset button style.
         /// </summary>
-        /// <param name="baseStyle">作为基底复制的样式。</param>
+        /// <param name="baseStyle">Base style copied as the source.</param>
         private static void EnsureRangeStyle(GUIStyle baseStyle)
         {
             if (_sliderRangeStyle != null) return;

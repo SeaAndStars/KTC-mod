@@ -2,8 +2,12 @@ using System;
 
 namespace KingdomEnhanced.Features
 {
+    /// <summary>
+    /// Provides access to the currently active hard mode preset for the campaign.
+    /// </summary>
     public static class HardModeFeature
     {
+        /// <summary>Returns the hard mode preset mapped from the current campaign's difficulty level.</summary>
         public static HardModePreset GetActivePreset()
         {
             if (CampaignSaveData.current != null)

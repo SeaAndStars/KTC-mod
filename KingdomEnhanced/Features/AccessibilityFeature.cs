@@ -16,38 +16,86 @@ namespace KingdomEnhanced.Features
 #if IL2CPP
     [RegisterTypeInIl2Cpp]
 #endif
+    /// <summary>
+    /// Main accessibility driver: hover announcements, radar, castle proximity, and debug zones.
+    /// </summary>
     public class AccessibilityFeature : MonoBehaviour
     {
 #if IL2CPP
+        /// <summary>IL2CPP constructor required by Unity's Il2Cpp interop.</summary>
         public AccessibilityFeature(IntPtr ptr) : base(ptr) { }
 #endif
+        /// <summary>
+        /// Cached reference to the player.
+        /// </summary>
         private Player _player;
+        /// <summary>
+        /// The payable last hovered, used to detect hover changes.
+        /// </summary>
         private MonoBehaviour _lastPayable = null;
 
+        /// <summary>
+        /// Radar helper created once the player is found.
+        /// </summary>
         private RadarSystem _radarSystem; 
 
+        /// <summary>Resets the base camp announcement flag when the scene starts.</summary>
         void Start()
         {
             _baseCampAnnounced = false;
         }
 
+        /// <summary>
+        /// Whether the player was inside the castle on the last check.
+        /// </summary>
         private bool _wasInCastle = false;
         
+        /// <summary>
+        /// Guards the one-time base camp direction announcement.
+        /// </summary>
         private bool _baseCampAnnounced = false;
+        /// <summary>
+        /// Whether the player was inside a vagrant camp on the last check.
+        /// </summary>
         private bool _wasInVillage = false; 
         
+        /// <summary>
+        /// Last announcement timestamp, used for spam throttling.
+        /// </summary>
         private float _spamTimer = 0f;
+        /// <summary>
+        /// Last announced message, used to detect hover changes.
+        /// </summary>
         private string _lastSpokenMsg = "";
+        /// <summary>
+        /// Last announced canonical name.
+        /// </summary>
         private string _lastName = "";
+        /// <summary>
+        /// Last announced price.
+        /// </summary>
         private int _lastPrice = -1;
 
 
+        /// <summary>
+        /// Timestamp of the last closest-payable scan.
+        /// </summary>
         private float _lastPayableCheckTime = 0f;
+        /// <summary>
+        /// Minimum interval between closest-payable scans.
+        /// </summary>
         private const float PAYABLE_CHECK_INTERVAL = 0.15f; 
 
+        /// <summary>
+        /// Matches names ending in a digit (upgrade candidates).
+        /// </summary>
         private static readonly Regex _endsWithDigitRegex = new Regex(@"\d$", RegexOptions.Compiled);
+        /// <summary>
+        /// Matches names ending in a capital letter (upgrade candidates).
+        /// </summary>
         private static readonly Regex _endsWithUpperRegex = new Regex(@"[A-Z]$", RegexOptions.Compiled);
 
+        /// <summary>Drains the TTS queue and handles input, hover, and proximity announcements each frame.</summary>
         void Update()
         {
             // TTS queue must always drain, even if Accessibility is off
@@ -93,6 +141,9 @@ namespace KingdomEnhanced.Features
             HandleBaseCampOrientation();
         }
 
+        /// <summary>
+        /// Handles hover announcements for the currently targeted payable.
+        /// </summary>
         void HandleHover()
         {
             var current = _player.selectedPayable as MonoBehaviour; 
@@ -101,162 +152,183 @@ namespace KingdomEnhanced.Features
             if (current != null)
             {
                 var payable = current.GetComponent<Payable>();
-                if (payable == null) return; 
+                if (payable == null)
+                {
+                    // Missing Payable means no target; prevent stale _lastPayable from re-announcing next frame
+                    ResetHoverState();
+                    return;
+                }
 
                 
                 if (current.GetComponent<Player>() != null || current.gameObject == _player.gameObject) return;
                 
                 if (_player.steed != null && current.gameObject == _player.steed.gameObject) return;
 
-                string rawName = PayableNameResolver.GetCanonicalName(current.name);
-                string displayName = PayableNameResolver.GetLocalizedDisplayName(current.name);
-                
-                
-                int price = payable.Price;
-                bool isGemCurrency = payable.Currency == CurrencyType.Gems;
-                string currency = LocalizationService.Get(isGemCurrency ? "accessibility.currency.gems" : "accessibility.currency.coins");
-
-
-
-                
-                if (string.IsNullOrEmpty(rawName))
+                try
                 {
-                    rawName = current.name.Replace("(Clone)", "").Trim();
-                    displayName = rawName;
-                }
-
-                
-                bool isBoat = current.GetComponent<Boat>() != null || current.name.ToLower().Contains("boat");
-                bool isShipwreck = !isBoat && current.name.ToLower().Contains("wreck");
-                if (isBoat)
-                {
-                    displayName = LocalizationService.Get("payable.name.boat");
-                }
-                else if (isShipwreck)
-                {
-                    displayName = LocalizationService.Get("accessibility.name.shipwreck");
-                }
-                else if (current.name.ToLower().Contains("wharf"))
-                {
-                    displayName = LocalizationService.Get("accessibility.name.wharf");
-                }
-
-                
-                string techWarning = "";
-                if (payable.IsLocked(_player, out LockIndicator.LockReason reason))
-                {
+                    string rawName = PayableNameResolver.GetCanonicalName(current.name);
+                    string displayName = PayableNameResolver.GetLocalizedDisplayName(current.name);
                     
-                    switch (reason)
+                    
+                    int price = payable.Price;
+                    bool isGemCurrency = payable.Currency == CurrencyType.Gems;
+                    string currency = LocalizationService.Get(isGemCurrency ? "accessibility.currency.gems" : "accessibility.currency.coins");
+
+
+
+                    
+                    if (string.IsNullOrEmpty(rawName))
                     {
-                        case LockIndicator.LockReason.StoneTechRequired: techWarning = LocalizationService.Get("accessibility.lock.stone_tech_required"); break;
-                        case LockIndicator.LockReason.IronTechRequired: techWarning = LocalizationService.Get("accessibility.lock.iron_tech_required"); break;
-                        case LockIndicator.LockReason.HermitLocked: techWarning = LocalizationService.Get("accessibility.lock.hermit_locked"); break;
-                        case LockIndicator.LockReason.NoUpgrade: techWarning = LocalizationService.Get("accessibility.lock.fully_upgraded"); break;
-                        case LockIndicator.LockReason.Base: techWarning = LocalizationService.Get("accessibility.lock.base_upgrade_required"); break;
-                        default: techWarning = LocalizationService.Get("accessibility.lock.locked"); break;
+                        rawName = current.name.Replace("(Clone)", "").Trim();
+                        displayName = rawName;
                     }
-                    if (reason == LockIndicator.LockReason.NotLocked) techWarning = ""; 
-                }
 
-                
-                bool isProtecting = false;
-                if (rawName.Contains("Tree") && (isProtecting = IsTreeProtectingVillage(current.transform.position.x)))
-                {
-                    techWarning = LocalizationService.Get("accessibility.lock.destroys_village");
-                }
-
-                
-                string actionKey = "accessibility.action.build";
-                
-                
-                if (isBoat || rawName.Contains("Boat") || rawName.Contains("Ship"))
-                {
-                     if (price <= 3) actionKey = "accessibility.action.add_parts";
-                     else if (price >= 10) actionKey = "accessibility.action.sail";
-                     else actionKey = "accessibility.action.repair_hull";
-                     
-                     if (isShipwreck || rawName.Contains("Wreck") || rawName.Contains("Ruin")) actionKey = "accessibility.action.repair_hull";
-                }
-                
-                if (rawName.Contains("Statue") || rawName.Contains("Idol"))
-                {
-                    actionKey = isGemCurrency ? "accessibility.action.pay" : "accessibility.action.activate";
-                }
-                
-                if (rawName.Contains("Bank") || rawName.Contains("Chest")) actionKey = "accessibility.action.deposit";
-                else if (rawName.Contains("Portal") || rawName.Contains("Border")) actionKey = "accessibility.action.destroy_portal";
-                else if (rawName.Contains("Beggar") || rawName.Contains("Citizen") || rawName.Contains("Hermit")) actionKey = "accessibility.action.hire";
-                else if (rawName.Contains("Shop") || rawName.Contains("Merchant")) actionKey = rawName.Contains("Merchant") ? "accessibility.action.invest" : "accessibility.action.buy";
-                else if (rawName.Contains("Teleporter")) actionKey = "accessibility.action.teleport";
-                else if (rawName.Contains("Bell")) actionKey = "accessibility.action.call";
-                else if (rawName.Contains("Gem Guard") || rawName.Contains("GemKeeper")) actionKey = "accessibility.action.withdraw";
-                
-                else if (rawName.Contains("Tree") && !rawName.Contains("Close")) actionKey = "accessibility.action.chop";
-                else if (rawName.Contains("Mount") || rawName.Contains("Chimera") || current.name.Contains("Steed") || current.name.Contains("Horse")) actionKey = "accessibility.action.switch";
-                else if (rawName.Contains("Banner")) actionKey = "accessibility.action.expedition";
-                
-                
-                if (actionKey == "accessibility.action.build")
-                {
                     
-                    
-                    if (_endsWithDigitRegex.IsMatch(rawName) || _endsWithUpperRegex.IsMatch(rawName)) actionKey = "accessibility.action.upgrade";
-                    
-                    var wall = current.GetComponent<Wall>();
-                    if (wall != null && wall.level > 0) actionKey = "accessibility.action.upgrade_wall";
-                    
-                    var castle = current.GetComponent<Castle>();
-                    
-                    if (castle != null)
+                    bool isBoat = current.GetComponent<Boat>() != null || current.name.ToLower().Contains("boat");
+                    bool isShipwreck = !isBoat && current.name.ToLower().Contains("wreck");
+                    if (isBoat)
                     {
-                         actionKey = castle.level == 0 ? "accessibility.action.build" : "accessibility.action.upgrade";
+                        displayName = LocalizationService.Get("payable.name.boat");
+                    }
+                    else if (isShipwreck)
+                    {
+                        displayName = LocalizationService.Get("accessibility.name.shipwreck");
+                    }
+                    else if (current.name.ToLower().Contains("wharf"))
+                    {
+                        displayName = LocalizationService.Get("accessibility.name.wharf");
+                    }
+
+                    
+                    string techWarning = "";
+                    if (payable.IsLocked(_player, out LockIndicator.LockReason reason))
+                    {
+                        
+                        switch (reason)
+                        {
+                            case LockIndicator.LockReason.StoneTechRequired: techWarning = LocalizationService.Get("accessibility.lock.stone_tech_required"); break;
+                            case LockIndicator.LockReason.IronTechRequired: techWarning = LocalizationService.Get("accessibility.lock.iron_tech_required"); break;
+                            case LockIndicator.LockReason.HermitLocked: techWarning = LocalizationService.Get("accessibility.lock.hermit_locked"); break;
+                            case LockIndicator.LockReason.NoUpgrade: techWarning = LocalizationService.Get("accessibility.lock.fully_upgraded"); break;
+                            case LockIndicator.LockReason.Base: techWarning = LocalizationService.Get("accessibility.lock.base_upgrade_required"); break;
+                            default: techWarning = LocalizationService.Get("accessibility.lock.locked"); break;
+                        }
+                        if (reason == LockIndicator.LockReason.NotLocked) techWarning = ""; 
+                    }
+
+                    
+                    bool isProtecting = false;
+                    if (rawName.Contains("Tree") && (isProtecting = IsTreeProtectingVillage(current.transform.position.x)))
+                    {
+                        techWarning = LocalizationService.Get("accessibility.lock.destroys_village");
+                    }
+
+                    
+                    string actionKey = "accessibility.action.build";
+                    
+                    
+                    if (isBoat || rawName.Contains("Boat") || rawName.Contains("Ship"))
+                    {
+                         if (price <= 3) actionKey = "accessibility.action.add_parts";
+                         else if (price >= 10) actionKey = "accessibility.action.sail";
+                         else actionKey = "accessibility.action.repair_hull";
+                         
+                         if (isShipwreck || rawName.Contains("Wreck") || rawName.Contains("Ruin")) actionKey = "accessibility.action.repair_hull";
                     }
                     
-                    var farm = current.GetComponent<Farmhouse>();
-                    if (farm != null && price >= 3) actionKey = "accessibility.action.upgrade_farm";
-                }
-
-                
-                string message = LocalizationService.Format("accessibility.hover.name_only", displayName);
-                
-                if (!string.IsNullOrEmpty(techWarning))
-                {
-                    message = LocalizationService.Format("accessibility.hover.with_warning", displayName, techWarning);
-                }
-                else
-                {
+                    if (rawName.Contains("Statue") || rawName.Contains("Idol"))
+                    {
+                        actionKey = isGemCurrency ? "accessibility.action.pay" : "accessibility.action.activate";
+                    }
                     
-                    if (price > 0 || actionKey == "accessibility.action.withdraw" || actionKey == "accessibility.action.deposit")
-                        message = LocalizationService.Format("accessibility.hover.with_price", displayName, price, currency, LocalizationService.Get(actionKey));
+                    if (rawName.Contains("Bank") || rawName.Contains("Chest")) actionKey = "accessibility.action.deposit";
+                    else if (rawName.Contains("Portal") || rawName.Contains("Border")) actionKey = "accessibility.action.destroy_portal";
+                    else if (rawName.Contains("Beggar") || rawName.Contains("Citizen") || rawName.Contains("Hermit")) actionKey = "accessibility.action.hire";
+                    else if (rawName.Contains("Shop") || rawName.Contains("Merchant")) actionKey = rawName.Contains("Merchant") ? "accessibility.action.invest" : "accessibility.action.buy";
+                    else if (rawName.Contains("Teleporter")) actionKey = "accessibility.action.teleport";
+                    else if (rawName.Contains("Bell")) actionKey = "accessibility.action.call";
+                    else if (rawName.Contains("Gem Guard") || rawName.Contains("GemKeeper")) actionKey = "accessibility.action.withdraw";
+                    
+                    else if (rawName.Contains("Tree") && !rawName.Contains("Close")) actionKey = "accessibility.action.chop";
+                    else if (rawName.Contains("Mount") || rawName.Contains("Chimera") || current.name.Contains("Steed") || current.name.Contains("Horse")) actionKey = "accessibility.action.switch";
+                    else if (rawName.Contains("Banner")) actionKey = "accessibility.action.expedition";
+                    
+                    
+                    if (actionKey == "accessibility.action.build")
+                    {
+                        
+                        
+                        if (_endsWithDigitRegex.IsMatch(rawName) || _endsWithUpperRegex.IsMatch(rawName)) actionKey = "accessibility.action.upgrade";
+                        
+                        var wall = current.GetComponent<Wall>();
+                        if (wall != null && wall.level > 0) actionKey = "accessibility.action.upgrade_wall";
+                        
+                        var castle = current.GetComponent<Castle>();
+                        
+                        if (castle != null)
+                        {
+                             actionKey = castle.level == 0 ? "accessibility.action.build" : "accessibility.action.upgrade";
+                        }
+                        
+                        var farm = current.GetComponent<Farmhouse>();
+                        if (farm != null && price >= 3) actionKey = "accessibility.action.upgrade_farm";
+                    }
+
+                    
+                    string message = LocalizationService.Format("accessibility.hover.name_only", displayName);
+                    
+                    if (!string.IsNullOrEmpty(techWarning))
+                    {
+                        message = LocalizationService.Format("accessibility.hover.with_warning", displayName, techWarning);
+                    }
                     else
-                        message = LocalizationService.Format("accessibility.hover.with_action", displayName, LocalizationService.Get(actionKey));
-                }
+                    {
+                        
+                        if (price > 0 || actionKey == "accessibility.action.withdraw" || actionKey == "accessibility.action.deposit")
+                            message = LocalizationService.Format("accessibility.hover.with_price", displayName, price, currency, LocalizationService.Get(actionKey));
+                        else
+                            message = LocalizationService.Format("accessibility.hover.with_action", displayName, LocalizationService.Get(actionKey));
+                    }
 
-                
-                bool changed = (current != _lastPayable || message != _lastSpokenMsg);
-                if (changed)
+                    
+                    bool changed = (current != _lastPayable || message != _lastSpokenMsg);
+                    if (changed)
+                    {
+                        ModMenu.Speak(message, interrupt: false);
+                        _lastSpokenMsg = message;
+                        _spamTimer = Time.time;
+                    }
+
+                    _lastPayable = current;
+                    _lastName = rawName;
+                    _lastPrice = price;
+                }
+                catch (Exception ex)
                 {
-                    ModMenu.Speak(message, interrupt: false);
-                    _lastSpokenMsg = message;
-                    _spamTimer = Time.time;
+                    // Any exception resets the hover state to prevent repeated announcements from the exception path
+                    ResetHoverState();
+                    Debug.LogWarning($"[Accessibility] HandleHover error: {ex.Message}");
                 }
-
-                _lastPayable = current;
-                _lastName = rawName;
-                _lastPrice = price;
             }
             else
             {
-                 if (_lastPayable != null)
-                 {
-                     _lastPayable = null;
-                     _lastSpokenMsg = "";
-                     _lastName = "";
-                     _lastPrice = -1;
-                 }
+                ResetHoverState();
             }
         }
 
+        /// <summary>
+        /// Clears the hover announcement state to prevent stale state from re-announcing next frame.
+        /// </summary>
+        private void ResetHoverState()
+        {
+            if (_lastPayable == null && string.IsNullOrEmpty(_lastSpokenMsg)) return;
+            _lastPayable = null;
+            _lastSpokenMsg = "";
+            _lastName = "";
+            _lastPrice = -1;
+        }
+
+        /// <summary>Returns the nearest payable within range, throttled to every 0.3 seconds.</summary>
         MonoBehaviour GetClosestPayable()
         {
             if (Time.time < _lastPayableCheckTime + 0.3f) return _lastPayable as MonoBehaviour; 
@@ -291,6 +363,7 @@ namespace KingdomEnhanced.Features
             return closest;
         }
 
+        /// <summary>Returns the castle nearest to the player's X position.</summary>
         Castle FindClosestCastle()
         {
             Castle closest = null;
@@ -310,6 +383,7 @@ namespace KingdomEnhanced.Features
             return closest;
         }
 
+        /// <summary>Announces the base camp direction once shortly after scene load.</summary>
         void HandleBaseCampOrientation()
         {
             if (_baseCampAnnounced) return;
@@ -327,20 +401,51 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>
+        /// Timer controlling how often the trigger zones are refreshed.
+        /// </summary>
         private float _zoneUpdateTimer = 0f;
+        /// <summary>
+        /// Leftmost wall X position defining the castle zone.
+        /// </summary>
         private float _castleMinX = 0f;
+        /// <summary>
+        /// Rightmost wall X position defining the castle zone.
+        /// </summary>
         private float _castleMaxX = 0f;
+        /// <summary>
+        /// X intervals between the trees bordering each vagrant camp.
+        /// </summary>
         private List<Vector2> _campIntervals = new List<Vector2>();
         
+        /// <summary>
+        /// Debug visualization box: rect, color, and label.
+        /// </summary>
         private struct TriggerZone {
+            /// <summary>
+            /// World-space rectangle of the zone.
+            /// </summary>
             public Rect Box;
+            /// <summary>
+            /// Fill color of the debug box.
+            /// </summary>
             public Color Color;
+            /// <summary>
+            /// Localized label drawn under the box.
+            /// </summary>
             public string Label;
         }
+        /// <summary>
+        /// Debug zones drawn in OnGUI when DebugZones is enabled.
+        /// </summary>
         private List<TriggerZone> _debugZones = new List<TriggerZone>();
         
+        /// <summary>
+        /// Cooldown between castle/camp enter-leave announcements.
+        /// </summary>
         private float _announcerCooldown = 0f;
 
+        /// <summary>Rebuilds the castle and camp trigger zones plus their debug boxes.</summary>
         void UpdateZones()
         {
             if (_player == null) return;
@@ -432,6 +537,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Announces entering or leaving the castle and vagrant camps.</summary>
         void HandleCastleProximity()
         {
             if (_announcerCooldown > 0f) _announcerCooldown -= Time.deltaTime;
@@ -481,8 +587,12 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>
+        /// Cached label style for debug zone boxes.
+        /// </summary>
         private GUIStyle _debugLabelStyle;
 
+        /// <summary>Draws the debug zone boxes when the DebugZones option is enabled.</summary>
         void OnGUI()
         {
             if (!ModMenu.DebugZones) return;
@@ -533,6 +643,7 @@ namespace KingdomEnhanced.Features
             }
         }
 
+        /// <summary>Returns the vagrant camp nearest to the player's X position.</summary>
         private BeggarCamp FindClosestCamp()
         {
             BeggarCamp closest = null;
@@ -546,6 +657,7 @@ namespace KingdomEnhanced.Features
             return closest;
         }
 
+        /// <summary>Returns true when the tree at the given X position borders a camp and protects the village.</summary>
         private bool IsTreeProtectingVillage(float treeX)
         {
             
@@ -562,6 +674,7 @@ namespace KingdomEnhanced.Features
         }
 
 
+        /// <summary>Clears the cached hover state when the component is destroyed.</summary>
         void OnDestroy()
         {
             _lastPayable = null;

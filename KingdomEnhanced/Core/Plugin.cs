@@ -22,6 +22,9 @@ using KingdomEnhanced.Hooks;
 
 namespace KingdomEnhanced.Core
 {
+    /// <summary>
+    /// Mod entry point: initializes settings, localization, UI components, and Harmony patches.
+    /// </summary>
     [BepInPlugin("kingdomenhanced", "Kingdom Enhanced", ModVersion.FULL)]
     public class Plugin :
 #if IL2CPP
@@ -30,8 +33,10 @@ namespace KingdomEnhanced.Core
         BaseUnityPlugin
 #endif
     {
+        /// <summary>Global plugin instance, assigned during initialization.</summary>
         public static Plugin Instance;
 
+        /// <summary>BepInEx log source for the plugin.</summary>
         public ManualLogSource LogSource
 #if IL2CPP
             => Log;
@@ -40,6 +45,7 @@ namespace KingdomEnhanced.Core
 #endif
 
 #if IL2CPP
+        /// <summary>IL2CPP entry point: registers Il2Cpp types and initializes the plugin.</summary>
         public override void Load()
         {
             RegisterTypeInIl2Cpp.RegisterAssembly(Assembly.GetExecutingAssembly());
@@ -47,12 +53,14 @@ namespace KingdomEnhanced.Core
             Init();
         }
 #else
+        /// <summary>Mono entry point: initializes the plugin.</summary>
         internal void Awake()
         {
             Init();
         }
 #endif
 
+        /// <summary>Initializes configuration, localization, UI components, and Harmony patches.</summary>
         private void Init()
         {
             Instance = this;
@@ -75,7 +83,7 @@ namespace KingdomEnhanced.Core
         }
 
         /// <summary>
-        /// 使用插件 DLL 同级的 Localization 目录初始化本地化服务。
+        /// Initializes the localization service from the Localization directory next to the plugin DLL.
         /// </summary>
         private void InitializeLocalization()
         {
@@ -89,7 +97,7 @@ namespace KingdomEnhanced.Core
             if (string.IsNullOrWhiteSpace(pluginDirectory))
             {
                 pluginDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? AppContext.BaseDirectory;
-                LogSource.LogWarning($"程序集位置无法解析目录，已回退到程序集目录：{pluginDirectory}");
+                LogSource.LogWarning($"Could not resolve assembly location; fell back to: {pluginDirectory}");
             }
 
             string localizationDirectory = Path.Combine(pluginDirectory, "Localization");

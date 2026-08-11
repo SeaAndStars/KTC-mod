@@ -6,8 +6,12 @@ using KingdomEnhanced.UI;
 
 namespace KingdomEnhanced.Utils
 {
+    /// <summary>
+    /// Resolves stable canonical English names for game objects and shops.
+    /// </summary>
     public static class PayableNameResolver
     {
+        /// <summary>Maps raw in-game object names to stable canonical English names.</summary>
         private static readonly Dictionary<string, string> _nameMapping = new Dictionary<string, string>
         {
             { "P1", "Peasant" },
@@ -80,30 +84,37 @@ namespace KingdomEnhanced.Utils
             { "Forge", "Forge" }
         };
 
+        /// <summary>Removes digits and dashes (runtime instance markers).</summary>
         private static readonly Regex _digitDashRegex = new Regex(@"[\d-]", RegexOptions.Compiled);
+        /// <summary>Removes a trailing space followed by a single capital letter (instance marker).</summary>
         private static readonly Regex _trailingUpperRegex = new Regex(@"\s[A-Z]$", RegexOptions.Compiled);
+        /// <summary>Removes " P#" tokens such as the worker marker "P2".</summary>
         private static readonly Regex _pNumberRegex = new Regex(@"\sP\d+", RegexOptions.Compiled);
+        /// <summary>Inserts a space between camelCase words.</summary>
         private static readonly Regex _camelCaseRegex = new Regex("([a-z])([A-Z])", RegexOptions.Compiled);
+        /// <summary>Collapses runs of whitespace into a single space.</summary>
         private static readonly Regex _multiSpaceRegex = new Regex(@"\s+", RegexOptions.Compiled);
+        /// <summary>Removes parenthesized suffixes such as "(Clone)".</summary>
         private static readonly Regex _parenRegex = new Regex(@"\s*\(.*?\)", RegexOptions.Compiled);
+        /// <summary>Strips biome/landscape keywords when name simplification is enabled.</summary>
         private static readonly Regex _biomeRegex = new Regex(
             @"(?i)\b(bamboo|iron|stone|dead|lands|scaffold|wreck|grove|grace|pin|sale|jade|norse|norselands|shogun|dire|plague|europe|greece|cypress|pine|olive|wild|pear|p2|olympus|dynasty|viking|challenge|hickory|oak|birch|apple|cherry|palm|spruce|fir|willow|maple|walnut|chestnut)\b", RegexOptions.Compiled);
 
         /// <summary>
-        /// 将游戏对象名称清理为稳定的英文规范名，供内部对象类型与交互规则判断使用。
+        /// Cleans a game object name into a stable canonical English name for internal object type and interaction rule checks.
         /// </summary>
-        /// <param name="original">游戏对象原始名称或预制体名称。</param>
-        /// <returns>移除运行时后缀并应用已知映射后的英文规范名。</returns>
+        /// <param name="original">Original or prefab name of the game object.</param>
+        /// <returns>Canonical English name with runtime suffixes removed and known mappings applied.</returns>
         public static string CleanName(string original)
         {
             return GetCanonicalName(original);
         }
 
         /// <summary>
-        /// 将游戏对象名称转换为当前语言的无障碍显示名称。
+        /// Converts a game object name into an accessibility display name in the current language.
         /// </summary>
-        /// <param name="original">游戏对象原始名称或预制体名称。</param>
-        /// <returns>已本地化的显示名称；未知对象返回规范英文名。</returns>
+        /// <param name="original">Original or prefab name of the game object.</param>
+        /// <returns>Localized display name; the canonical English name for unknown objects.</returns>
         public static string GetLocalizedDisplayName(string original)
         {
             string canonicalName = CleanName(original);
@@ -167,10 +178,10 @@ namespace KingdomEnhanced.Utils
         }
 
         /// <summary>
-        /// 将游戏对象名称清理为稳定的英文规范名，供内部对象类型与交互规则判断使用。
+        /// Cleans a game object name into a stable canonical English name for internal object type and interaction rule checks.
         /// </summary>
-        /// <param name="original">游戏对象原始名称或预制体名称。</param>
-        /// <returns>移除运行时后缀并应用已知映射后的英文规范名。</returns>
+        /// <param name="original">Original or prefab name of the game object.</param>
+        /// <returns>Canonical English name with runtime suffixes removed and known mappings applied.</returns>
         public static string GetCanonicalName(string original)
         {
             if (string.IsNullOrEmpty(original)) return "";
@@ -200,20 +211,20 @@ namespace KingdomEnhanced.Utils
         }
         
         /// <summary>
-        /// 根据射线命中结果获取商店英文规范名。
+        /// Gets the canonical English shop name from a raycast hit.
         /// </summary>
-        /// <param name="hit">射线检测命中结果。</param>
-        /// <returns>当前尚无可解析商店时返回空字符串。</returns>
+        /// <param name="hit">The raycast hit result.</param>
+        /// <returns>An empty string when no shop can currently be resolved.</returns>
         public static string GetShopTypeName(RaycastHit hit) 
         {
              return "";
         }
         
         /// <summary>
-        /// 根据商店类型获取稳定的英文规范名。
+        /// Gets a stable canonical English name from a shop type.
         /// </summary>
-        /// <param name="type">游戏内商店类型枚举。</param>
-        /// <returns>英文规范商店名；未知类型返回空字符串。</returns>
+        /// <param name="type">In-game shop type enum.</param>
+        /// <returns>Canonical English shop name; an empty string for unknown types.</returns>
         public static string GetShopTypeName(PayableShop.ShopType type)
         {
             switch(type)

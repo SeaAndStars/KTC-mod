@@ -1,7 +1,7 @@
 # Kingdom Enhanced Mod - Build Script for Windows PowerShell
 param(
     [switch]$SkipMono,
-    # 可选 BepInEx plugins 根目录；为空时保持仅构建行为。
+    # Optional BepInEx plugins root; when empty, only builds without deploying.
     [string]$PluginsPath
 )
 
@@ -10,7 +10,7 @@ $Csproj = Join-Path $ScriptDir "KingdomEnhanced\KingdomEnhanced.csproj"
 
 $failed = $false
 
-# 将指定构建输出及完整本地化目录部署到本地 BepInEx plugins 目录。
+# Deploys a build output and the full localization directory to the local BepInEx plugins directory.
 function Copy-BuildOutput {
     param(
         [string]$Configuration
@@ -27,17 +27,17 @@ function Copy-BuildOutput {
     $localizationDir = Join-Path $pluginDir 'Localization'
 
     if (-not (Test-Path $dllSource)) {
-        throw "找不到构建 DLL：$dllSource"
+        throw "Build DLL not found: $dllSource"
     }
     if (-not (Test-Path $localizationSource)) {
-        throw "找不到本地化目录：$localizationSource"
+        throw "Localization directory not found: $localizationSource"
     }
 
     New-Item -ItemType Directory -Path $pluginDir -Force | Out-Null
     New-Item -ItemType Directory -Path $localizationDir -Force | Out-Null
     Copy-Item -Path $dllSource -Destination $pluginDir -Force
     Copy-Item -Path (Join-Path $localizationSource '*') -Destination $localizationDir -Recurse -Force
-    Write-Host "已部署 $Configuration 到：$pluginDir" -ForegroundColor Green
+    Write-Host "Deployed $Configuration to: $pluginDir" -ForegroundColor Green
 }
 
 Write-Host "========================================" -ForegroundColor Cyan

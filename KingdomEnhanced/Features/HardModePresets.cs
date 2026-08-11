@@ -4,19 +4,28 @@ using KingdomEnhanced.Core;
 
 namespace KingdomEnhanced.Features
 {
+    /// <summary>Available hard mode difficulty presets.</summary>
     public enum HardModePreset
     {
+        // No preset; default difficulty
         None = 0,
+        // Balanced default preset
         Nightmare = 100,
+        // Preset with increased enemy spawns
         Relentless = 101,
+        // Preset with heavier difficulty and retaliation multipliers
         Oblivion = 102,
+        // Preset with stronger and faster enemies
         NoEscape = 103
     }
 
+    /// <summary>
+    /// Provides localized and stable names, descriptions, and difficulty data for the hard mode presets.
+    /// </summary>
     public static class HardModePresets
     {
         /// <summary>
-        /// 硬模式预设名称对应的本地化资源键。
+        /// Localization resource keys for the hard mode preset names.
         /// </summary>
         private static readonly Dictionary<HardModePreset, string> PresetNameKeys = new Dictionary<HardModePreset, string>
         {
@@ -27,7 +36,7 @@ namespace KingdomEnhanced.Features
         };
 
         /// <summary>
-        /// 硬模式预设描述对应的本地化资源键。
+        /// Localization resource keys for the hard mode preset descriptions.
         /// </summary>
         private static readonly Dictionary<HardModePreset, string> PresetDescriptionKeys = new Dictionary<HardModePreset, string>
         {
@@ -38,7 +47,7 @@ namespace KingdomEnhanced.Features
         };
 
         /// <summary>
-        /// 硬模式预设的稳定英文名称。
+        /// Stable English names for the hard mode presets.
         /// </summary>
         public static readonly Dictionary<HardModePreset, string> PresetNames = new Dictionary<HardModePreset, string>
         {
@@ -49,7 +58,7 @@ namespace KingdomEnhanced.Features
         };
 
         /// <summary>
-        /// 硬模式预设的稳定英文描述。
+        /// Stable English descriptions for the hard mode presets.
         /// </summary>
         public static readonly Dictionary<HardModePreset, string> PresetDescriptions = new Dictionary<HardModePreset, string>
         {
@@ -60,10 +69,10 @@ namespace KingdomEnhanced.Features
         };
 
         /// <summary>
-        /// 获取指定硬模式预设在当前语言下的最终展示名称。
+        /// Gets the final display name of the specified hard mode preset in the current language.
         /// </summary>
-        /// <param name="preset">硬模式预设。</param>
-        /// <returns>当前语言下的预设展示名称。</returns>
+        /// <param name="preset">The hard mode preset.</param>
+        /// <returns>The preset display name in the current language.</returns>
         public static string GetPresetName(HardModePreset preset)
         {
             string name = LocalizationService.Get(PresetNameKeys[preset]);
@@ -71,10 +80,10 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 获取指定硬模式预设在当前语言下的最终展示描述。
+        /// Gets the final display description of the specified hard mode preset in the current language.
         /// </summary>
-        /// <param name="preset">硬模式预设。</param>
-        /// <returns>当前语言下的预设展示描述。</returns>
+        /// <param name="preset">The hard mode preset.</param>
+        /// <returns>The preset display description in the current language.</returns>
         public static string GetPresetDescription(HardModePreset preset)
         {
             string description = LocalizationService.Get(PresetDescriptionKeys[preset]);
@@ -82,10 +91,10 @@ namespace KingdomEnhanced.Features
         }
 
         /// <summary>
-        /// 创建指定硬模式预设对应的难度数据。
+        /// Creates the difficulty data configured for the specified hard mode preset.
         /// </summary>
-        /// <param name="preset">硬模式预设。</param>
-        /// <returns>已配置倍率和展示名称的难度数据。</returns>
+        /// <param name="preset">The hard mode preset.</param>
+        /// <returns>Difficulty data with the configured multipliers and display name.</returns>
         public static DifficultyData CreateDifficultyData(HardModePreset preset)
         {
             var data = new DifficultyData();

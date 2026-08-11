@@ -14,22 +14,41 @@ namespace KingdomEnhanced.Systems
     /// </summary>
     public static class TTSManager
     {
-        // The SpVoice COM object lives entirely on the background STA thread
+        /// <summary>The SpVoice COM object lives entirely on the background STA thread.</summary>
         private static Thread _speakThread;
+        /// <summary>Flag controlling the background speak thread loop.</summary>
         private static volatile bool _threadRunning = false;
+        /// <summary>True once the background thread has been started.</summary>
         private static bool _initialized = false;
 
-        // Thread-safe queue: main thread writes, speak thread reads
+        /// <summary>Thread-safe queue: main thread writes, speak thread reads.</summary>
         private static readonly Queue<string> _pendingQueue = new Queue<string>();
+        /// <summary>Lock guarding the queue and the last-spoken state.</summary>
         private static readonly object        _queueLock   = new object();
 
+        /// <summary>Hard cap on queued messages; the oldest is dropped when exceeded.</summary>
+        private const int MaxQueueLength = 32;
+
+        /// <summary>Last text actually spoken; exact duplicates within the dedupe window are dropped to prevent infinite loops.</summary>
+        private static string _lastSpokenText = string.Empty;
+
+        /// <summary>Timestamp (Time.unscaledTime) of the last actual speech.</summary>
+        private static float _lastSpokenTime = float.MinValue;
+
+        /// <summary>Dedupe window in seconds: identical text within the window is dropped.</summary>
+        private const float DedupeWindowSeconds = 2.0f;
+
+        /// <summary>History of recently spoken messages for RepeatLast and ReadPreviousMessage.</summary>
         private static readonly List<string> _messageLog = new List<string>();
+        /// <summary>Current position in the message history.</summary>
         private static int _historyIndex = -1;
+        /// <summary>Maximum number of history entries retained.</summary>
         private const  int MaxHistory   = 10;
 
+        /// <summary>Strips HTML-like tags (e.g. rich text color codes) from speech text.</summary>
         private static readonly Regex _htmlTagRegex = new Regex(@"<.*?>", RegexOptions.Compiled);
 
-        // Called once at startup from the main thread
+        /// <summary>Called once at startup from the main thread.</summary>
         public static void Initialize()
         {
             if (_initialized) return;
@@ -49,6 +68,7 @@ namespace KingdomEnhanced.Systems
         }
 
         // ── Background thread ────────────────────────────────────────────────
+        /// <summary>Background STA thread loop that creates the SAPI COM object and speaks queued text.</summary>
         private static void SpeakThreadLoop()
         {
             // Create the SAPI COM object on THIS thread (STA requirement)
@@ -104,6 +124,13 @@ namespace KingdomEnhanced.Systems
                             null, spVoice,
                             new object[] { text, 0 }
                         );
+
+                        // Record the recently spoken text for main-thread dedupe
+                        lock (_queueLock)
+                        {
+                            _lastSpokenText = text;
+                            _lastSpokenTime = UnityEngine.Time.unscaledTime;
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -130,20 +157,37 @@ namespace KingdomEnhanced.Systems
         /// <summary>Called every frame from AccessibilityFeature.Update() — now a no-op.</summary>
         public static void Update() { /* speak thread is self-managing */ }
 
+        /// <summary>Queues text for speech after stripping tags and applying the dedupe window.</summary>
         public static void Speak(string text, bool interrupt = true)
         {
             if (string.IsNullOrEmpty(text) || !_initialized) return;
 
             string clean = _htmlTagRegex.Replace(text, string.Empty);
-            AddToHistory(clean);
 
             lock (_queueLock)
             {
+                // Dedupe: drop exact matches to the last spoken text within the window to prevent infinite loops from per-frame callers
+                if (string.Equals(clean, _lastSpokenText, StringComparison.Ordinal) &&
+                    UnityEngine.Time.unscaledTime - _lastSpokenTime < DedupeWindowSeconds)
+                {
+                    return;
+                }
+
                 if (interrupt) _pendingQueue.Clear(); // Drop queued phrases
+
+                // Queue cap: drop the oldest message when full so the queue cannot grow unbounded
+                if (_pendingQueue.Count >= MaxQueueLength)
+                {
+                    _pendingQueue.Dequeue();
+                }
+
                 _pendingQueue.Enqueue(clean);
             }
+
+            AddToHistory(clean);
         }
 
+        /// <summary>Replays the most recently spoken message.</summary>
         public static void RepeatLast()
         {
             if (_messageLog.Count == 0) return;
@@ -154,6 +198,7 @@ namespace KingdomEnhanced.Systems
             }
         }
 
+        /// <summary>Speaks the previous message from history, or announces the beginning of history.</summary>
         public static void ReadPreviousMessage()
         {
             if (_messageLog.Count == 0) return;
@@ -167,6 +212,7 @@ namespace KingdomEnhanced.Systems
             Speak($"{_historyIndex + 1} of {_messageLog.Count}: {_messageLog[_historyIndex]}", interrupt: true);
         }
 
+        /// <summary>Records a message in history, skipping consecutive duplicates and trimming to MaxHistory.</summary>
         private static void AddToHistory(string text)
         {
             if (_messageLog.Count > 0 && _messageLog[_messageLog.Count - 1] == text) return;
